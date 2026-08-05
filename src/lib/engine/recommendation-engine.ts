@@ -1,218 +1,99 @@
-import type { DayOfWeek } from '@/types/common';
-import type { Subject } from '@/types/subject';
-import type { ResolvedBusService, ScheduleForDay } from '@/lib/services/schedule.service';
-import { calculateMarginMinutes, compareTime } from '@/utils/time';
+import { DiaSemana, Horario, Materia } from '../../types';
+import { MATERIAS } from '../../data/materiasDB';
+import { HORARIOS_COLECTIVOS } from '../../data/horariosDB';
 
-// ─── Configuración ────────────────────────────────────────────────────────────
+const DURACION_VIAJE_MINUTOS = 60;
+const MARGEN_MINUTOS = 15;
 
-/**
- * Margen mínimo en minutos entre la llegada del colectivo y el inicio
- * de la primera clase para que el servicio sea considerado "a tiempo".
- * Un colectivo con margen menor es descartado.
- */
-export const MIN_MARGIN_MINUTES = 10;
+const timeToMins = (time: string): number => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
 
-// ─── Tipos de salida ──────────────────────────────────────────────────────────
+export const calcularColectivos = (
+  dia: DiaSemana,
+  tipo: 'ida' | 'vuelta',
+  cursaArquitectura: boolean,
+  duermeEnCordoba: boolean
+): { recomendado: Horario | null, alternativas: Horario[] } => {
+  
+  // 1. Obtener y filtrar materias del día
+  let materiasDelDia = MATERIAS.filter((m: Materia) => m.dia === dia);
 
-/**
- * Clasificación de servicios para un sentido (ida o vuelta).
- */
-export interface RecommendationGroup {
-  /** El servicio óptimo: único colectivo destacado. */
-  recommended: ResolvedBusService | null;
-  /** Servicios válidos adicionales, en orden cronológico. */
-  alternatives: ResolvedBusService[];
-  /**
-   * Servicios descartados (llegan muy tarde para ida,
-   * o salen antes de que termine la clase para vuelta).
-   * No se muestran en la UI pero se conservan para auditoría.
-   */
-  discarded: ResolvedBusService[];
-  /** Hora de corte usada para clasificar (primera clase o última clase). */
-  cutoffTime: string | null;
-}
-
-/**
- * Resultado completo de recomendaciones para el día activo.
- */
-export interface RecommendationResult {
-  ida: RecommendationGroup;
-  vuelta: RecommendationGroup;
-  /** Hora de inicio de la primera clase del día. */
-  firstClassTime: string | null;
-  /** Hora de fin de la última clase del día. */
-  lastClassTime: string | null;
-  /**
-   * true si hay suficientes datos para producir recomendaciones
-   * (materias + servicios cargados).
-   */
-  hasData: boolean;
-}
-
-// ─── Helpers de tiempo de clase ───────────────────────────────────────────────
-
-/**
- * Devuelve la hora de inicio de la primera clase del día,
- * considerando todos los bloques de todas las materias activas.
- *
- * @param subjects - Materias activas del escenario
- * @param day      - Día a evaluar
- * @returns TimeString HH:MM o null si no hay bloques para ese día
- */
-export function getFirstClassStartTime(
-  subjects: Subject[],
-  day: DayOfWeek,
-): string | null {
-  const times = subjects
-    .flatMap((s) => s.classBlocks)
-    .filter((b) => b.day === day)
-    .map((b) => b.startTime);
-
-  if (times.length === 0) return null;
-
-  return [...times].sort(compareTime)[0];
-}
-
-/**
- * Devuelve la hora de fin de la última clase del día,
- * considerando todos los bloques de todas las materias activas.
- *
- * @param subjects - Materias activas del escenario
- * @param day      - Día a evaluar
- * @returns TimeString HH:MM o null si no hay bloques para ese día
- */
-export function getLastClassEndTime(
-  subjects: Subject[],
-  day: DayOfWeek,
-): string | null {
-  const times = subjects
-    .flatMap((s) => s.classBlocks)
-    .filter((b) => b.day === day)
-    .map((b) => b.endTime);
-
-  if (times.length === 0) return null;
-
-  return [...times].sort(compareTime).at(-1)!;
-}
-
-// ─── Clasificadores por sentido ───────────────────────────────────────────────
-
-/**
- * Clasifica los servicios de IDA.
- *
- * Criterio:
- *   - Descartado:   margen < MIN_MARGIN_MINUTES (llega demasiado tarde)
- *   - A tiempo:     margen >= MIN_MARGIN_MINUTES
- *   - Recomendado:  el de SALIDA MÁS TARDE entre los a tiempo
- *                   (minimiza tiempo de espera en la UTN)
- *   - Alternativas: el resto a tiempo, en orden cronológico
- */
-export function classifyIda(
-  services: ResolvedBusService[],
-  firstClassTime: string,
-): RecommendationGroup {
-  const onTime: ResolvedBusService[] = [];
-  const discarded: ResolvedBusService[] = [];
-
-  for (const svc of services) {
-    const margin = calculateMarginMinutes(svc.arrivalTime, firstClassTime);
-    if (margin >= MIN_MARGIN_MINUTES) {
-      onTime.push(svc);
-    } else {
-      discarded.push(svc);
+  materiasDelDia = materiasDelDia.filter((m: Materia) => {
+    if (m.obligatoria) return true;
+    if (dia === 'martes' && m.nombre === 'Arquitectura' && cursaArquitectura) {
+      return true;
     }
+    return false; // Ignorar materias virtuales o no obligatorias que no se cursan
+  });
+
+  if (materiasDelDia.length === 0) {
+    return { recomendado: null, alternativas: [] };
   }
 
-  if (onTime.length === 0) {
-    return { recommended: null, alternatives: [], discarded, cutoffTime: firstClassTime };
-  }
+  // Ordenar cronológicamente
+  materiasDelDia.sort((a, b) => timeToMins(a.horaInicio) - timeToMins(b.horaInicio));
 
-  // El recomendado es el que sale MÁS TARDE (menos tiempo de espera en destino)
-  const sorted = [...onTime].sort((a, b) =>
-    compareTime(b.departureTime, a.departureTime),
-  );
-  const [recommended, ...rest] = sorted;
+  // 2. Obtener horarios del día y filtrar por tipo de viaje
+  const horariosDelDia = HORARIOS_COLECTIVOS[dia] || [];
+  const opciones = horariosDelDia.filter((h: Horario) => h.tipo === tipo);
 
-  // Las alternativas se muestran en orden cronológico (más temprano primero)
-  const alternatives = [...rest].sort((a, b) =>
-    compareTime(a.departureTime, b.departureTime),
-  );
+  if (tipo === 'ida') {
+    const tieneMateriaA8 = materiasDelDia.some((m) => m.horaInicio === '08:00');
+    
+    // REGLA DE ORO (Tráfico AM)
+    if (tieneMateriaA8) {
+      const opcionesAM = opciones
+        .filter((h) => timeToMins(h.horaSalida) >= timeToMins('06:30') && timeToMins(h.horaSalida) <= timeToMins('07:15'))
+        .sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
 
-  return { recommended, alternatives, discarded, cutoffTime: firstClassTime };
-}
+      const recomendado = opcionesAM.find((h) => h.horaSalida === '06:30' || h.horaSalida === '06:40') || (opcionesAM.length > 0 ? opcionesAM[0] : null);
+      
+      let alternativas: Horario[] = [];
+      if (recomendado) {
+        const index = opcionesAM.indexOf(recomendado);
+        alternativas = opcionesAM.slice(index + 1);
+      }
+      
+      return { recomendado, alternativas };
+    } 
+    
+    // Para el resto de horarios de ida
+    const primeraMateria = materiasDelDia[0];
+    const limiteLlegadaTerminal = timeToMins(primeraMateria.horaInicio) - MARGEN_MINUTOS;
 
-/**
- * Clasifica los servicios de VUELTA.
- *
- * Criterio:
- *   - Descartado:   sale ANTES o AL MISMO TIEMPO que termina la última clase
- *   - Disponible:   sale DESPUÉS de que termina la última clase
- *   - Recomendado:  el PRIMERO disponible (mínima espera tras la clase)
- *   - Alternativas: el resto, en orden cronológico
- */
-export function classifyVuelta(
-  services: ResolvedBusService[],
-  lastClassTime: string,
-): RecommendationGroup {
-  const available: ResolvedBusService[] = [];
-  const discarded: ResolvedBusService[] = [];
+    const opcionesValidas = opciones
+      .filter((h) => {
+        const llegadaEstimada = timeToMins(h.horaSalida) + DURACION_VIAJE_MINUTOS;
+        return llegadaEstimada <= limiteLlegadaTerminal;
+      })
+      .sort((a, b) => timeToMins(b.horaSalida) - timeToMins(a.horaSalida)); // El que sale más tarde y llega a tiempo será el primero ([0])
 
-  for (const svc of services) {
-    // El colectivo debe salir estrictamente después de que termine la clase
-    if (compareTime(svc.departureTime, lastClassTime) > 0) {
-      available.push(svc);
-    } else {
-      discarded.push(svc);
+    const recomendado = opcionesValidas.length > 0 ? opcionesValidas[0] : null;
+    
+    // Alternativas: las opciones más tempranas (re-ordenadas de menor a mayor hora de salida)
+    const alternativas = opcionesValidas.length > 1 
+      ? opcionesValidas.slice(1, 3).sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida)) 
+      : [];
+    
+    return { recomendado, alternativas };
+  } else {
+    // VUELTA
+    if (dia === 'viernes' && duermeEnCordoba) {
+      return { recomendado: null, alternativas: [] };
     }
+
+    const ultimaMateria = materiasDelDia[materiasDelDia.length - 1];
+    const limiteSalidaTerminal = timeToMins(ultimaMateria.horaFin);
+
+    const opcionesValidas = opciones
+      .filter((h) => timeToMins(h.horaSalida) > limiteSalidaTerminal)
+      .sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+
+    const recomendado = opcionesValidas.length > 0 ? opcionesValidas[0] : null;
+    const alternativas = opcionesValidas.slice(1, 3);
+
+    return { recomendado, alternativas };
   }
-
-  if (available.length === 0) {
-    return { recommended: null, alternatives: [], discarded, cutoffTime: lastClassTime };
-  }
-
-  // Ya vienen ordenados cronológicamente; el primero es el recomendado
-  const [recommended, ...alternatives] = available;
-
-  return { recommended, alternatives, discarded, cutoffTime: lastClassTime };
-}
-
-// ─── Función principal ────────────────────────────────────────────────────────
-
-/**
- * Produce las recomendaciones completas para el día activo.
- *
- * Flujo:
- *   subjects → getFirstClassStartTime / getLastClassEndTime
- *   schedule.ida    → classifyIda(firstClassTime)
- *   schedule.vuelta → classifyVuelta(lastClassTime)
- *
- * @param subjects - Materias activas del escenario (puede estar vacío)
- * @param schedule - Servicios ya parseados, filtrados y con empresa resuelta
- * @param day      - Día del escenario
- * @returns RecommendationResult listo para el componente visual
- */
-export function getRecommendations(
-  subjects: Subject[],
-  schedule: ScheduleForDay,
-  day: DayOfWeek,
-): RecommendationResult {
-  const firstClassTime = getFirstClassStartTime(subjects, day);
-  const lastClassTime = getLastClassEndTime(subjects, day);
-
-  // Sin materias o sin servicios: no hay recomendaciones posibles
-  const hasData =
-    subjects.length > 0 &&
-    (schedule.ida.length > 0 || schedule.vuelta.length > 0);
-
-  const ida: RecommendationGroup =
-    firstClassTime !== null
-      ? classifyIda(schedule.ida, firstClassTime)
-      : { recommended: null, alternatives: [], discarded: schedule.ida, cutoffTime: null };
-
-  const vuelta: RecommendationGroup =
-    lastClassTime !== null
-      ? classifyVuelta(schedule.vuelta, lastClassTime)
-      : { recommended: null, alternatives: [], discarded: schedule.vuelta, cutoffTime: null };
-
-  return { ida, vuelta, firstClassTime, lastClassTime, hasData };
-}
+};

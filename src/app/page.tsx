@@ -1,274 +1,237 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
-import { calcularColectivoRecomendado } from "../engine/recommendationEngine";
-import { DiaSemana, Horario, Materia } from "../types";
-import { MATERIAS } from "../data/materiasDB";
-import { ChevronLeft, ChevronRight, BookOpen, MapPin, Moon } from "lucide-react";
-import RelojMinimalista from "../components/RelojMinimalista";
+import React, { useState, useEffect } from 'react';
+import { useEscenario } from '@/hooks/useEscenario';
+import ContextualControls from '@/features/schedule/ContextualControls';
+import NativeCard from '@/components/ui/NativeCard';
+import RelojMinimalista from '@/components/RelojMinimalista';
+import { calcularColectivos } from '@/lib/engine/recommendation-engine';
+import { MATERIAS } from '@/data/materiasDB';
+import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon } from 'lucide-react';
+import { Horario } from '@/types';
 
-// Helper para obtener el día local
-const getDiaSemana = (date: Date): DiaSemana => {
-  const map: Record<number, DiaSemana> = {
-    0: "domingo", 1: "lunes", 2: "martes", 3: "miercoles",
-    4: "jueves", 5: "viernes", 6: "sabado",
-  };
-  return map[date.getDay()];
-};
-
-// Formateador "Miércoles 5 de agosto"
-const formatearFecha = (date: Date): string => {
-  const day = date.getDate();
-  const month = new Intl.DateTimeFormat("es-AR", { month: "long" }).format(date);
-  const weekday = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(date);
-  return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${day} de ${month}`;
-};
-
-// Píldora de Countdown que envuelve RelojMinimalista
-const PildoraCountdown = ({ horaSalida }: { horaSalida: string }) => {
+/**
+ * Hook para calcular minutos restantes para un horario HH:MM
+ */
+function useCountdown(horaSalida: string | undefined) {
   const [minutosFaltantes, setMinutosFaltantes] = useState<number | null>(null);
 
   useEffect(() => {
-    const calcularFaltante = () => {
-      const now = new Date();
-      const [horas, minutos] = horaSalida.split(":").map(Number);
-      
-      const salidaDate = new Date(now);
-      salidaDate.setHours(horas, minutos, 0, 0);
+    if (!horaSalida) {
+      setMinutosFaltantes(null);
+      return;
+    }
 
-      const diffMs = salidaDate.getTime() - now.getTime();
-      const diffMin = Math.floor(diffMs / 60000);
-      setMinutosFaltantes(diffMin);
+    const calculate = () => {
+      const ahora = new Date();
+      const [h, m] = horaSalida.split(':').map(Number);
+      
+      const salida = new Date();
+      salida.setHours(h, m, 0, 0);
+
+      // Si ya pasó, la diferencia será negativa
+      const diffMs = salida.getTime() - ahora.getTime();
+      const diffMins = Math.ceil(diffMs / 60000);
+      
+      setMinutosFaltantes(diffMins);
     };
 
-    calcularFaltante();
-    const interval = setInterval(calcularFaltante, 10000);
+    calculate();
+    const interval = setInterval(calculate, 60000);
     return () => clearInterval(interval);
   }, [horaSalida]);
 
-  if (minutosFaltantes === null) return null;
+  return minutosFaltantes;
+}
 
-  if (minutosFaltantes < 0) {
+/**
+ * Componente Tarjeta de Colectivo (Ida o Vuelta)
+ */
+function HorarioCard({ 
+  titulo, 
+  recomendacion, 
+  icon: Icon 
+}: { 
+  titulo: string, 
+  recomendacion: ReturnType<typeof calcularColectivos>, 
+  icon: React.ElementType 
+}) {
+  const [verAlternativas, setVerAlternativas] = useState(false);
+  const { recomendado, alternativas } = recomendacion;
+  
+  const minutosFaltantes = useCountdown(recomendado?.horaSalida);
+
+  if (!recomendado) {
     return (
-      <div className="bg-red-900/40 text-red-400 rounded-full px-3 py-1 text-sm font-medium border border-red-800/50">
-        Ya salió
-      </div>
+      <NativeCard className="flex flex-col items-center justify-center py-12 text-center gap-4">
+        <div className="w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center border border-zinc-700">
+          <Moon size={28} className="text-zinc-400" />
+        </div>
+        <div>
+          <p className="text-lg font-semibold text-white">Hoy no hay {titulo.toLowerCase()} programada 🏠</p>
+          <p className="text-sm text-zinc-500 mt-1">Disfrutá tu tiempo o descansá en Córdoba.</p>
+        </div>
+      </NativeCard>
     );
   }
 
   return (
-    <div className="bg-emerald-900/40 text-emerald-400 rounded-full px-3 py-1 text-sm font-medium flex items-center gap-1.5">
-      Sale en {minutosFaltantes} min
-      {/* El RelojMinimalista se monta internamente como fue requerido, aunque lo mostremos sutilmente */}
-      <span className="opacity-40 text-[10px] hidden sm:inline-block"><RelojMinimalista /></span>
-    </div>
-  );
-};
+    <NativeCard className="flex flex-col relative overflow-hidden">
+      {/* Efecto de resplandor decorativo */}
+      <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
-// Componente para renderizar la Tarjeta de Viaje (Ida o Vuelta)
-const ViajeCard = ({ 
-  titulo, 
-  recomendacion, 
-  esHoy 
-}: { 
-  titulo: string; 
-  recomendacion: { recomendado: Horario | null; siguiente_disponible: Horario | null; alternativas: Horario[] }; 
-  esHoy: boolean;
-}) => {
-  if (!recomendacion.recomendado) {
-    return null;
-  }
-
-  const rec = recomendacion.recomendado;
-  
-  // Unificar alternativas (siguiente disponible + opciones anteriores)
-  const opcionesCrudas = [recomendacion.siguiente_disponible, ...recomendacion.alternativas].filter(Boolean) as Horario[];
-  const alternativas = Array.from(new Set(opcionesCrudas.map(a => a.horaSalida + a.empresa)))
-    .map(id => opcionesCrudas.find(a => (a.horaSalida + a.empresa) === id)!)
-    .sort((a, b) => {
-      const timeA = a.horaSalida.split(':').map(Number);
-      const timeB = b.horaSalida.split(':').map(Number);
-      return (timeA[0]*60 + timeA[1]) - (timeB[0]*60 + timeB[1]);
-    });
-
-  return (
-    <div className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden mb-6">
-      <div className="p-6 pb-8">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2 text-zinc-400 font-medium text-sm uppercase tracking-wider">
-            <MapPin size={16} />
-            {titulo}
-          </div>
-          {esHoy && <PildoraCountdown horaSalida={rec.horaSalida} />}
-        </div>
-        
-        <div className="flex items-end gap-3 mb-1">
-          <h2 className="text-6xl font-bold font-sans tracking-tight text-white leading-none">
-            {rec.horaSalida}
-          </h2>
-          <span className="text-lg font-semibold text-zinc-500 pb-1 uppercase">
-            {rec.empresa}
-          </span>
-        </div>
+      <div className="flex items-center gap-2 mb-5 text-zinc-400">
+        <Icon size={18} />
+        <h2 className="font-semibold text-sm uppercase tracking-wider">{titulo}</h2>
       </div>
-      
-      {alternativas.length > 0 && (
-        <div className="border-t border-zinc-800/80 bg-zinc-900/40">
-          <div className="divide-y divide-zinc-800/50">
-            {alternativas.map((alt, idx) => (
-              <div key={idx} className="flex justify-between items-center px-6 py-3.5">
-                <span className="text-zinc-300 font-medium text-lg">{alt.horaSalida}</span>
-                <span className="text-zinc-500 text-sm">{alt.empresa}</span>
-              </div>
-            ))}
+
+      <div className="flex justify-between items-end mb-6">
+        <div>
+          <p className="text-zinc-400 font-medium text-sm mb-1">{recomendado.empresa}</p>
+          <div className="text-6xl font-sans tracking-tight text-white leading-none">
+            {recomendado.horaSalida}
           </div>
+        </div>
+        {minutosFaltantes !== null && (
+          <div className={`font-medium px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm ${
+            minutosFaltantes > 0 && minutosFaltantes <= 60 
+              ? 'bg-blue-900/40 text-blue-400 animate-pulse' 
+              : 'bg-zinc-800 text-zinc-300'
+          }`}>
+            <span className="relative flex h-2 w-2">
+              {minutosFaltantes > 0 && minutosFaltantes <= 60 && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              )}
+              <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                minutosFaltantes > 0 && minutosFaltantes <= 60 ? 'bg-blue-500' : 'bg-zinc-500'
+              }`}></span>
+            </span>
+            {minutosFaltantes > 0 
+              ? `en ${minutosFaltantes} min` 
+              : minutosFaltantes === 0 
+                ? 'Saliendo...' 
+                : 'Ya salió'}
+          </div>
+        )}
+      </div>
+
+      {recomendado.nota && (
+        <div className="bg-blue-950/20 border border-blue-900/30 p-3 rounded-2xl mb-4 text-sm text-blue-200 flex gap-2 items-start">
+          <MapPin size={16} className="text-blue-400 shrink-0 mt-0.5" />
+          <span className="leading-snug">{recomendado.nota}</span>
         </div>
       )}
-    </div>
+
+      {alternativas.length > 0 && (
+        <div className="border-t border-zinc-800/80 pt-4 mt-2">
+          <button 
+            onClick={() => setVerAlternativas(!verAlternativas)}
+            className="flex items-center justify-between w-full text-sm text-zinc-400 hover:text-white transition-colors py-1"
+          >
+            <span>Ver siguientes {alternativas.length} opciones</span>
+            {verAlternativas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
+          
+          {verAlternativas && (
+            <div className="mt-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+              {alternativas.map((alt: Horario, idx: number) => (
+                <div key={idx} className="flex justify-between items-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl">
+                  <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
+                  <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </NativeCard>
   );
-};
+}
 
-export default function Home() {
-  const [offsetDias, setOffsetDias] = useState(0);
-  const [fechaActual] = useState(new Date());
+export default function HomePage() {
+  const escenario = useEscenario();
   
-  // Controles Contextuales Dinámicos (Estado Local)
-  const [cursaArquitectura, setCursaArquitectura] = useState(true);
-  const [duermeCordoba, setDuermeCordoba] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  if (!escenario.isMounted) return <div className="min-h-screen bg-black" />;
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
+  const { diaSeleccionado, cursaArquitectura, duermeEnCordoba } = escenario;
 
-  const fechaVisible = useMemo(() => {
-    const d = new Date(fechaActual);
-    d.setDate(d.getDate() + offsetDias);
-    return d;
-  }, [fechaActual, offsetDias]);
+  // Filtrar materias del día usando la misma lógica que el motor
+  const materiasDelDia = MATERIAS.filter((m) => {
+    if (m.dia !== diaSeleccionado) return false;
+    if (m.obligatoria) return true;
+    if (diaSeleccionado === 'martes' && m.nombre === 'Arquitectura' && cursaArquitectura) return true;
+    return false;
+  }).sort((a, b) => {
+    const [h1, m1] = a.horaInicio.split(':').map(Number);
+    const [h2, m2] = b.horaInicio.split(':').map(Number);
+    return (h1 * 60 + m1) - (h2 * 60 + m2);
+  });
 
-  const diaSemana = getDiaSemana(fechaVisible);
-  const esHoy = offsetDias === 0;
+  // Ejecutar motor
+  const recomendacionIda = calcularColectivos(diaSeleccionado, 'ida', cursaArquitectura, duermeEnCordoba);
+  const recomendacionVuelta = calcularColectivos(diaSeleccionado, 'vuelta', cursaArquitectura, duermeEnCordoba);
 
-  const recomendacionIda = useMemo(() => {
-    return calcularColectivoRecomendado(diaSemana, "ida", cursaArquitectura, duermeCordoba);
-  }, [diaSemana, cursaArquitectura, duermeCordoba]);
-
-  const recomendacionVuelta = useMemo(() => {
-    return calcularColectivoRecomendado(diaSemana, "vuelta", cursaArquitectura, duermeCordoba);
-  }, [diaSemana, cursaArquitectura, duermeCordoba]);
-
-  const materiasDelDia = useMemo(() => {
-    return MATERIAS.filter((m) => m.dia === diaSemana).filter(m => {
-        if (m.obligatoria) return true;
-        if (diaSemana === 'martes' && m.nombre === 'Arquitectura' && cursaArquitectura) return true;
-        if (diaSemana === 'martes' && m.nombre === 'Arquitectura' && !cursaArquitectura) return false;
-        return false;
-    });
-  }, [diaSemana, cursaArquitectura]);
-
-  if (!isMounted) return <div className="min-h-screen bg-black" />;
-
-  const labelDiaBoton = offsetDias === 0 ? "Hoy" : offsetDias === -1 ? "Ayer" : offsetDias === 1 ? "Mañana" : `${Math.abs(offsetDias)}d`;
+  // Capitalizar día
+  const diaCapitalizado = diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1);
 
   return (
-    <div className="flex flex-col min-h-screen p-6 pt-12 pb-32 max-w-md mx-auto">
+    <div 
+      className="p-4 max-w-md mx-auto flex flex-col gap-6"
+      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+    >
       
-      {/* 1. Header & Controles de Día */}
-      <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-white capitalize mb-4">
-          {formatearFecha(fechaVisible)}
-        </h1>
-        
-        <div className="inline-flex items-center bg-zinc-900 rounded-full p-1 border border-zinc-800">
-          <button onClick={() => setOffsetDias(o => o - 1)} className="p-2 text-zinc-400 hover:text-white transition-colors active:scale-95">
-            <ChevronLeft size={20} />
-          </button>
-          <button onClick={() => setOffsetDias(0)} className="px-6 py-1.5 text-sm font-medium text-white bg-zinc-800 rounded-full mx-1 shadow-sm border border-zinc-700 active:scale-95">
-            {labelDiaBoton}
-          </button>
-          <button onClick={() => setOffsetDias(o => o + 1)} className="p-2 text-zinc-400 hover:text-white transition-colors active:scale-95">
-            <ChevronRight size={20} />
-          </button>
+      {/* Header */}
+      <header className="flex justify-between items-end mt-2 mb-2">
+        <div>
+          <p className="text-zinc-500 text-sm font-medium tracking-wide uppercase mb-1">App Horarios</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white">
+            {diaCapitalizado}
+          </h1>
+        </div>
+        <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm">
+          <RelojMinimalista />
         </div>
       </header>
 
-      {/* 2. Controles Contextuales Dinámicos */}
-      {(diaSemana === "martes" || diaSemana === "viernes") && (
-        <div className="mb-6 bg-zinc-900 rounded-3xl border border-zinc-800 p-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className={`p-2 rounded-xl ${diaSemana === 'martes' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}`}>
-              {diaSemana === 'martes' ? <BookOpen size={20} /> : <Moon size={20} />}
+      {/* Controladores */}
+      <ContextualControls />
+
+      {/* Tarjetas de Resultados */}
+      <div className="flex flex-col gap-6 mt-2">
+        <HorarioCard titulo="Viaje de Ida" recomendacion={recomendacionIda} icon={Bus} />
+        
+        {/* Línea de Tiempo de Materias */}
+        {materiasDelDia.length > 0 && (
+          <NativeCard className="py-6">
+            <div className="flex items-center gap-2 mb-5 text-zinc-400">
+              <Clock size={18} />
+              <h2 className="font-semibold text-sm uppercase tracking-wider">Cursado</h2>
             </div>
-            <span className="font-medium text-zinc-200 text-sm">
-              {diaSemana === "martes" ? "¿Cursás Arquitectura hoy?" : "¿Te quedás a dormir en Cba?"}
-            </span>
-          </div>
-          <label className="relative inline-flex items-center cursor-pointer">
-            <input 
-              type="checkbox" 
-              className="sr-only peer"
-              checked={diaSemana === "martes" ? cursaArquitectura : duermeCordoba}
-              onChange={(e) => {
-                if (diaSemana === "martes") setCursaArquitectura(e.target.checked);
-                else setDuermeCordoba(e.target.checked);
-              }}
-            />
-            <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
-          </label>
-        </div>
-      )}
-
-      {/* 3. Tarjetas de Viajes */}
-      {!recomendacionIda.recomendado && !recomendacionVuelta.recomendado && materiasDelDia.length === 0 ? (
-        <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 text-center mt-6">
-          <h2 className="text-xl font-bold mb-2 text-zinc-100">Día libre</h2>
-          <p className="text-zinc-500 text-sm">No hay viajes ni materias programadas para hoy.</p>
-        </div>
-      ) : (
-        <div className="mt-2">
-          
-          <ViajeCard 
-            titulo="Hacia Córdoba" 
-            recomendacion={recomendacionIda} 
-            esHoy={esHoy} 
-          />
-
-          {/* Tarjeta de Materias */}
-          {materiasDelDia.length > 0 && (
-            <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6 mb-6">
-              <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <BookOpen size={18} />
-                Materias de {diaSemana}
-              </h3>
-              <div className="divide-y divide-zinc-800/50">
-                {materiasDelDia.map((m, idx) => (
-                  <div key={idx} className="py-3.5 flex justify-between items-center first:pt-0 last:pb-0">
-                    <div className="flex flex-col">
-                      <span className="text-zinc-100 font-medium text-lg">{m.nombre}</span>
-                      <span className="text-zinc-500 text-sm">
-                        {m.horaInicio} - {m.horaFin}
-                      </span>
-                    </div>
-                    {!m.obligatoria && (
-                      <span className="bg-zinc-800 text-zinc-400 text-xs px-2.5 py-1 rounded-full font-medium">
-                        Opcional
-                      </span>
-                    )}
+            
+            <div className="flex flex-col gap-0 relative">
+              {/* Línea vertical continua */}
+              <div className="absolute left-[9px] top-3 bottom-3 w-0.5 bg-zinc-800 rounded-full" />
+              
+              {materiasDelDia.map((materia, idx) => (
+                <div key={idx} className="relative pl-8 py-3">
+                  {/* Punto en la línea */}
+                  <div className="absolute left-[3px] top-[22px] w-3.5 h-3.5 bg-zinc-900 border-[2.5px] border-blue-500 rounded-full z-10" />
+                  
+                  <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-4">
+                    <h3 className="font-semibold text-white text-base">{materia.nombre}</h3>
+                    <p className="text-zinc-400 text-sm mt-1.5 font-medium">
+                      {materia.horaInicio} <span className="text-zinc-600 mx-1">-</span> {materia.horaFin}
+                    </p>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
-          )}
+          </NativeCard>
+        )}
 
-          <ViajeCard 
-            titulo="Regreso a Casa" 
-            recomendacion={recomendacionVuelta} 
-            esHoy={esHoy} 
-          />
-          
-        </div>
-      )}
+        <HorarioCard titulo="Viaje de Vuelta" recomendacion={recomendacionVuelta} icon={Bus} />
+      </div>
+
     </div>
   );
 }

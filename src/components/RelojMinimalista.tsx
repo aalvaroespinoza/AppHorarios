@@ -1,30 +1,37 @@
-'use client';
+"use client";
 
 import { useState, useEffect } from 'react';
 
 export default function RelojMinimalista() {
-  const [time, setTime] = useState<string>('');
-  const [mounted, setMounted] = useState(false);
+  const [hora, setHora] = useState<string>('');
 
   useEffect(() => {
-    setMounted(true);
-    const updateTime = () => {
-      const now = new Date();
-      setTime(now.toLocaleTimeString('es-AR', { hour12: false }));
+    // Función para actualizar la hora
+    const actualizarHora = () => {
+      const ahora = new Date();
+      // Formatear la hora en HH:MM
+      const horas = ahora.getHours().toString().padStart(2, '0');
+      const minutos = ahora.getMinutes().toString().padStart(2, '0');
+      setHora(`${horas}:${minutos}`);
     };
-    
-    updateTime(); // llamada inicial
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
+
+    // Actualizar de inmediato
+    actualizarHora();
+
+    // Configurar el intervalo para actualizar cada minuto (o cada segundo para ser exactos al cambio de minuto)
+    const intervalo = setInterval(actualizarHora, 1000);
+
+    return () => clearInterval(intervalo);
   }, []);
 
-  if (!mounted) {
-    return <div className="text-xs text-zinc-500 font-mono tracking-wider tabular-nums h-[16px] min-w-[55px] opacity-0">...</div>;
+  // Para evitar destellos de hidratación en SSR, no mostramos nada hasta que esté montado
+  if (!hora) {
+    return <span className="text-zinc-500 font-mono text-sm opacity-0">00:00</span>;
   }
 
   return (
-    <div className="text-xs text-zinc-500 font-mono tracking-wider tabular-nums">
-      {time}
-    </div>
+    <span className="text-zinc-500 font-mono text-sm">
+      {hora}
+    </span>
   );
 }
