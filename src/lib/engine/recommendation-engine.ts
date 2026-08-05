@@ -37,11 +37,6 @@ export const calcularColectivos = (
   horaActualHHMM: string
 ): { recomendado: RawScheduleEntry | null, alternativas: RawScheduleEntry[] } => {
   
-  // 1. Obtener escenario activo
-  // Simulamos una fecha de referencia que coincida con el día solicitado
-  // para que el scenario-engine pueda resolverlo correctamente.
-  // Como `determineScenario` usa dateToSchoolDay, pasamos un martes cualquiera 
-  // si piden martes, etc. Pero es más fácil construir un Date base:
   const map: Record<string, number> = {
     'lunes': 1, 'martes': 2, 'miercoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'domingo': 0
   };
@@ -62,8 +57,6 @@ export const calcularColectivos = (
     return { recomendado: null, alternativas: [] };
   }
 
-  // 2. Obtener materias del escenario para ese día
-  // Extraemos todos los bloques de clase de las materias activas para ese día
   let classBlocks = subjectData.subjects
     .filter(s => scenario.activeSubjectIds.includes(s.id))
     .flatMap(s => s.classBlocks)
@@ -73,59 +66,69 @@ export const calcularColectivos = (
     return { recomendado: null, alternativas: [] };
   }
 
-  // Ordenar cronológicamente
   classBlocks.sort((a, b) => timeToMins(a.startTime) - timeToMins(b.startTime));
 
-  // 3. Obtener horarios base del día y tipo
-  let opciones = rawScheduleEntries.filter(
+  // Todos los horarios disponibles en ese día y dirección
+  const todasOpciones = rawScheduleEntries.filter(
     (h) => h.dia === dia && h.sentido === tipo
   );
 
-  // 4. Lógica de Filtrado en Vivo (descartar los que ya pasaron)
-  opciones = opciones.filter((h) => timeToMins(h.horaSalida) >= timeToMins(horaActualHHMM));
-
-  if (opciones.length === 0) {
+  if (todasOpciones.length === 0) {
     return { recomendado: null, alternativas: [] };
   }
 
-  // 5. Filtrado por tipo de viaje e itinerario académico
+  let idealBus: RawScheduleEntry | null = null;
+
   if (tipo === 'ida') {
     const primerBloque = classBlocks[0];
+    const limiteLlegadaTerminal = timeToMins(primerBloque.startTime);
     
-    // Regla general: Debe llegar al menos 15 minutos antes de la clase.
-    // Usamos horaLlegada de la tabla si existe, sino asumimos 60 mins de viaje.
-    const limiteLlegadaTerminal = timeToMins(primerBloque.startTime) - 15;
-    
-    opciones = opciones.filter((h) => {
-      // Como horaLlegada está en schedules.ts, la usamos
-      return timeToMins(h.horaLlegada) <= timeToMins(primerBloque.startTime);
-    });
-
+    // Buses que llegan antes o a la misma hora que empieza la clase
+    let validas = todasOpciones.filter(h => timeToMins(h.horaLlegada) <= limiteLlegadaTerminal);
+    if (validas.length > 0) {
+      // Ordenamos descendente para encontrar el que llega más cerca a la hora de cursar (el más tarde posible)
+      validas.sort((a, b) => timeToMins(b.horaSalida) - timeToMins(a.horaSalida));
+      idealBus = validas[0];
+    }
   } else {
     // VUELTA
     if (dia === 'viernes' && duermeEnCordoba) {
       return { recomendado: null, alternativas: [] };
     }
-
     const ultimoBloque = classBlocks[classBlocks.length - 1];
     let limiteSalidaTerminal = timeToMins(ultimoBloque.endTime);
     
-    // Regla de Viernes ("Dormir en Córdoba"): Si no duerme en Córdoba, permitimos tomar el de las 23:00
-    // aunque la clase termine a las 23:05 (el usuario saldrá antes).
-    if (dia === 'viernes' && !duermeEnCordoba && ultimoBloque.endTime === '23:05') {
-      limiteSalidaTerminal = timeToMins('23:00');
+    // Buses que salen después de la clase
+    let validas = todasOpciones.filter(h => timeToMins(h.horaSalida) >= limiteSalidaTerminal);
+    
+    if (validas.length > 0) {
+      // Ordenamos ascendente para agarrar el primero que sale después de clases
+      validas.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+      idealBus = validas[0];
+    } else {
+      // Si no hay buses válidos después de la clase (ej. clase termina 23:05 y el último bus es antes)
+      // Agarra el último bus disponible de ese día ("me trato de tomar todos los anteriores")
+      let todasOrdenadas = [...todasOpciones].sort((a, b) => timeToMins(b.horaSalida) - timeToMins(a.horaSalida));
+      idealBus = todasOrdenadas[0];
     }
-
-    // Debe salir después de que termine la última clase (con la excepción de viernes)
-    opciones = opciones.filter((h) => timeToMins(h.horaSalida) >= limiteSalidaTerminal);
   }
 
-  // 6. Ordenar los resultados finales ascendente (el más próximo en el futuro primero)
-  opciones.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+  // Filtrado de las opciones que todavía no pasaron en el día real
+  let opcionesFuturas = todasOpciones.filter((h) => timeToMins(h.horaSalida) >= timeToMins(horaActualHHMM));
 
-  // 7. Retornar el recomendado y las alternativas
-  const recomendado = opciones.length > 0 ? opciones[0] : null;
-  const alternativas = opciones.slice(1);
+  // Si no se encontró un ideal (raro) o el ideal YA PASÓ de la hora actual real:
+  if (!idealBus || timeToMins(horaActualHHMM) > timeToMins(idealBus.horaSalida)) {
+     opcionesFuturas.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+     idealBus = opcionesFuturas.length > 0 ? opcionesFuturas[0] : null;
+  }
 
-  return { recomendado, alternativas };
+  if (!idealBus) {
+    return { recomendado: null, alternativas: [] };
+  }
+
+  // Las alternativas son el resto de las opciones futuras
+  let alternativas = opcionesFuturas.filter(h => h.horaSalida !== idealBus!.horaSalida);
+  alternativas.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+
+  return { recomendado: idealBus, alternativas };
 };
