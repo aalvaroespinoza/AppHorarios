@@ -8,7 +8,7 @@ import RelojMinimalista from '@/components/RelojMinimalista';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
-import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon } from 'lucide-react';
+import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon, CheckCircle2 } from 'lucide-react';
 import type { RawScheduleEntry } from '@/types/schedule';
 import type { DayOfWeek } from '@/types/common';
 
@@ -52,14 +52,41 @@ function useCountdown(horaSalida: string | undefined) {
 function HorarioCard({ 
   titulo, 
   recomendacion, 
-  icon: Icon 
+  icon: Icon,
+  direction
 }: { 
   titulo: string, 
   recomendacion: ReturnType<typeof calcularColectivos>, 
-  icon: React.ElementType 
+  icon: React.ElementType,
+  direction: 'ida' | 'vuelta'
 }) {
   const [verAlternativas, setVerAlternativas] = useState(false);
+  const [yaTomado, setYaTomado] = useState(false);
+  const [storageKey, setStorageKey] = useState('');
   const { recomendado, alternativas } = recomendacion;
+  
+  useEffect(() => {
+    // Usar la fecha local para construir la clave
+    const d = new Date();
+    d.setHours(d.getHours() - 3); // Ajuste UTC-3
+    const today = d.toISOString().split('T')[0];
+    const key = `tomado:${today}:${direction}`;
+    setStorageKey(key);
+    
+    if (localStorage.getItem(key) === 'true') {
+      setYaTomado(true);
+    }
+  }, [direction]);
+
+  const toggleTomado = () => {
+    const newValue = !yaTomado;
+    setYaTomado(newValue);
+    if (newValue) {
+      localStorage.setItem(storageKey, 'true');
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  };
   
   const esVuelta = titulo.toLowerCase().includes('vuelta');
   const horaReal = esVuelta && recomendado ? addMinutes(recomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : recomendado?.horaSalida;
@@ -81,13 +108,26 @@ function HorarioCard({
   }
 
   return (
-    <NativeCard className="flex flex-col relative overflow-hidden">
+    <NativeCard className={`flex flex-col relative overflow-hidden transition-all duration-300 ${yaTomado ? 'opacity-70 grayscale-[0.3]' : ''}`}>
       {/* Efecto de resplandor decorativo */}
-      <div className="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${yaTomado ? 'bg-green-500/10' : 'bg-blue-500/10'}`} />
 
-      <div className="flex items-center gap-2 mb-5 text-zinc-400">
-        <Icon size={18} />
-        <h2 className="font-semibold text-sm uppercase tracking-wider">{titulo}</h2>
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2 text-zinc-400">
+          <Icon size={18} />
+          <h2 className="font-semibold text-sm uppercase tracking-wider">{titulo}</h2>
+        </div>
+        <button 
+          onClick={toggleTomado}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+            yaTomado 
+              ? 'bg-green-900/30 text-green-400 border-green-800/50' 
+              : 'bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-800 hover:text-white'
+          }`}
+        >
+          <CheckCircle2 size={16} />
+          {yaTomado ? 'Completado' : 'Ya lo tomé'}
+        </button>
       </div>
 
       <div className="flex justify-between items-end mb-6">
@@ -259,7 +299,7 @@ export default function HomePage() {
 
       {/* Tarjetas de Resultados */}
       <div className="flex flex-col gap-6 mt-2">
-        <HorarioCard titulo="Viaje de Ida" recomendacion={recomendacionIda} icon={Bus} />
+        <HorarioCard titulo="Viaje de Ida" recomendacion={recomendacionIda} icon={Bus} direction="ida" />
         
         {/* Línea de Tiempo de Materias */}
         {materiasDelDia.length > 0 && (
@@ -290,7 +330,7 @@ export default function HomePage() {
           </NativeCard>
         )}
 
-        <HorarioCard titulo="Viaje de Vuelta" recomendacion={recomendacionVuelta} icon={Bus} />
+        <HorarioCard titulo="Viaje de Vuelta" recomendacion={recomendacionVuelta} icon={Bus} direction="vuelta" />
       </div>
 
     </div>
