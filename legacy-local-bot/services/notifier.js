@@ -11,10 +11,10 @@ dayjs.extend(timezone);
 dayjs.locale('es');
 
 export const startNotifier = (bot) => {
-  const chatId = process.env.MY_CHAT_ID;
+  const chatId = process.env.TELEGRAM_CHAT_ID;
   
   if (!chatId) {
-    console.warn('⚠️ MY_CHAT_ID no está configurado en .env. Las alertas no se enviarán.');
+    console.warn('⚠️ TELEGRAM_CHAT_ID no está configurado en .env. Las alertas no se enviarán.');
     return;
   }
 

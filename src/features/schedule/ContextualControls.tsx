@@ -3,10 +3,9 @@
 import React from 'react';
 import { useEscenario } from '@/hooks/useEscenario';
 import NativeCard from '@/components/ui/NativeCard';
-import NativeSwitch from '@/components/ui/NativeSwitch';
-import { DiaSemana } from '@/types';
+import { DayOfWeek } from '@/types/common';
 
-const DIAS_SEMANA: { id: DiaSemana; label: string }[] = [
+const DIAS_SEMANA: { id: DayOfWeek; label: string }[] = [
   { id: 'lunes', label: 'Lunes' },
   { id: 'martes', label: 'Martes' },
   { id: 'miercoles', label: 'Miércoles' },
@@ -16,13 +15,8 @@ const DIAS_SEMANA: { id: DiaSemana; label: string }[] = [
 ];
 
 export default function ContextualControls() {
-  const { 
     diaSeleccionado, 
     setDiaSeleccionado,
-    cursaArquitectura,
-    setCursaArquitectura,
-    duermeEnCordoba,
-    setDuermeEnCordoba,
     isMounted
   } = useEscenario();
 
@@ -52,7 +46,7 @@ export default function ContextualControls() {
         <div className="flex space-x-2 items-center">
           <button
             onClick={() => {
-              const map: Record<number, DiaSemana> = {
+              const map: Record<number, DayOfWeek> = {
                 0: 'lunes', 1: 'lunes', 2: 'martes', 3: 'miercoles',
                 4: 'jueves', 5: 'viernes', 6: 'sabado'
               };
@@ -82,44 +76,7 @@ export default function ContextualControls() {
         </div>
       </div>
 
-      {/* 2. Switches Contextuales */}
-      {/* El div contenedor envuelve los condicionales para reservar espacio sutilmente si se desea,
-          pero usamos animaciones para suavizar la transición de mount/unmount */}
-      <div className="flex flex-col gap-4">
-        {diaSeleccionado === 'martes' && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300 fill-mode-both">
-            <NativeCard className="flex flex-row items-center justify-between">
-              <div className="pr-4">
-                <h3 className="text-white font-medium text-base">¿Cursás Arquitectura hoy?</h3>
-                <p className="text-zinc-500 text-sm mt-1 leading-snug">
-                  Actívalo si debes ir a la primera hora (08:00).
-                </p>
-              </div>
-              <NativeSwitch 
-                checked={cursaArquitectura} 
-                onChange={setCursaArquitectura} 
-              />
-            </NativeCard>
-          </div>
-        )}
-
-        {diaSeleccionado === 'viernes' && (
-          <div className="animate-in fade-in slide-in-from-top-2 duration-300 fill-mode-both">
-            <NativeCard className="flex flex-row items-center justify-between">
-              <div className="pr-4">
-                <h3 className="text-white font-medium text-base">¿Dormís en Córdoba?</h3>
-                <p className="text-zinc-500 text-sm mt-1 leading-snug">
-                  Si te quedas, cancelaremos las recomendaciones de regreso de esa noche.
-                </p>
-              </div>
-              <NativeSwitch 
-                checked={duermeEnCordoba} 
-                onChange={setDuermeEnCordoba} 
-              />
-            </NativeCard>
-          </div>
-        )}
-      </div>
+      {/* Los switches contextuales (Arquitectura, Córdoba) han sido movidos a Configuración */}
     </div>
   );
 }

@@ -6,9 +6,11 @@ import ContextualControls from '@/features/schedule/ContextualControls';
 import NativeCard from '@/components/ui/NativeCard';
 import RelojMinimalista from '@/components/RelojMinimalista';
 import { calcularColectivos } from '@/lib/engine/recommendation-engine';
-import { MATERIAS } from '@/data/materiasDB';
+import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
+import { subjectData } from '@/data/subjects';
 import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon } from 'lucide-react';
-import { Horario } from '@/types';
+import type { RawScheduleEntry } from '@/types/schedule';
+import type { DayOfWeek } from '@/types/common';
 
 /**
  * Hook para calcular minutos restantes para un horario HH:MM
@@ -115,10 +117,10 @@ function HorarioCard({
         )}
       </div>
 
-      {recomendado.nota && (
+      {recomendado.notas && (
         <div className="bg-blue-950/20 border border-blue-900/30 p-3 rounded-2xl mb-4 text-sm text-blue-200 flex gap-2 items-start">
           <MapPin size={16} className="text-blue-400 shrink-0 mt-0.5" />
-          <span className="leading-snug">{recomendado.nota}</span>
+          <span className="leading-snug">{recomendado.notas}</span>
         </div>
       )}
 
@@ -134,7 +136,7 @@ function HorarioCard({
           
           {verAlternativas && (
             <div className="mt-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-              {alternativas.map((alt: Horario, idx: number) => (
+              {alternativas.map((alt: RawScheduleEntry, idx: number) => (
                 <div key={idx} className="flex justify-between items-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl">
                   <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
                   <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
@@ -170,21 +172,48 @@ export default function HomePage() {
 
   const { diaSeleccionado, cursaArquitectura, duermeEnCordoba } = escenario;
 
-  // Filtrar materias del día usando la misma lógica que el motor
-  const materiasDelDia = MATERIAS.filter((m) => {
-    if (m.dia !== diaSeleccionado) return false;
-    if (m.obligatoria) return true;
-    if (diaSeleccionado === 'martes' && m.nombre === 'Arquitectura' && cursaArquitectura) return true;
-    return false;
-  }).sort((a, b) => {
-    const [h1, m1] = a.horaInicio.split(':').map(Number);
-    const [h2, m2] = b.horaInicio.split(':').map(Number);
-    return (h1 * 60 + m1) - (h2 * 60 + m2);
+  // Filtrar materias del día usando la nueva lógica de escenarios y bloques
+  const map: Record<string, number> = {
+    'lunes': 1, 'martes': 2, 'miercoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'domingo': 0
+  };
+  const targetDay = map[diaSeleccionado];
+  const refDate = new Date();
+  while (refDate.getDay() !== targetDay) {
+    refDate.setDate(refDate.getDate() + 1);
+  }
+
+  const scenarioId = determineScenario({ 
+    tuesdayHasArquitectura: cursaArquitectura,
+    referenceDate: refDate 
   });
+  const scenarioData = scenarioId ? findScenario(scenarioId) : null;
+
+  let materiasDelDia: Array<{nombre: string, horaInicio: string, horaFin: string}> = [];
+  if (scenarioData) {
+    subjectData.subjects.forEach(subject => {
+      if (scenarioData.activeSubjectIds.includes(subject.id)) {
+        subject.classBlocks.forEach(block => {
+          if (block.day === diaSeleccionado) {
+            materiasDelDia.push({
+              nombre: subject.name,
+              horaInicio: block.startTime,
+              horaFin: block.endTime
+            });
+          }
+        });
+      }
+    });
+    // Ordenar cronológicamente
+    materiasDelDia.sort((a, b) => {
+      const [h1, m1] = a.horaInicio.split(':').map(Number);
+      const [h2, m2] = b.horaInicio.split(':').map(Number);
+      return (h1 * 60 + m1) - (h2 * 60 + m2);
+    });
+  }
 
   // Ejecutar motor
-  const recomendacionIda = calcularColectivos(diaSeleccionado, 'ida', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
-  const recomendacionVuelta = calcularColectivos(diaSeleccionado, 'vuelta', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
+  const recomendacionIda = calcularColectivos(diaSeleccionado as DayOfWeek, 'ida', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
+  const recomendacionVuelta = calcularColectivos(diaSeleccionado as DayOfWeek, 'vuelta', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
 
   // Capitalizar día
   const diaCapitalizado = diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1);

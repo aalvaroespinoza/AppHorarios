@@ -3,10 +3,10 @@ import { Telegraf } from 'telegraf';
 import { setupRoutes } from './routes/botRoutes.js';
 import { startNotifier } from './services/notifier.js';
 
-const token = process.env.BOT_TOKEN;
+const token = process.env.TELEGRAM_BOT_TOKEN;
 
 if (!token) {
-  console.error('ERROR: Falta BOT_TOKEN en el archivo .env');
+  console.error('ERROR: Falta TELEGRAM_BOT_TOKEN en el archivo .env');
   process.exit(1);
 }
 

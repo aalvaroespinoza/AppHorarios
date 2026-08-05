@@ -1,23 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Telegraf } from 'telegraf';
-import { calcularColectivoRecomendado } from '../../../../engine/recommendationEngine';
-import { DiaSemana } from '../../../../types';
+import { calcularColectivos } from '../../../../lib/engine/recommendation-engine';
+import { DayOfWeek } from '../../../../types/common';
 
-// Forzamos la runtime de Node, ya que Telegraf usa dependencias de Node.js que no soportan Edge
-// export const runtime = 'nodejs';
-
-// Soportamos varias nomenclaturas de variables de entorno
-const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
-const chatId = process.env.TELEGRAM_CHAT_ID || process.env.MY_CHAT_ID;
-const CRON_SECRET = process.env.CRON_SECRET || 'apphorarios_secret_123'; // Valor por defecto fallback local
+const botToken = process.env.TELEGRAM_BOT_TOKEN;
+const chatId = process.env.TELEGRAM_CHAT_ID;
+const CRON_SECRET = process.env.CRON_SECRET;
 
 // Helper estático
-const getDiaActual = (): DiaSemana => {
-  const map: Record<number, DiaSemana> = {
+const getDiaActual = (d: Date): DayOfWeek | 'domingo' => {
+  const map: Record<number, DayOfWeek | 'domingo'> = {
     0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
     4: 'jueves', 5: 'viernes', 6: 'sabado'
   };
-  return map[new Date().getDay()];
+  return map[d.getDay()];
 };
 
 export async function GET(req: NextRequest) {
@@ -38,22 +34,28 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const dia = getDiaActual();
-  if (dia === 'domingo') {
-    return NextResponse.json({ status: 'ok', sent: false, reason: 'Es domingo, sin clases' });
+  const ahora = new Date();
+  ahora.setHours(ahora.getHours() - 3); // Ajuste UTC-3 para Argentina
+
+  const dia = getDiaActual(ahora);
+  if (dia === 'domingo' || dia === 'lunes' || dia === 'sabado') {
+    return NextResponse.json({ status: 'ok', sent: false, reason: `Es ${dia}, sin clases presenciales.` });
   }
 
+  const diaAcademico = dia as DayOfWeek;
   let mensajeEnviado = false;
   const bot = new Telegraf(botToken);
-  const ahora = new Date();
   
   // Convertimos la hora actual a minutos
+  const hStr = ahora.getHours().toString().padStart(2, '0');
+  const mStr = ahora.getMinutes().toString().padStart(2, '0');
+  const horaActualHHMM = `${hStr}:${mStr}`;
   const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
 
   // Función interna para evaluar y despachar
   const evaluarYNotificar = async (tipo: 'ida' | 'vuelta') => {
     // Por defecto el bot asume que cursa Arquitectura (true) y duerme en Cba (true)
-    const rec = calcularColectivoRecomendado(dia, tipo, true, true);
+    const rec = calcularColectivos(diaAcademico, tipo, true, true, horaActualHHMM);
     if (rec.recomendado) {
       const [h, m] = rec.recomendado.horaSalida.split(':').map(Number);
       const minutosSalida = h * 60 + m;

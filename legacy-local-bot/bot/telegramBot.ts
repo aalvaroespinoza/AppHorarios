@@ -1,22 +1,22 @@
 import 'dotenv/config';
 import { Telegraf } from 'telegraf';
 import cron from 'node-cron';
-import { calcularColectivoRecomendado } from '../engine/recommendationEngine';
-import { DiaSemana } from '../types';
+import { calcularColectivos } from '../lib/engine/recommendation-engine';
+import { DayOfWeek } from '../types/common';
 
-const botToken = process.env.BOT_TOKEN;
-const chatId = process.env.MY_CHAT_ID;
+const botToken = process.env.TELEGRAM_BOT_TOKEN;
+const chatId = process.env.TELEGRAM_CHAT_ID;
 
 if (!botToken) {
-  console.error('ERROR: Falta BOT_TOKEN en el archivo .env');
+  console.error('ERROR: Falta TELEGRAM_BOT_TOKEN en el archivo .env');
   process.exit(1);
 }
 
 const bot = new Telegraf(botToken);
 
 // Función de utilidad para obtener el día actual
-const getDiaActual = (): DiaSemana => {
-  const dias: Record<number, DiaSemana> = {
+const getDiaActual = (): DayOfWeek | 'domingo' => {
+  const dias: Record<number, DayOfWeek | 'domingo'> = {
     0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
     4: 'jueves', 5: 'viernes', 6: 'sabado'
   };
@@ -34,8 +34,10 @@ bot.command('hoy', (ctx) => {
     return ctx.reply('☕ Hoy es Domingo. No viajás, ¡a descansar!');
   }
 
-  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
-  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', true, true);
+  const diaAcademico = dia as DayOfWeek;
+  const hora = '00:00'; // O hora actual simulada si usaran
+  const recIda = calcularColectivos(diaAcademico, 'ida', true, true, hora);
+  const recVuelta = calcularColectivos(diaAcademico, 'vuelta', true, true, hora);
 
   if (!recIda.recomendado) {
     return ctx.reply('Hoy no tienes viajes programados según tu configuración.');
@@ -46,13 +48,13 @@ bot.command('hoy', (ctx) => {
   respuesta += `*IDA:*\n`;
   respuesta += `Empresa: ${recIda.recomendado.empresa}\n`;
   respuesta += `Salida: ${recIda.recomendado.horaSalida}\n`;
-  if (recIda.recomendado.nota) respuesta += `Nota: _${recIda.recomendado.nota}_\n`;
+  if (recIda.recomendado.notas) respuesta += `Nota: _${recIda.recomendado.notas}_\n`;
   
   if (recVuelta.recomendado) {
     respuesta += `\n*VUELTA:*\n`;
     respuesta += `Empresa: ${recVuelta.recomendado.empresa}\n`;
     respuesta += `Salida: ${recVuelta.recomendado.horaSalida}\n`;
-    if (recVuelta.recomendado.nota) respuesta += `Nota: _${recVuelta.recomendado.nota}_\n`;
+    if (recVuelta.recomendado.notas) respuesta += `Nota: _${recVuelta.recomendado.notas}_\n`;
   } else {
     respuesta += `\n*VUELTA:*\nNo hay viaje de vuelta programado.`;
   }
@@ -63,7 +65,7 @@ bot.command('hoy', (ctx) => {
 // CRON JOB: Se ejecuta cada 1 minuto
 cron.schedule('* * * * *', () => {
   if (!chatId) {
-    console.log('Cron: MY_CHAT_ID no configurado. Se salta la alerta.');
+    console.log('Cron: TELEGRAM_CHAT_ID no configurado. Se salta la alerta.');
     return;
   }
 
@@ -73,8 +75,10 @@ cron.schedule('* * * * *', () => {
   const ahora = new Date();
   const minutosDelDia = ahora.getHours() * 60 + ahora.getMinutes();
 
+  const diaAcademico = dia as DayOfWeek;
+  const hora = `${ahora.getHours().toString().padStart(2, '0')}:${ahora.getMinutes().toString().padStart(2, '0')}`;
   const revisarViaje = (tipo: 'ida' | 'vuelta') => {
-    const rec = calcularColectivoRecomendado(dia, tipo, true, true);
+    const rec = calcularColectivos(diaAcademico, tipo, true, true, hora);
     if (rec.recomendado) {
       const [h, m] = rec.recomendado.horaSalida.split(':').map(Number);
       const minutosSalida = h * 60 + m;

@@ -2,13 +2,13 @@
   "name": "app-horarios-bot",
   "version": "1.0.0",
   "description": "Bot de Telegram para horarios de colectivo",
-  "main": "src/index.js",
+  "main": "legacy-local-bot/index.js",
   "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "bot": "tsx watch src/bot/telegramBot.ts",
+    "bot": "tsx watch legacy-local-bot/bot/telegramBot.ts",
     "webhook": "node scripts/setWebhook.js"
   },
   "dependencies": {

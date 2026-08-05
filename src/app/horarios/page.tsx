@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import { useEscenario } from '@/hooks/useEscenario';
-import { HORARIOS_COLECTIVOS } from '@/data/horariosDB';
+import { rawScheduleEntries } from '@/data/schedules';
 import NativeCard from '@/components/ui/NativeCard';
 import { Bus, MapPin } from 'lucide-react';
 import ContextualControls from '@/features/schedule/ContextualControls';
-import { Horario } from '@/types';
+import type { RawScheduleEntry } from '@/types/schedule';
 
 export default function HorariosPage() {
   const escenario = useEscenario();
@@ -15,18 +15,19 @@ export default function HorariosPage() {
   if (!escenario.isMounted) return <div className="min-h-screen bg-black" />;
 
   const { diaSeleccionado } = escenario;
-  const horariosDelDia = HORARIOS_COLECTIVOS[diaSeleccionado] || [];
   
-  const horariosFiltrados = horariosDelDia.filter(h => h.tipo === tab);
+  const horariosDelDia = rawScheduleEntries.filter(h => h.dia === diaSeleccionado) || [];
+  const horariosFiltrados = horariosDelDia.filter(h => h.sentido === tab);
 
-  // Agrupar por empresa
+  // Agrupar por empresa (capitalizando el nombre)
   const agrupadosPorEmpresa = horariosFiltrados.reduce((acc, curr) => {
-    if (!acc[curr.empresa]) {
-      acc[curr.empresa] = [];
+    const empresaCapitalized = curr.empresa.charAt(0).toUpperCase() + curr.empresa.slice(1);
+    if (!acc[empresaCapitalized]) {
+      acc[empresaCapitalized] = [];
     }
-    acc[curr.empresa].push(curr);
+    acc[empresaCapitalized].push(curr);
     return acc;
-  }, {} as Record<string, Horario[]>);
+  }, {} as Record<string, RawScheduleEntry[]>);
 
   // Ordenar horarios dentro de cada empresa de menor a mayor
   Object.keys(agrupadosPorEmpresa).forEach(empresa => {
@@ -76,10 +77,10 @@ export default function HorariosPage() {
                     {horarios.map((h, idx) => (
                       <li key={idx} className="p-4 flex items-center justify-between hover:bg-zinc-800/20 transition-colors">
                         <span className="text-2xl font-semibold text-zinc-100">{h.horaSalida}</span>
-                        {h.nota && (
+                        {h.notas && (
                           <div className="bg-zinc-800/50 text-zinc-400 text-[11px] px-2 py-1 rounded-md flex items-center gap-1 max-w-[150px] text-right">
                             <MapPin size={10} className="shrink-0" />
-                            <span className="leading-tight text-left">{h.nota}</span>
+                            <span className="leading-tight text-left">{h.notas}</span>
                           </div>
                         )}
                       </li>

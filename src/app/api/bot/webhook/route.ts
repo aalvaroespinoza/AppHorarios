@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Telegraf, Markup } from 'telegraf';
 import { calcularColectivos } from '../../../../lib/engine/recommendation-engine';
-import { MATERIAS } from '../../../../data/materiasDB';
-import { DiaSemana, Horario } from '../../../../types';
+import { DayOfWeek } from '../../../../types/common';
+import { RawScheduleEntry } from '../../../../types/schedule';
 
-const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
+const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
 if (!botToken) {
   console.error('Falta TELEGRAM_BOT_TOKEN');
@@ -13,8 +13,8 @@ if (!botToken) {
 const bot = new Telegraf(botToken || 'DUMMY_TOKEN_FOR_BUILD');
 
 // --- Helpers estáticos ---
-const getDiaActual = (): DiaSemana => {
-  const map: Record<number, DiaSemana> = {
+const getDiaActual = (): DayOfWeek | 'domingo' => {
+  const map: Record<number, DayOfWeek | 'domingo'> = {
     0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
     4: 'jueves', 5: 'viernes', 6: 'sabado'
   };
@@ -24,8 +24,8 @@ const getDiaActual = (): DiaSemana => {
   return map[d.getDay()];
 };
 
-const getDiaManana = (): DiaSemana => {
-  const map: Record<number, DiaSemana> = {
+const getDiaManana = (): DayOfWeek | 'domingo' => {
+  const map: Record<number, DayOfWeek | 'domingo'> = {
     0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
     4: 'jueves', 5: 'viernes', 6: 'sabado'
   };
@@ -64,13 +64,14 @@ bot.start((ctx) => {
 
 const handleHoy = (ctx: any) => {
   const dia = getDiaActual();
-  if (dia === 'domingo') {
-    return ctx.reply('☕ Hoy es Domingo. No viajás, ¡a descansar!', mainMenu);
+  if (dia === 'domingo' || dia === 'lunes' || dia === 'sabado') {
+    return ctx.reply(`☕ Hoy es ${dia}. No viajás, ¡a descansar!`, mainMenu);
   }
-
+  
+  const diaAcademico = dia as DayOfWeek;
   const horaActual = getHoraActualArgHHMM();
-  const recIda = calcularColectivos(dia, 'ida', true, true, horaActual);
-  const recVuelta = calcularColectivos(dia, 'vuelta', true, true, horaActual);
+  const recIda = calcularColectivos(diaAcademico, 'ida', true, true, horaActual);
+  const recVuelta = calcularColectivos(diaAcademico, 'vuelta', true, true, horaActual);
 
   if (!recIda.recomendado && !recVuelta.recomendado) {
     return ctx.reply('Hoy ya no tienes viajes recomendados disponibles.', mainMenu);
@@ -103,12 +104,13 @@ bot.action('cmd_hoy', handleHoy);
 
 const handleManana = (ctx: any) => {
   const dia = getDiaManana();
-  if (dia === 'domingo' || dia === 'sabado') {
+  if (dia === 'domingo' || dia === 'sabado' || dia === 'lunes') {
     return ctx.reply(`🏖️ Mañana es ${dia.charAt(0).toUpperCase() + dia.slice(1)}. No cursás, a disfrutar.`, mainMenu);
   }
 
+  const diaAcademico = dia as DayOfWeek;
   // Se pasa 00:00 para asegurar que traiga todos los horarios del día de mañana
-  const recIda = calcularColectivos(dia, 'ida', true, true, '00:00');
+  const recIda = calcularColectivos(diaAcademico, 'ida', true, true, '00:00');
   
   if (!recIda.recomendado) {
     return ctx.reply(`Mañana ${dia.charAt(0).toUpperCase() + dia.slice(1)} no tienes viajes programados.`, mainMenu);
@@ -125,13 +127,18 @@ bot.action('cmd_manana', handleManana);
 
 const handleEstado = (ctx: any) => {
   const dia = getDiaActual();
+  if (dia === 'domingo' || dia === 'lunes' || dia === 'sabado') {
+    return ctx.reply('No hay viajes programados para hoy.', mainMenu);
+  }
+  
+  const diaAcademico = dia as DayOfWeek;
   const horaActual = getHoraActualArgHHMM();
-  const recIda = calcularColectivos(dia, 'ida', true, true, horaActual);
-  const recVuelta = calcularColectivos(dia, 'vuelta', true, true, horaActual);
+  const recIda = calcularColectivos(diaAcademico, 'ida', true, true, horaActual);
+  const recVuelta = calcularColectivos(diaAcademico, 'vuelta', true, true, horaActual);
   
   // Como calcularColectivos ya filtra los del pasado y devuelve el próximo como recomendado,
   // simplemente usamos ese
-  let proximo: Horario | null = recIda.recomendado || recVuelta.recomendado;
+  let proximo: RawScheduleEntry | null = recIda.recomendado || recVuelta.recomendado;
   
   if (!proximo) {
     return ctx.reply('No hay más viajes programados para hoy.', mainMenu);

@@ -6,6 +6,18 @@ import type { RawScheduleEntry } from '@/types/schedule';
  */
 export const rawScheduleEntries: RawScheduleEntry[] = [
   // ─── IDA (Despeñaderos → UTN) ─────────────────────────────
+  // Mañana (migrados)
+  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:30', horaLlegada: '07:45', dia: 'martes' },
+  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:40', horaLlegada: '07:55', dia: 'martes' },
+  { empresa: 'intercordoba', sentido: 'ida', horaSalida: '06:45', horaLlegada: '08:00', dia: 'martes' },
+  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:30', horaLlegada: '07:45', dia: 'miercoles' },
+  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:40', horaLlegada: '07:55', dia: 'miercoles' },
+  { empresa: 'intercordoba', sentido: 'ida', horaSalida: '06:45', horaLlegada: '08:00', dia: 'miercoles' },
+  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:30', horaLlegada: '07:45', dia: 'jueves' },
+  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:40', horaLlegada: '07:55', dia: 'jueves' },
+  { empresa: 'intercordoba', sentido: 'ida', horaSalida: '06:45', horaLlegada: '08:00', dia: 'jueves' },
+
+  // Tarde/Noche
   { empresa: 'canelo', sentido: 'ida', horaSalida: '11:00', horaLlegada: '12:15', dia: 'martes', notas: 'Directo' },
   { empresa: 'intercordoba', sentido: 'ida', horaSalida: '12:00', horaLlegada: '13:10', dia: 'martes' },
   { empresa: 'lumasa', sentido: 'ida', horaSalida: '16:00', horaLlegada: '17:15', dia: 'martes' },

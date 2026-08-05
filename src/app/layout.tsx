@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import BottomTabBar from "@/components/layout/BottomTabBar";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import { EscenarioProvider } from "@/context/EscenarioContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +24,7 @@ export const metadata: Metadata = {
     statusBarStyle: "black-translucent",
     title: "Horarios",
   },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -32,11 +35,13 @@ export default function RootLayout({
   return (
     <html lang="es" className="dark">
       <body className={`${inter.className} bg-black text-white min-h-screen antialiased`}>
-        {/* pb-24 asegura que la BottomTabBar no tape el contenido del final */}
-        <main className="pb-24">
-          {children}
-        </main>
-        <BottomTabBar />
+        <EscenarioProvider>
+          <main className="pb-24">
+            {children}
+          </main>
+          <BottomTabBar />
+          <ServiceWorkerRegister />
+        </EscenarioProvider>
       </body>
     </html>
   );

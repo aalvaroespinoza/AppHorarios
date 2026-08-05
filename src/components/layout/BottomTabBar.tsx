@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Home, Clock, Settings } from 'lucide-react';
+import { Home, Clock, Settings, Sunrise, Info } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -14,8 +14,10 @@ export default function BottomTabBar() {
 
   const tabs = [
     { id: '/', label: 'Hoy', icon: Home },
+    { id: '/manana', label: 'Mañana', icon: Sunrise },
     { id: '/horarios', label: 'Horarios', icon: Clock },
     { id: '/configuracion', label: 'Ajustes', icon: Settings },
+    { id: '/acerca', label: 'Acerca', icon: Info },
   ];
 
   return (

@@ -3,9 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import NativeCard from '@/components/ui/NativeCard';
-import { RefreshCw, Moon, Sun, Info, ChevronRight, Settings2 } from 'lucide-react';
+import NativeSwitch from '@/components/ui/NativeSwitch';
+import { useEscenario } from '@/hooks/useEscenario';
+import { RefreshCw, Moon, Sun, Info, ChevronRight, Settings2, Building2, Bed } from 'lucide-react';
 
 export default function Configuracion() {
+  const { cursaArquitectura, setCursaArquitectura, duermeEnCordoba, setDuermeEnCordoba } = useEscenario();
   const [temaOscuro, setTemaOscuro] = useState(true);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -73,6 +76,34 @@ export default function Configuracion() {
                   className="block w-12 h-7 bg-zinc-300 dark:bg-zinc-700 rounded-full cursor-pointer transition-colors peer-checked:bg-[#34c759] relative after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:after:translate-x-5 peer-checked:after:border-white shadow-inner"
                 ></label>
               </div>
+            </div>
+
+            {/* TOGGLE ARQUITECTURA */}
+            <div className="flex items-center justify-between p-4 border-t border-zinc-200 dark:border-zinc-800/50">
+              <div className="flex items-center gap-3">
+                <div className="bg-orange-500 p-1.5 rounded-lg text-white shadow-sm">
+                  <Building2 size={18} />
+                </div>
+                <div>
+                  <span className="font-medium text-[16px] block leading-tight">Cursar Arquitectura</span>
+                  <span className="text-[12px] text-zinc-500 block leading-tight mt-0.5">Habilitar viajes tempranos (08:00)</span>
+                </div>
+              </div>
+              <NativeSwitch checked={cursaArquitectura} onChange={setCursaArquitectura} />
+            </div>
+
+            {/* TOGGLE CORDOBA */}
+            <div className="flex items-center justify-between p-4 border-t border-zinc-200 dark:border-zinc-800/50">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-500 p-1.5 rounded-lg text-white shadow-sm">
+                  <Bed size={18} />
+                </div>
+                <div>
+                  <span className="font-medium text-[16px] block leading-tight">Dormir en Córdoba</span>
+                  <span className="text-[12px] text-zinc-500 block leading-tight mt-0.5">Cancela regresos a Despeñaderos</span>
+                </div>
+              </div>
+              <NativeSwitch checked={duermeEnCordoba} onChange={setDuermeEnCordoba} />
             </div>
           </NativeCard>
         </section>

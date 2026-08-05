@@ -1,3 +1,5 @@
+"use client";
+
 import { ScenarioTag } from '@/components/ui/ScenarioTag';
 import { SubjectList } from '@/features/schedule/SubjectList';
 import { BusScheduleList } from '@/features/schedule/BusScheduleList';
@@ -8,14 +10,11 @@ import { rawScheduleEntries } from '@/data/schedules';
 import { companies } from '@/data/companies';
 import { formatDateLong } from '@/utils/date';
 
+import { useEscenario } from '@/hooks/useEscenario';
+
 interface DayViewProps {
   /** Fecha a mostrar. La lógica se computa a partir de ella. */
   date: Date;
-  /**
-   * Desambiguación de Arquitectura para los martes.
-   * Se podrá conectar a un toggle en el futuro.
-   */
-  tuesdayHasArquitectura?: boolean;
 }
 
 /**
@@ -28,13 +27,13 @@ interface DayViewProps {
  */
 export function DayView({
   date,
-  tuesdayHasArquitectura = false,
 }: DayViewProps) {
+  const { cursaArquitectura, isMounted } = useEscenario();
   /* ── 1. Fecha ─────────────────────────────────────────────── */
   const dateLabel = formatDateLong(date);
 
   /* ── 2. Escenario + materias ──────────────────────────────── */
-  const scenarioId = determineScenario({ tuesdayHasArquitectura, referenceDate: date });
+  const scenarioId = determineScenario({ tuesdayHasArquitectura: cursaArquitectura, referenceDate: date });
   const scenario = scenarioId ? findScenario(scenarioId) : null;
 
   const activeSubjects = scenario

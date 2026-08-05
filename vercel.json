@@ -1,3 +1,9 @@
 {
-  "name": "app-horarios"
+  "name": "app-horarios",
+  "crons": [
+    {
+      "path": "/api/bot/cron?secret=un_secreto_muy_seguro_123",
+      "schedule": "0 10 * * *"
+    }
+  ]
 }

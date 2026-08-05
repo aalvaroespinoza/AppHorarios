@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-const token = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
+const token = process.env.TELEGRAM_BOT_TOKEN;
 const url = process.argv[2];
 
 if (!token || !url) {
