@@ -35,8 +35,8 @@ export default function HorariosPage() {
   });
 
   return (
-    <main className="min-h-screen bg-black text-white font-sans max-w-md mx-auto pb-24 overflow-y-auto">
-      <header className="bg-zinc-900/90 backdrop-blur-md border-b border-zinc-800/80 pt-12 pb-4 px-4 sticky top-0 z-10 flex flex-col shadow-lg gap-4">
+    <main className="min-h-screen bg-black text-white font-sans max-w-md mx-auto pb-24">
+      <header className="bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800/80 pt-10 pb-4 px-4 sticky top-0 z-50 flex flex-col shadow-xl gap-4">
         <div>
           <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2 mb-1">
             <Bus className="text-blue-500" />
@@ -45,19 +45,28 @@ export default function HorariosPage() {
           <p className="text-sm text-zinc-400 leading-tight">Consulta la grilla completa de colectivos agrupada por empresa.</p>
         </div>
         
+        {/* Indicador de Vista Actual */}
+        <div className={`flex items-center justify-center py-2 px-3 rounded-lg border font-bold text-sm tracking-wide ${
+          tab === 'ida' 
+            ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
+            : 'bg-[#34c759]/10 border-[#34c759]/30 text-[#34c759]'
+        }`}>
+          Viendo: {tab === 'ida' ? 'IDA hacia Córdoba' : 'VUELTA hacia Despeñaderos'}
+        </div>
+        
         {/* Tabs Ida/Vuelta */}
-        <div className="flex bg-zinc-800/50 p-1 rounded-xl">
+        <div className="flex bg-zinc-800/80 p-1.5 rounded-xl shadow-inner">
           <button 
             onClick={() => setTab('ida')}
-            className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all ${tab === 'ida' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'ida' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
-            Ida (hacia Cba)
+            Ida
           </button>
           <button 
             onClick={() => setTab('vuelta')}
-            className={`flex-1 py-1.5 text-sm font-medium rounded-lg transition-all ${tab === 'vuelta' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'vuelta' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
           >
-            Vuelta (hacia Desp)
+            Vuelta
           </button>
         </div>
       </header>
