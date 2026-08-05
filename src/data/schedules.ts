@@ -69,8 +69,22 @@ const INTERCORDOBA_VUELTA = [
 const LUMASA_VUELTA_SALIDA = ['06:30', '08:30', '10:40', '12:30', '14:30', '16:30', '18:30', '20:30'];
 const LUMASA_VUELTA_LLEGADA = ['07:30', '09:30', '11:40', '13:30', '15:30', '17:30', '19:30', '21:30'];
 
-// ─── VUELTA Sábados (solo Intercordoba "diario" corre sábados) ──────────
+// ─── SÁBADOS ─────────────────────────────────────────────────────────────
+// Canelo confirmado por teléfono (terminal a terminal). Lumasa
+// calculado con el mismo desfase Río Tercero/Despeñaderos/Córdoba que ya
+// usa la tabla de lunes a viernes. Intercordoba ya estaba cargado (servicios "diario").
+
+const CANELO_IDA_SABADO = ['07:00'];
+const INTERCORDOBA_IDA_SABADO = ['08:45', '14:00', '18:45', '20:00', '22:25']; // ya son "diario"
+
+const LUMASA_IDA_SABADO_SALIDA = ['09:20', '11:20', '13:20', '15:20', '17:20', '19:20', '21:20'];
+const LUMASA_IDA_SABADO_LLEGADA = ['10:20', '12:20', '14:20', '16:20', '18:20', '20:20', '22:20'];
+
+const CANELO_VUELTA_SABADO = ['13:30'];
 const INTERCORDOBA_VUELTA_SABADO = ['07:00', '10:30', '17:00', '18:15', '20:00'];
+
+const LUMASA_VUELTA_SABADO_SALIDA = ['08:30', '10:40', '12:30', '14:30', '16:30', '18:30', '20:30'];
+const LUMASA_VUELTA_SABADO_LLEGADA = ['09:30', '11:40', '13:30', '15:30', '17:30', '19:30', '21:30'];
 
 export const rawScheduleEntries: RawScheduleEntry[] = [
   ...expandirLunesAViernes('canelo', 'ida', CANELO_IDA),
@@ -80,12 +94,34 @@ export const rawScheduleEntries: RawScheduleEntry[] = [
   ...expandirLunesAViernes('intercordoba', 'vuelta', INTERCORDOBA_VUELTA),
   ...expandirLunesAViernes('lumasa', 'vuelta', LUMASA_VUELTA_SALIDA, LUMASA_VUELTA_LLEGADA),
 
-  ...INTERCORDOBA_VUELTA_SABADO.map((horaSalida): RawScheduleEntry => ({
-    empresa: 'intercordoba',
-    sentido: 'vuelta',
-    horaSalida,
+  ...CANELO_IDA_SABADO.map((horaSalida): RawScheduleEntry => ({
+    empresa: 'canelo', sentido: 'ida', horaSalida,
     horaLlegada: sumarMinutos(horaSalida, VIAJE_ESTIMADO_MIN),
+    dia: 'sabado', notas: 'confirmado por teléfono · llegada estimada',
+  })),
+  ...INTERCORDOBA_IDA_SABADO.map((horaSalida): RawScheduleEntry => ({
+    empresa: 'intercordoba', sentido: 'ida', horaSalida,
+    horaLlegada: sumarMinutos(horaSalida, VIAJE_ESTIMADO_MIN),
+    dia: 'sabado', notas: 'servicio diario · llegada estimada',
+  })),
+  ...LUMASA_IDA_SABADO_SALIDA.map((horaSalida, i): RawScheduleEntry => ({
+    empresa: 'lumasa', sentido: 'ida', horaSalida,
+    horaLlegada: LUMASA_IDA_SABADO_LLEGADA[i],
     dia: 'sabado',
-    notas: 'solo servicios diarios · llegada estimada',
+  })),
+  ...CANELO_VUELTA_SABADO.map((horaSalida): RawScheduleEntry => ({
+    empresa: 'canelo', sentido: 'vuelta', horaSalida,
+    horaLlegada: sumarMinutos(horaSalida, VIAJE_ESTIMADO_MIN),
+    dia: 'sabado', notas: 'confirmado por teléfono · llegada estimada',
+  })),
+  ...INTERCORDOBA_VUELTA_SABADO.map((horaSalida): RawScheduleEntry => ({
+    empresa: 'intercordoba', sentido: 'vuelta', horaSalida,
+    horaLlegada: sumarMinutos(horaSalida, VIAJE_ESTIMADO_MIN),
+    dia: 'sabado', notas: 'solo servicios diarios · llegada estimada',
+  })),
+  ...LUMASA_VUELTA_SABADO_SALIDA.map((horaSalida, i): RawScheduleEntry => ({
+    empresa: 'lumasa', sentido: 'vuelta', horaSalida,
+    horaLlegada: LUMASA_VUELTA_SABADO_LLEGADA[i],
+    dia: 'sabado',
   })),
 ];
