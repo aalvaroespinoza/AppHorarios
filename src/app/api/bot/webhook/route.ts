@@ -134,7 +134,7 @@ bot.action('cmd_manana', handleManana);
 const handleEstado = (ctx: any) => {
   const dia = getDiaActual();
   if (dia === 'domingo' || dia === 'lunes' || dia === 'sabado') {
-    return ctx.reply('No hay viajes programados para hoy.', mainMenu);
+    return ctx.reply('No hay viajes hoy.');
   }
   
   const diaAcademico = dia as DayOfWeek;
@@ -152,7 +152,7 @@ const handleEstado = (ctx: any) => {
   }
   
   if (!proximo) {
-    return ctx.reply('No hay más viajes programados para hoy.', mainMenu);
+    return ctx.reply('No hay más viajes hoy.');
   }
   
   const d = new Date();
@@ -169,13 +169,10 @@ const handleEstado = (ctx: any) => {
   if (horas > 0) tiempoStr += `${horas}h `;
   tiempoStr += `${mins}m`;
   
-  let msjRespuesta = `⏳ Faltan *${tiempoStr}* para tu próximo viaje:\n*${proximo.empresa}* a las *${horaReal}*`;
-  if (esVuelta) {
-     msjRespuesta += ` (pasa por el Ministerio). Sale de Terminal a las ${proximo.horaSalida}.`;
-  } else {
-     msjRespuesta += `.`;
-  }
-  return ctx.replyWithMarkdown(msjRespuesta, mainMenu);
+  // Mensaje corto y directo para centro de notificaciones iOS
+  const msjRespuesta = `🚌 Próximo en ${tiempoStr}: ${proximo.empresa} a las ${horaReal} (${esVuelta ? 'Vuelta' : 'Ida'})`;
+  
+  return ctx.reply(msjRespuesta);
 };
 
 bot.command('estado', handleEstado);
@@ -207,7 +204,7 @@ const handleAyuda = (ctx: any) => {
   const msg = `ℹ️ *Comandos Disponibles:*\n\n` +
               `/hoy - Muestra recomendaciones para el día actual.\n` +
               `/manana - Muestra recomendaciones para el día siguiente.\n` +
-              `/estado - Muestra el tiempo restante para el próximo viaje.\n` +
+              `/estado - Muestra el tiempo restante en formato corto.\n` +
               `/horarios - Muestra la grilla completa del día.\n` +
               `/ayuda - Muestra este mensaje.`;
   return ctx.replyWithMarkdown(msg, mainMenu);
@@ -216,13 +213,13 @@ const handleAyuda = (ctx: any) => {
 bot.command('ayuda', handleAyuda);
 
 // --- Endpoint de Next.js (Serverless Handler) ---
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
     const body = await req.json();
     await bot.handleUpdate(body);
-    return NextResponse.json({ ok: true });
+    return new Response('OK', { status: 200 });
   } catch (error) {
     console.error('Error procesando el webhook de Telegram:', error);
-    return NextResponse.json({ ok: false, error: 'Internal Error' }, { status: 200 });
+    return new Response('OK', { status: 200 });
   }
 }
