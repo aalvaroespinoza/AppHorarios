@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
 import ContextualControls from '@/features/schedule/ContextualControls';
 import NativeCard from '@/components/ui/NativeCard';
@@ -203,21 +203,27 @@ function HorarioCard({
             <span>Ver siguientes {currentAlternativas.length} opciones</span>
             {verAlternativas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
-          
-          {verAlternativas && (
-            <div className="mt-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-              {currentAlternativas.map((alt: RawScheduleEntry, idx: number) => (
-                <button 
-                  key={idx} 
-                  onClick={() => handleSwap(alt, idx)}
-                  className="flex justify-between items-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl hover:bg-zinc-800/80 transition-colors text-left"
-                >
-                  <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
-                  <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <AnimatePresence>
+            {verAlternativas && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="mt-4 flex flex-col gap-2 overflow-hidden"
+              >
+                {currentAlternativas.map((alt: RawScheduleEntry, idx: number) => (
+                  <button 
+                    key={idx} 
+                    onClick={() => handleSwap(alt, idx)}
+                    className="flex justify-between items-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl hover:bg-zinc-800/80 transition-colors text-left"
+                  >
+                    <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
+                    <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
     </NativeCard>
