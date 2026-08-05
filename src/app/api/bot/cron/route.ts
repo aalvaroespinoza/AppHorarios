@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Telegraf } from 'telegraf';
-import { calcularColectivos } from '../../../../lib/engine/recommendation-engine';
+import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '../../../../lib/engine/recommendation-engine';
 import { DayOfWeek } from '../../../../types/common';
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
@@ -57,13 +57,14 @@ export async function GET(req: NextRequest) {
     // Por defecto el bot asume que cursa Arquitectura (true) y duerme en Cba (true)
     const rec = calcularColectivos(diaAcademico, tipo, true, true, horaActualHHMM);
     if (rec.recomendado) {
-      const [h, m] = rec.recomendado.horaSalida.split(':').map(Number);
+      const horaReal = tipo === 'vuelta' ? addMinutes(rec.recomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : rec.recomendado.horaSalida;
+      const [h, m] = horaReal.split(':').map(Number);
       const minutosSalida = h * 60 + m;
       const diff = minutosSalida - minutosActuales;
 
       // 3. Regla de negocio: Exactamente 15 minutos de diferencia
       if (diff === 15) {
-        let msg = `🏃‍♂️ ¡Atención! En 15 min sale el *${rec.recomendado.empresa}* de las *${rec.recomendado.horaSalida}*. ¡Andá saliendo para la parada!`;
+        let msg = `🏃‍♂️ ¡Atención! En 15 min pasa el *${rec.recomendado.empresa}* por tu parada (Ministerio) a las *${horaReal}*. ¡Andá saliendo! (Salió de Terminal a las ${rec.recomendado.horaSalida})`;
         if (tipo === 'ida') {
           msg = `🧉 ¡Buen día! Prepará el termo y el mate que en 15 minutos tenés que salir para tomar el *${rec.recomendado.empresa}* de las *${rec.recomendado.horaSalida}*`;
         }

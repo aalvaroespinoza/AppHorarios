@@ -5,9 +5,19 @@ import { subjectData } from '@/data/subjects';
 import { rawScheduleEntries } from '@/data/schedules';
 
 // Funciones puras para manipulación de horas (formato "HH:MM")
-const timeToMins = (timeHHMM: string): number => {
+export const OFFSET_PARADA_VUELTA_MIN = 10;
+
+export const timeToMins = (timeHHMM: string): number => {
   const [hours, minutes] = timeHHMM.split(':').map(Number);
   return hours * 60 + minutes;
+};
+
+export const addMinutes = (timeHHMM: string, minsToAdd: number): string => {
+  const [hours, minutes] = timeHHMM.split(':').map(Number);
+  let totalMins = hours * 60 + minutes + minsToAdd;
+  const h = Math.floor(totalMins / 60) % 24;
+  const m = totalMins % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 };
 
 const subMinutes = (timeHHMM: string, minsToSub: number): string => {

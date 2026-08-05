@@ -43,9 +43,9 @@ function weekdayInArgentina(date: Date): number {
 
 /**
  * Días de la semana que tienen cursada.
- * Lunes y sábado están excluidos actualmente.
+ * Sábado y domingo están excluidos actualmente.
  */
-const SCHOOL_DAYS: DayOfWeek[] = ['martes', 'miercoles', 'jueves', 'viernes'];
+const SCHOOL_DAYS: DayOfWeek[] = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
 
 // ─── Funciones puras de soporte ───────────────────────────────────────────────
 

@@ -6,6 +6,7 @@ import type { Subject } from './subject';
  * Cada escenario puede implicar distintos horarios de colectivo.
  */
 export type ScenarioId =
+  | 'lunes'
   | 'martes-con-arquitectura'
   | 'martes-sin-arquitectura'
   | 'miercoles'

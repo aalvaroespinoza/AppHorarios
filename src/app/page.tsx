@@ -5,7 +5,7 @@ import { useEscenario } from '@/hooks/useEscenario';
 import ContextualControls from '@/features/schedule/ContextualControls';
 import NativeCard from '@/components/ui/NativeCard';
 import RelojMinimalista from '@/components/RelojMinimalista';
-import { calcularColectivos } from '@/lib/engine/recommendation-engine';
+import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
 import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon } from 'lucide-react';
@@ -61,7 +61,10 @@ function HorarioCard({
   const [verAlternativas, setVerAlternativas] = useState(false);
   const { recomendado, alternativas } = recomendacion;
   
-  const minutosFaltantes = useCountdown(recomendado?.horaSalida);
+  const esVuelta = titulo.toLowerCase().includes('vuelta');
+  const horaReal = esVuelta && recomendado ? addMinutes(recomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : recomendado?.horaSalida;
+  
+  const minutosFaltantes = useCountdown(horaReal);
 
   if (!recomendado) {
     return (
@@ -90,9 +93,19 @@ function HorarioCard({
       <div className="flex justify-between items-end mb-6">
         <div>
           <p className="text-zinc-400 font-medium text-sm mb-1">{recomendado.empresa}</p>
-          <div className="text-6xl font-sans tracking-tight text-white leading-none">
-            {recomendado.horaSalida}
-          </div>
+          {esVuelta ? (
+            <>
+              <div className="text-sm text-zinc-400 mb-1 mt-2">Sale de Terminal: {recomendado.horaSalida}</div>
+              <div className="text-sm text-blue-400 mb-1 font-medium">Pasa por tu parada (Ministerio):</div>
+              <div className="text-6xl font-sans tracking-tight text-white leading-none">
+                {horaReal}
+              </div>
+            </>
+          ) : (
+            <div className="text-6xl font-sans tracking-tight text-white leading-none">
+              {recomendado.horaSalida}
+            </div>
+          )}
         </div>
         {minutosFaltantes !== null && (
           <div className={`font-medium px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm ${

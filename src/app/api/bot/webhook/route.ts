@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Telegraf, Markup } from 'telegraf';
-import { calcularColectivos } from '../../../../lib/engine/recommendation-engine';
+import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '../../../../lib/engine/recommendation-engine';
 import { DayOfWeek } from '../../../../types/common';
 import { RawScheduleEntry } from '../../../../types/schedule';
 import { getScheduleForDay } from '../../../../lib/services';
@@ -90,10 +90,13 @@ const handleHoy = (ctx: any) => {
   }
   
   if (recVuelta.recomendado) {
+    const horaTerminal = recVuelta.recomendado.horaSalida;
+    const horaMinisterio = addMinutes(horaTerminal, OFFSET_PARADA_VUELTA_MIN);
     respuesta += `\n*VUELTA:*\n`;
-    respuesta += `🏆 Recomendado: *${recVuelta.recomendado.horaSalida}* (${recVuelta.recomendado.empresa})\n`;
+    respuesta += `🏆 Sale de Terminal: *${horaTerminal}* (${recVuelta.recomendado.empresa})\n`;
+    respuesta += `📍 *Pasa por tu parada (Ministerio): ${horaMinisterio}*\n`;
     if (recVuelta.alternativas.length > 0) {
-      respuesta += `⏱️ Siguientes: ${recVuelta.alternativas.map(a => a.horaSalida).join(', ')}\n`;
+      respuesta += `⏱️ Siguientes (desde Terminal): ${recVuelta.alternativas.map(a => a.horaSalida).join(', ')}\n`;
     }
   } else {
     respuesta += `\n*VUELTA:*\nNo hay vuelta recomendada.`;
@@ -139,9 +142,14 @@ const handleEstado = (ctx: any) => {
   const recIda = calcularColectivos(diaAcademico, 'ida', true, true, horaActual);
   const recVuelta = calcularColectivos(diaAcademico, 'vuelta', true, true, horaActual);
   
-  // Como calcularColectivos ya filtra los del pasado y devuelve el próximo como recomendado,
-  // simplemente usamos ese
-  let proximo: RawScheduleEntry | null = recIda.recomendado || recVuelta.recomendado;
+  let proximo: RawScheduleEntry | null = null;
+  let esVuelta = false;
+  if (recIda.recomendado) {
+    proximo = recIda.recomendado;
+  } else if (recVuelta.recomendado) {
+    proximo = recVuelta.recomendado;
+    esVuelta = true;
+  }
   
   if (!proximo) {
     return ctx.reply('No hay más viajes programados para hoy.', mainMenu);
@@ -151,7 +159,8 @@ const handleEstado = (ctx: any) => {
   d.setHours(d.getHours() - 3); // UTC-3
   const minutosActuales = d.getHours() * 60 + d.getMinutes();
 
-  const [h, m] = proximo.horaSalida.split(':').map(Number);
+  const horaReal = esVuelta ? addMinutes(proximo.horaSalida, OFFSET_PARADA_VUELTA_MIN) : proximo.horaSalida;
+  const [h, m] = horaReal.split(':').map(Number);
   const diff = (h * 60 + m) - minutosActuales;
   const horas = Math.floor(diff / 60);
   const mins = diff % 60;
@@ -160,7 +169,13 @@ const handleEstado = (ctx: any) => {
   if (horas > 0) tiempoStr += `${horas}h `;
   tiempoStr += `${mins}m`;
   
-  return ctx.replyWithMarkdown(`⏳ Faltan *${tiempoStr}* para tu próximo viaje:\n*${proximo.empresa}* a las *${proximo.horaSalida}*.`, mainMenu);
+  let msjRespuesta = `⏳ Faltan *${tiempoStr}* para tu próximo viaje:\n*${proximo.empresa}* a las *${horaReal}*`;
+  if (esVuelta) {
+     msjRespuesta += ` (pasa por el Ministerio). Sale de Terminal a las ${proximo.horaSalida}.`;
+  } else {
+     msjRespuesta += `.`;
+  }
+  return ctx.replyWithMarkdown(msjRespuesta, mainMenu);
 };
 
 bot.command('estado', handleEstado);
