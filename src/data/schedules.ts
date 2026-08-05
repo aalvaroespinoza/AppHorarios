@@ -70,18 +70,19 @@ const LUMASA_VUELTA_SALIDA = ['06:30', '08:30', '10:40', '12:30', '14:30', '16:3
 const LUMASA_VUELTA_LLEGADA = ['07:30', '09:30', '11:40', '13:30', '15:30', '17:30', '19:30', '21:30'];
 
 // ─── SÁBADOS ─────────────────────────────────────────────────────────────
-// Canelo confirmado por teléfono (terminal a terminal). Lumasa
-// calculado con el mismo desfase Río Tercero/Despeñaderos/Córdoba que ya
-// usa la tabla de lunes a viernes. Intercordoba ya estaba cargado (servicios "diario").
+// Canelo confirmado por teléfono (terminal a terminal).
+// Lumasa: Los horarios de ida los sábados parten desde Río Tercero a las 
+// 08:30, 10:30, 12:30, 14:30, 16:30, 18:30 y 20:30, y necesitan el offset 
+// de tiempo correspondiente (50 min aprox) para Despeñaderos.
 
 const CANELO_IDA_SABADO = ['07:00'];
-const INTERCORDOBA_IDA_SABADO = ['08:45', '14:00', '18:45', '20:00', '22:25']; // ya son "diario"
+const INTERCORDOBA_IDA_SABADO = ['08:45', '10:45', '14:00', '16:45', '18:45', '20:00', '22:25'];
 
 const LUMASA_IDA_SABADO_SALIDA = ['09:20', '11:20', '13:20', '15:20', '17:20', '19:20', '21:20'];
 const LUMASA_IDA_SABADO_LLEGADA = ['10:20', '12:20', '14:20', '16:20', '18:20', '20:20', '22:20'];
 
 const CANELO_VUELTA_SABADO = ['13:30'];
-const INTERCORDOBA_VUELTA_SABADO = ['07:00', '10:30', '17:00', '18:15', '20:00'];
+const INTERCORDOBA_VUELTA_SABADO = ['10:30', '12:15', '13:15', '17:00', '18:15', '20:00'];
 
 const LUMASA_VUELTA_SABADO_SALIDA = ['08:30', '10:40', '12:30', '14:30', '16:30', '18:30', '20:30'];
 const LUMASA_VUELTA_SABADO_LLEGADA = ['09:30', '11:40', '13:30', '15:30', '17:30', '19:30', '21:30'];

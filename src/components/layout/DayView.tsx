@@ -48,9 +48,8 @@ export function DayView({
     : [];
 
   /* ── 3. Horarios del día ──────────────────────────────────── */
-  const busSchedule = scenario
-    ? getScheduleForDay(scenario.day, rawScheduleEntries, Object.values(companies))
-    : { ida: [], vuelta: [] };
+  const currentDow = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'][currentDate.getDay()] as DayOfWeek;
+  const busSchedule = getScheduleForDay(currentDow, rawScheduleEntries, Object.values(companies));
 
   /* ── Render ───────────────────────────────────────────────── */
   return (
