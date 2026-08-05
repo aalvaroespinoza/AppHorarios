@@ -224,9 +224,13 @@ export default function HomePage() {
     });
   }
 
+  // Determinar si estamos viendo "hoy" o un día futuro/pasado
+  const isToday = new Date().getDay() === targetDay;
+  const horaParaFiltro = isToday ? horaActualHHMM : '00:00';
+
   // Ejecutar motor
-  const recomendacionIda = calcularColectivos(diaSeleccionado as DayOfWeek, 'ida', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
-  const recomendacionVuelta = calcularColectivos(diaSeleccionado as DayOfWeek, 'vuelta', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
+  const recomendacionIda = calcularColectivos(diaSeleccionado as DayOfWeek, 'ida', cursaArquitectura, duermeEnCordoba, horaParaFiltro);
+  const recomendacionVuelta = calcularColectivos(diaSeleccionado as DayOfWeek, 'vuelta', cursaArquitectura, duermeEnCordoba, horaParaFiltro);
 
   // Capitalizar día
   const diaCapitalizado = diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1);

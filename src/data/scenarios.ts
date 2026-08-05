@@ -11,13 +11,6 @@ import type { Scenario } from '@/types/scenario';
  */
 export const scenarios: Scenario[] = [
   {
-    id: 'lunes',
-    label: 'Lunes',
-    day: 'lunes',
-    activeSubjectIds: ['ingles-i'],
-    description: 'Inglés I, 11:20 a 12:50',
-  },
-  {
     id: 'martes-con-arquitectura',
     label: 'Martes con Arquitectura',
     day: 'martes',
