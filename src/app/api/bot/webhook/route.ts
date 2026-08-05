@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Telegraf, Markup } from 'telegraf';
 import { calcularColectivoRecomendado } from '../../../../engine/recommendationEngine';
 import { MATERIAS } from '../../../../data/materiasDB';
-import { DiaSemana, EscenarioUsuario, Horario } from '../../../../types';
+import { DiaSemana, Horario } from '../../../../types';
 
 // Soportamos ambos nombres de variables de entorno para evitar problemas
 const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
@@ -28,12 +28,6 @@ const getDiaManana = (): DiaSemana => {
     4: 'jueves', 5: 'viernes', 6: 'sabado'
   };
   return map[(new Date().getDay() + 1) % 7];
-};
-
-const escenarioPorDefecto: EscenarioUsuario = {
-  cursaArquitecturaMartes: true,
-  duermeEnCordobaViernes: true,
-  minutosCaminandoTerminal: 10,
 };
 
 const mainMenu = Markup.inlineKeyboard([
@@ -64,8 +58,9 @@ const handleHoy = (ctx: any) => {
     return ctx.reply('☕ Hoy es Domingo. No viajás, ¡a descansar!', mainMenu);
   }
 
-  const recIda = calcularColectivoRecomendado(dia, 'ida', escenarioPorDefecto);
-  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', escenarioPorDefecto);
+  // Por defecto el bot asume que cursa arquitectura (true) y duerme allá (true)
+  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
+  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', true, true);
 
   if (!recIda.recomendado) {
     return ctx.reply('Hoy no tienes viajes programados según tu configuración.', mainMenu);
@@ -103,11 +98,11 @@ const handleManana = (ctx: any) => {
   let materiasDelDia = MATERIAS.filter((m) => m.dia === dia);
   materiasDelDia = materiasDelDia.filter((m) => {
     if (m.obligatoria) return true;
-    if (dia === 'martes' && m.nombre === 'Arquitectura' && escenarioPorDefecto.cursaArquitecturaMartes) return true;
+    if (dia === 'martes' && m.nombre === 'Arquitectura' && true) return true;
     return false;
   });
 
-  const recIda = calcularColectivoRecomendado(dia, 'ida', escenarioPorDefecto);
+  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
   
   if (!recIda.recomendado || materiasDelDia.length === 0) {
     return ctx.reply(`Mañana ${dia.charAt(0).toUpperCase() + dia.slice(1)} no tienes viajes programados.`, mainMenu);
@@ -133,8 +128,8 @@ bot.action('cmd_manana', handleManana);
 
 const handleEstado = (ctx: any) => {
   const dia = getDiaActual();
-  const recIda = calcularColectivoRecomendado(dia, 'ida', escenarioPorDefecto);
-  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', escenarioPorDefecto);
+  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
+  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', true, true);
   
   const ahora = new Date();
   const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();

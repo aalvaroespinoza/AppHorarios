@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { Telegraf } from 'telegraf';
 import cron from 'node-cron';
 import { calcularColectivoRecomendado } from '../engine/recommendationEngine';
-import { DiaSemana, EscenarioUsuario } from '../types';
+import { DiaSemana } from '../types';
 
 const botToken = process.env.BOT_TOKEN;
 const chatId = process.env.MY_CHAT_ID;
@@ -13,13 +13,6 @@ if (!botToken) {
 }
 
 const bot = new Telegraf(botToken);
-
-// Escenario estático simulado para el bot backend
-const escenarioPorDefecto: EscenarioUsuario = {
-  cursaArquitecturaMartes: true,
-  duermeEnCordobaViernes: true,
-  minutosCaminandoTerminal: 10,
-};
 
 // Función de utilidad para obtener el día actual
 const getDiaActual = (): DiaSemana => {
@@ -37,8 +30,8 @@ bot.command('hoy', (ctx) => {
     return ctx.reply('☕ Hoy es Domingo. No viajás, ¡a descansar!');
   }
 
-  const recIda = calcularColectivoRecomendado(dia, 'ida', escenarioPorDefecto);
-  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', escenarioPorDefecto);
+  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
+  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', true, true);
 
   if (!recIda.recomendado) {
     return ctx.reply('Hoy no tienes viajes programados según tu configuración.');
@@ -77,7 +70,7 @@ cron.schedule('* * * * *', () => {
   const minutosDelDia = ahora.getHours() * 60 + ahora.getMinutes();
 
   const revisarViaje = (tipo: 'ida' | 'vuelta') => {
-    const rec = calcularColectivoRecomendado(dia, tipo, escenarioPorDefecto);
+    const rec = calcularColectivoRecomendado(dia, tipo, true, true);
     if (rec.recomendado) {
       const [h, m] = rec.recomendado.horaSalida.split(':').map(Number);
       const minutosSalida = h * 60 + m;
