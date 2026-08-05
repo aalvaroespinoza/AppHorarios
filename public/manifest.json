@@ -1,60 +1,24 @@
 {
   "name": "AppHorarios",
-  "short_name": "AppHorarios",
-  "description": "Consultá qué colectivo tomar desde Despeñaderos a la UTN Córdoba según tu día de cursada.",
-  "lang": "es",
-  "dir": "ltr",
+  "short_name": "Horarios",
+  "description": "Tu recomendador de colectivos personal offline-first",
   "start_url": "/",
-  "scope": "/",
   "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#2563eb",
   "orientation": "portrait",
-  "background_color": "#f5f5f7",
-  "theme_color": "#0071e3",
-  "categories": ["travel", "utilities", "education"],
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "/icon.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
+      "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
-  ],
-  "shortcuts": [
-    {
-      "name": "Hoy",
-      "short_name": "Hoy",
-      "description": "Ver colectivos para hoy",
-      "url": "/",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
-    },
-    {
-      "name": "Mañana",
-      "short_name": "Mañana",
-      "description": "Ver colectivos para mañana",
-      "url": "/manana",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Pantalla principal de AppHorarios"
-    }
-  ],
-  "prefer_related_applications": false
+  ]
 }

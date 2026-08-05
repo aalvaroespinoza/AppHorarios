@@ -23,7 +23,7 @@ export const calcularColectivoRecomendado = (
   dia: DiaSemana,
   tipo: TipoViaje,
   escenario: EscenarioUsuario
-): { recomendado: Horario | null; alternativas: Horario[] } => {
+): { recomendado: Horario | null; siguiente_disponible: Horario | null; alternativas: Horario[] } => {
   
   // 1. Obtener las materias estáticas para el día solicitado
   let materiasDelDia = MATERIAS.filter((m) => m.dia === dia);
@@ -40,7 +40,7 @@ export const calcularColectivoRecomendado = (
 
   // Si después del filtrado no hay materias presenciales, no hay viaje requerido
   if (materiasDelDia.length === 0) {
-    return { recomendado: null, alternativas: [] };
+    return { recomendado: null, siguiente_disponible: null, alternativas: [] };
   }
 
   // Ordenar cronológicamente (garantiza que [0] es la primera y [length-1] la última)
@@ -70,14 +70,27 @@ export const calcularColectivoRecomendado = (
     // Las alternativas son las 2 opciones previas más cercanas
     const alternativas = opcionesIda.slice(1, 3).map((o) => o.horario);
 
-    return { recomendado, alternativas };
+    // Calcular siguiente_disponible (el bondi que sale después del recomendado, sin importar si llega tarde)
+    let siguiente_disponible: Horario | null = null;
+    if (recomendado) {
+      const todosLosIda = horariosDelDia
+        .filter((h) => h.tipo === 'ida')
+        .sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+      
+      const index = todosLosIda.findIndex(h => timeToMins(h.horaSalida) === timeToMins(recomendado.horaSalida) && h.empresa === recomendado.empresa);
+      if (index !== -1 && index + 1 < todosLosIda.length) {
+        siguiente_disponible = todosLosIda[index + 1];
+      }
+    }
+
+    return { recomendado, siguiente_disponible, alternativas };
     
   } else {
     // 5. Lógica a la inversa para el viaje de vuelta
     
     // Regla de negocio especial: Si es viernes y duerme en Córdoba, no hay vuelta
     if (dia === 'viernes' && escenario.duermeEnCordobaViernes) {
-      return { recomendado: null, alternativas: [] };
+      return { recomendado: null, siguiente_disponible: null, alternativas: [] };
     }
 
     // El Horario Límite de Salida es el tiempo al que el alumno logrará llegar a la terminal
@@ -93,7 +106,10 @@ export const calcularColectivoRecomendado = (
 
     const recomendado = opcionesVuelta.length > 0 ? opcionesVuelta[0] : null;
     const alternativas = opcionesVuelta.slice(1, 3);
+    
+    // El siguiente_disponible para la vuelta es simplemente la segunda opción
+    const siguiente_disponible = opcionesVuelta.length > 1 ? opcionesVuelta[1] : null;
 
-    return { recomendado, alternativas };
+    return { recomendado, siguiente_disponible, alternativas };
   }
 };

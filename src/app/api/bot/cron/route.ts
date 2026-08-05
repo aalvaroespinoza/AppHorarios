@@ -66,9 +66,14 @@ export async function GET(req: NextRequest) {
 
       // 3. Regla de negocio: Exactamente 15 minutos de diferencia
       if (diff === 15) {
+        let msg = `🏃‍♂️ ¡Atención! En 15 min sale el *${rec.recomendado.empresa}* de las *${rec.recomendado.horaSalida}*. ¡Andá saliendo para la parada!`;
+        if (tipo === 'ida') {
+          msg = `🧉 ¡Buen día! Prepará el termo y el mate que en 15 minutos tenés que salir para tomar el *${rec.recomendado.empresa}* de las *${rec.recomendado.horaSalida}*`;
+        }
+        
         await bot.telegram.sendMessage(
           chatId,
-          `🏃‍♂️ ¡Atención! En 15 min sale el *${rec.recomendado.empresa}* de las *${rec.recomendado.horaSalida}*. ¡Andá saliendo para la parada!`,
+          msg,
           { parse_mode: 'Markdown' }
         );
         mensajeEnviado = true;
