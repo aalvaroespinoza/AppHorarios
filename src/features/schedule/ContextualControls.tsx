@@ -27,6 +27,23 @@ export default function ContextualControls() {
     isMounted
   } = useEscenario();
 
+  const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Auto-centrar el día seleccionado
+  React.useEffect(() => {
+    if (!scrollContainerRef.current) return;
+    
+    const activeBtn = scrollContainerRef.current.querySelector('[data-active="true"]') as HTMLButtonElement;
+    if (activeBtn) {
+      const container = scrollContainerRef.current;
+      const scrollLeft = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2);
+      container.scrollTo({
+        left: scrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  }, [diaSeleccionado, isMounted]);
+
   // Prevenir desajustes de hidratación en Server Side Rendering
   if (!isMounted) {
     return <div className="animate-pulse h-24 bg-zinc-900/50 rounded-xl" />;
@@ -49,25 +66,27 @@ export default function ContextualControls() {
       `}} />
 
       {/* 1. Carrusel de Días */}
-      <div className="overflow-x-auto no-scrollbar pb-2 -mx-4 px-4">
-        <div className="flex space-x-2 items-center">
-          {DIAS_SEMANA.map((dia) => {
-            const isSelected = diaSeleccionado === dia.id;
-            return (
-              <button
-                key={dia.id}
-                onClick={() => setDiaSeleccionado(dia.id)}
-                className={`whitespace-nowrap transition-all duration-200 ${
-                  isSelected 
-                    ? 'bg-zinc-800 text-white font-semibold rounded-full px-4 py-2' 
-                    : 'text-zinc-500 font-medium rounded-full px-4 py-2 hover:bg-zinc-800/40'
-                }`}
-              >
-                {dia.label}
-              </button>
-            );
-          })}
-        </div>
+      <div 
+        ref={scrollContainerRef}
+        className="overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 flex space-x-2 items-center"
+      >
+        {DIAS_SEMANA.map((dia) => {
+          const isSelected = diaSeleccionado === dia.id;
+          return (
+            <button
+              key={dia.id}
+              data-active={isSelected}
+              onClick={() => setDiaSeleccionado(dia.id)}
+              className={`whitespace-nowrap transition-all duration-200 ${
+                isSelected 
+                  ? 'bg-zinc-800 text-white font-semibold rounded-full px-4 py-2' 
+                  : 'text-zinc-500 font-medium rounded-full px-4 py-2 hover:bg-zinc-800/40'
+              }`}
+            >
+              {dia.label}
+            </button>
+          );
+        })}
       </div>
 
       {/* Controles Dinámicos (solo martes o viernes) */}
