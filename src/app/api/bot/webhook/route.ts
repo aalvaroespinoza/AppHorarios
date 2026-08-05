@@ -3,6 +3,9 @@ import { Telegraf, Markup } from 'telegraf';
 import { calcularColectivos } from '../../../../lib/engine/recommendation-engine';
 import { DayOfWeek } from '../../../../types/common';
 import { RawScheduleEntry } from '../../../../types/schedule';
+import { getScheduleForDay } from '../../../../lib/services';
+import { rawScheduleEntries } from '../../../../data/schedules';
+import { companies } from '../../../../data/companies';
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -163,6 +166,39 @@ const handleEstado = (ctx: any) => {
 bot.command('estado', handleEstado);
 bot.action('cmd_estado', handleEstado);
 
+const handleHorarios = (ctx: any) => {
+  const dia = getDiaActual();
+  if (dia === 'domingo' || dia === 'lunes') {
+    return ctx.reply('No hay colectivos para UTN los días ' + dia + '.', mainMenu);
+  }
+  
+  const schedule = getScheduleForDay(dia as DayOfWeek, rawScheduleEntries, Object.values(companies));
+  
+  let msg = `📅 *Grilla Completa - ${dia.toUpperCase()}*\n\n`;
+  msg += `*IDA (Despeñaderos → Cba)*\n`;
+  if (schedule.ida.length === 0) msg += `No hay servicios.\n`;
+  schedule.ida.forEach(v => msg += `- ${v.departureTime} (${v.companyName})\n`);
+  
+  msg += `\n*VUELTA (Cba → Despeñaderos)*\n`;
+  if (schedule.vuelta.length === 0) msg += `No hay servicios.\n`;
+  schedule.vuelta.forEach(v => msg += `- ${v.departureTime} (${v.companyName})\n`);
+  
+  return ctx.replyWithMarkdown(msg, mainMenu);
+};
+
+bot.command('horarios', handleHorarios);
+
+const handleAyuda = (ctx: any) => {
+  const msg = `ℹ️ *Comandos Disponibles:*\n\n` +
+              `/hoy - Muestra recomendaciones para el día actual.\n` +
+              `/manana - Muestra recomendaciones para el día siguiente.\n` +
+              `/estado - Muestra el tiempo restante para el próximo viaje.\n` +
+              `/horarios - Muestra la grilla completa del día.\n` +
+              `/ayuda - Muestra este mensaje.`;
+  return ctx.replyWithMarkdown(msg, mainMenu);
+};
+
+bot.command('ayuda', handleAyuda);
 
 // --- Endpoint de Next.js (Serverless Handler) ---
 export async function POST(req: NextRequest) {

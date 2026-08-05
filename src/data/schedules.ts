@@ -1,39 +1,91 @@
-import type { RawScheduleEntry } from '@/types/schedule';
+import type { RawScheduleEntry, Direction } from '@/types/schedule';
+import type { DayOfWeek } from '@/types/common';
 
 /**
- * Base de datos cruda de horarios de colectivos.
- * Se separa en ida (hacia UTN) y vuelta (hacia Despeñaderos).
+ * Base de datos cruda de horarios de colectivo.
+ * Relevados a mano de carteles/capturas de Canelo, Lumasa e Intercordoba
+ * (agosto 2026). NO inventar ni completar con datos supuestos — si falta
+ * un horario, mejor dejarlo afuera que inventarlo.
+ *
+ * Canelo avisó cambio de horarios próximo — reconfirmar antes de un viaje
+ * real. Tel: (03547) 497666.
  */
+
+const DIAS_HABILES: DayOfWeek[] = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes'];
+
+// Minutos de viaje estimados cuando la empresa no publica hora de llegada
+const VIAJE_ESTIMADO_MIN = 65;
+
+function sumarMinutos(hora: string, minutos: number): string {
+  const [h, m] = hora.split(':').map(Number);
+  const total = h * 60 + m + minutos;
+  const hh = Math.floor((total / 60) % 24).toString().padStart(2, '0');
+  const mm = (total % 60).toString().padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
+function expandirLunesAViernes(
+  empresa: string,
+  sentido: Direction,
+  horas: string[],
+  llegadas?: string[], // si no se pasa, se estima
+  notas?: string,
+): RawScheduleEntry[] {
+  const entries: RawScheduleEntry[] = [];
+  DIAS_HABILES.forEach((dia) => {
+    horas.forEach((horaSalida, i) => {
+      const horaLlegada = llegadas ? llegadas[i] : sumarMinutos(horaSalida, VIAJE_ESTIMADO_MIN);
+      entries.push({
+        empresa,
+        sentido,
+        horaSalida,
+        horaLlegada,
+        dia,
+        notas: llegadas ? notas : (notas ? `${notas} · llegada estimada` : 'llegada estimada'),
+      });
+    });
+  });
+  return entries;
+}
+
+// ─── IDA (Despeñaderos → Córdoba), Lunes a Viernes ───────────────────────
+const CANELO_IDA = [
+  '05:30', '06:30', '06:40', '07:50', '09:20', '10:50',
+  '12:20', '13:40', '15:20', '16:55', '18:20', '20:00', '21:20',
+];
+
+const INTERCORDOBA_IDA = [
+  '06:45', '08:45', '11:35', '14:00', '16:00', '18:45', '20:00', '20:45', '22:25',
+];
+
+const LUMASA_IDA_SALIDA = ['07:20', '09:20', '11:20', '13:20', '15:20', '17:20', '19:20', '21:20'];
+const LUMASA_IDA_LLEGADA = ['08:20', '10:20', '12:20', '14:20', '16:20', '18:20', '20:20', '22:20'];
+
+// ─── VUELTA (Córdoba → Despeñaderos), Lunes a Viernes ────────────────────
+const INTERCORDOBA_VUELTA = [
+  '07:00', '09:45', '10:30', '12:15', '13:15', '14:00', '16:00', '17:00', '18:15', '20:00', '21:15',
+];
+
+const LUMASA_VUELTA_SALIDA = ['06:30', '08:30', '10:40', '12:30', '14:30', '16:30', '18:30', '20:30'];
+const LUMASA_VUELTA_LLEGADA = ['07:30', '09:30', '11:40', '13:30', '15:30', '17:30', '19:30', '21:30'];
+
+// ─── VUELTA Sábados (solo Intercordoba "diario" corre sábados) ──────────
+const INTERCORDOBA_VUELTA_SABADO = ['07:00', '10:30', '17:00', '18:15', '20:00'];
+
 export const rawScheduleEntries: RawScheduleEntry[] = [
-  // ─── IDA (Despeñaderos → UTN) ─────────────────────────────
-  // Mañana (migrados)
-  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:30', horaLlegada: '07:45', dia: 'martes' },
-  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:40', horaLlegada: '07:55', dia: 'martes' },
-  { empresa: 'intercordoba', sentido: 'ida', horaSalida: '06:45', horaLlegada: '08:00', dia: 'martes' },
-  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:30', horaLlegada: '07:45', dia: 'miercoles' },
-  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:40', horaLlegada: '07:55', dia: 'miercoles' },
-  { empresa: 'intercordoba', sentido: 'ida', horaSalida: '06:45', horaLlegada: '08:00', dia: 'miercoles' },
-  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:30', horaLlegada: '07:45', dia: 'jueves' },
-  { empresa: 'canelo', sentido: 'ida', horaSalida: '06:40', horaLlegada: '07:55', dia: 'jueves' },
-  { empresa: 'intercordoba', sentido: 'ida', horaSalida: '06:45', horaLlegada: '08:00', dia: 'jueves' },
+  ...expandirLunesAViernes('canelo', 'ida', CANELO_IDA),
+  ...expandirLunesAViernes('intercordoba', 'ida', INTERCORDOBA_IDA),
+  ...expandirLunesAViernes('lumasa', 'ida', LUMASA_IDA_SALIDA, LUMASA_IDA_LLEGADA),
 
-  // Tarde/Noche
-  { empresa: 'canelo', sentido: 'ida', horaSalida: '11:00', horaLlegada: '12:15', dia: 'martes', notas: 'Directo' },
-  { empresa: 'intercordoba', sentido: 'ida', horaSalida: '12:00', horaLlegada: '13:10', dia: 'martes' },
-  { empresa: 'lumasa', sentido: 'ida', horaSalida: '16:00', horaLlegada: '17:15', dia: 'martes' },
-  { empresa: 'sierras', sentido: 'ida', horaSalida: '17:00', horaLlegada: '18:10', dia: 'martes' },
-  { empresa: 'sierras', sentido: 'ida', horaSalida: '17:00', horaLlegada: '18:10', dia: 'jueves' },
-  { empresa: 'sierras', sentido: 'ida', horaSalida: '17:00', horaLlegada: '18:10', dia: 'viernes' },
+  ...expandirLunesAViernes('intercordoba', 'vuelta', INTERCORDOBA_VUELTA),
+  ...expandirLunesAViernes('lumasa', 'vuelta', LUMASA_VUELTA_SALIDA, LUMASA_VUELTA_LLEGADA),
 
-  // ─── VUELTA (UTN → Despeñaderos) ──────────────────────────
-  { empresa: 'canelo', sentido: 'vuelta', horaSalida: '17:30', horaLlegada: '18:45', dia: 'martes' },
-  { empresa: 'lumasa', sentido: 'vuelta', horaSalida: '22:45', horaLlegada: '23:55', dia: 'martes' },
-  { empresa: 'sierras', sentido: 'vuelta', horaSalida: '23:00', horaLlegada: '00:10', dia: 'martes' },
-  { empresa: 'intercordoba', sentido: 'vuelta', horaSalida: '23:15', horaLlegada: '00:30', dia: 'martes' },
-
-  { empresa: 'lumasa', sentido: 'vuelta', horaSalida: '22:45', horaLlegada: '23:55', dia: 'jueves' },
-  { empresa: 'sierras', sentido: 'vuelta', horaSalida: '23:00', horaLlegada: '00:10', dia: 'jueves' },
-
-  { empresa: 'lumasa', sentido: 'vuelta', horaSalida: '22:45', horaLlegada: '23:55', dia: 'viernes' },
-  { empresa: 'intercordoba', sentido: 'vuelta', horaSalida: '23:15', horaLlegada: '00:30', dia: 'viernes' },
+  ...INTERCORDOBA_VUELTA_SABADO.map((horaSalida): RawScheduleEntry => ({
+    empresa: 'intercordoba',
+    sentido: 'vuelta',
+    horaSalida,
+    horaLlegada: sumarMinutos(horaSalida, VIAJE_ESTIMADO_MIN),
+    dia: 'sabado',
+    notas: 'solo servicios diarios · llegada estimada',
+  })),
 ];
