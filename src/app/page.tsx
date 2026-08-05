@@ -63,7 +63,23 @@ function HorarioCard({
   const [verAlternativas, setVerAlternativas] = useState(false);
   const [yaTomado, setYaTomado] = useState(false);
   const [storageKey, setStorageKey] = useState('');
-  const { recomendado, alternativas } = recomendacion;
+  
+  const [currentRecomendado, setCurrentRecomendado] = useState<RawScheduleEntry | null>(recomendacion.recomendado);
+  const [currentAlternativas, setCurrentAlternativas] = useState<RawScheduleEntry[]>(recomendacion.alternativas);
+
+  useEffect(() => {
+    setCurrentRecomendado(recomendacion.recomendado);
+    setCurrentAlternativas(recomendacion.alternativas);
+  }, [recomendacion]);
+
+  const handleSwap = (alt: RawScheduleEntry, idx: number) => {
+    if (!currentRecomendado) return;
+    const newAlts = [...currentAlternativas];
+    newAlts[idx] = currentRecomendado;
+    newAlts.sort((a, b) => a.horaSalida.localeCompare(b.horaSalida));
+    setCurrentRecomendado(alt);
+    setCurrentAlternativas(newAlts);
+  };
   
   useEffect(() => {
     // Usar la fecha local para construir la clave
@@ -89,11 +105,11 @@ function HorarioCard({
   };
   
   const esVuelta = titulo.toLowerCase().includes('vuelta');
-  const horaReal = esVuelta && recomendado ? addMinutes(recomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : recomendado?.horaSalida;
+  const horaReal = esVuelta && currentRecomendado ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado?.horaSalida;
   
   const minutosFaltantes = useCountdown(horaReal);
 
-  if (!recomendado) {
+  if (!currentRecomendado) {
     return (
       <NativeCard className="flex flex-col items-center justify-center py-12 text-center gap-4">
         <div className="w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center border border-zinc-700">
@@ -132,10 +148,10 @@ function HorarioCard({
 
       <div className="flex justify-between items-end mb-6">
         <div>
-          <p className="text-zinc-400 font-medium text-sm mb-1">{recomendado.empresa}</p>
+          <p className="text-zinc-400 font-medium text-sm mb-1">{currentRecomendado.empresa}</p>
           {esVuelta ? (
             <>
-              <div className="text-sm text-zinc-400 mb-1 mt-2">Sale de Terminal: {recomendado.horaSalida}</div>
+              <div className="text-sm text-zinc-400 mb-1 mt-2">Sale de Terminal: {currentRecomendado.horaSalida}</div>
               <div className="text-sm text-blue-400 mb-1 font-medium">Pasa por tu parada (Ministerio):</div>
               <div className="text-6xl font-sans tracking-tight text-white leading-none">
                 {horaReal}
@@ -143,7 +159,7 @@ function HorarioCard({
             </>
           ) : (
             <div className="text-6xl font-sans tracking-tight text-white leading-none">
-              {recomendado.horaSalida}
+              {currentRecomendado.horaSalida}
             </div>
           )}
         </div>
@@ -170,30 +186,34 @@ function HorarioCard({
         )}
       </div>
 
-      {recomendado.notas && (
+      {currentRecomendado.notas && (
         <div className="bg-blue-950/20 border border-blue-900/30 p-3 rounded-2xl mb-4 text-sm text-blue-200 flex gap-2 items-start">
           <MapPin size={16} className="text-blue-400 shrink-0 mt-0.5" />
-          <span className="leading-snug">{recomendado.notas}</span>
+          <span className="leading-snug">{currentRecomendado.notas}</span>
         </div>
       )}
 
-      {alternativas.length > 0 && (
+      {currentAlternativas.length > 0 && (
         <div className="border-t border-zinc-800/80 pt-4 mt-2">
           <button 
             onClick={() => setVerAlternativas(!verAlternativas)}
             className="flex items-center justify-between w-full text-sm text-zinc-400 hover:text-white transition-colors py-1"
           >
-            <span>Ver siguientes {alternativas.length} opciones</span>
+            <span>Ver siguientes {currentAlternativas.length} opciones</span>
             {verAlternativas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
           
           {verAlternativas && (
             <div className="mt-4 flex flex-col gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
-              {alternativas.map((alt: RawScheduleEntry, idx: number) => (
-                <div key={idx} className="flex justify-between items-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl">
+              {currentAlternativas.map((alt: RawScheduleEntry, idx: number) => (
+                <button 
+                  key={idx} 
+                  onClick={() => handleSwap(alt, idx)}
+                  className="flex justify-between items-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl hover:bg-zinc-800/80 transition-colors text-left"
+                >
                   <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
                   <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
-                </div>
+                </button>
               ))}
             </div>
           )}
@@ -241,7 +261,7 @@ export default function HomePage() {
   });
   const scenarioData = scenarioId ? findScenario(scenarioId) : null;
 
-  let materiasDelDia: Array<{nombre: string, horaInicio: string, horaFin: string}> = [];
+  let materiasDelDia: Array<{nombre: string, horaInicio: string, horaFin: string, color?: string}> = [];
   if (scenarioData) {
     subjectData.subjects.forEach(subject => {
       if (scenarioData.activeSubjectIds.includes(subject.id)) {
@@ -250,7 +270,8 @@ export default function HomePage() {
             materiasDelDia.push({
               nombre: subject.name,
               horaInicio: block.startTime,
-              horaFin: block.endTime
+              horaFin: block.endTime,
+              color: subject.color
             });
           }
         });
@@ -316,8 +337,22 @@ export default function HomePage() {
             {diaCapitalizado}
           </h1>
         </div>
-        <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm">
-          <RelojMinimalista />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              const map: Record<number, DayOfWeek> = {
+                0: 'lunes', 1: 'lunes', 2: 'martes', 3: 'miercoles',
+                4: 'jueves', 5: 'viernes', 6: 'sabado'
+              };
+              escenario.setDiaSeleccionado(map[new Date().getDay()]);
+            }}
+            className="text-blue-400 font-bold text-sm bg-blue-500/10 px-3 py-1.5 rounded-full hover:bg-blue-500/20 transition-colors"
+          >
+            Hoy
+          </button>
+          <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm">
+            <RelojMinimalista />
+          </div>
         </div>
       </header>
 
@@ -367,6 +402,9 @@ export default function HomePage() {
                     }`}>
                       {showLineInside && <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 -ml-8"><TimeLine /></div>}
                       <h3 className={`font-semibold text-base flex items-center gap-2 ${isFinished ? 'text-zinc-300' : 'text-white'}`}>
+                        {materia.color && (
+                          <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${materia.color.split(' ')[0]}`} />
+                        )}
                         {materia.nombre}
                         {isFinished && <CheckCircle2 size={16} className="text-zinc-500" />}
                       </h3>

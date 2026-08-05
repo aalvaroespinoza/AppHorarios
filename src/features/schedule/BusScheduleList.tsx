@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from 'react';
 import type { ScheduleForDay } from '@/lib/services/schedule.service';
 import { BusServiceCard } from './BusServiceCard';
 
@@ -6,43 +9,20 @@ interface BusScheduleListProps {
 }
 
 /**
- * Etiqueta de grupo (IDA / VUELTA) con contador de servicios.
- */
-function GroupLabel({
-  label,
-  count,
-  dotClass,
-}: {
-  label: string;
-  count: number;
-  dotClass: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 mb-1">
-      <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotClass}`} aria-hidden="true" />
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-secondary)]">
-        {label}
-      </p>
-      <span className="text-[11px] text-[var(--color-text-secondary)] ml-auto">
-        {count} {count === 1 ? 'servicio' : 'servicios'}
-      </span>
-    </div>
-  );
-}
-
-/**
  * BusScheduleList
  *
  * Renderiza los servicios de colectivo agrupados por sentido:
- *   IDA (Despeñaderos → UTN) primero,
- *   VUELTA (UTN → Despeñaderos) segundo.
+ *   IDA (Despeñaderos → UTN)
+ *   VUELTA (UTN → Despeñaderos)
  *
- * Cada grupo muestra un empty state si no hay servicios.
- * Puramente presentacional — recibe datos ya procesados.
+ * Utiliza pestañas (Tabs) para no extender el scroll verticalmente.
  */
 export function BusScheduleList({ schedule }: BusScheduleListProps) {
   const { ida, vuelta } = schedule;
   const noServices = ida.length === 0 && vuelta.length === 0;
+  
+  // Default to the tab that has services if possible
+  const [tab, setTab] = useState<'ida' | 'vuelta'>(ida.length > 0 ? 'ida' : 'vuelta');
 
   if (noServices) {
     return (
@@ -57,48 +37,40 @@ export function BusScheduleList({ schedule }: BusScheduleListProps) {
     );
   }
 
+  const activeList = tab === 'ida' ? ida : vuelta;
+
   return (
-    <section aria-label="Horarios de colectivos">
-      <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-secondary)] mb-3">
-        Colectivos
-      </p>
+    <section aria-label="Horarios de colectivos" className="flex flex-col gap-3">
+      <div className="flex bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg">
+        <button 
+          onClick={() => setTab('ida')}
+          className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${tab === 'ida' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'}`}
+        >
+          Ida ({ida.length})
+        </button>
+        <button 
+          onClick={() => setTab('vuelta')}
+          className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${tab === 'vuelta' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'}`}
+        >
+          Vuelta ({vuelta.length})
+        </button>
+      </div>
 
-      <div className="flex flex-col gap-4">
-        {/* ── IDA ─────────────────────────────────────── */}
-        {ida.length > 0 && (
-          <div>
-            <GroupLabel
-              label="Ida"
-              count={ida.length}
-              dotClass="bg-[var(--color-accent)]"
-            />
-            <ul
-              className="divide-y divide-[var(--color-border)]"
-              aria-label="Servicios de ida"
-            >
-              {ida.map((service) => (
-                <BusServiceCard key={service.id} service={service} />
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* ── VUELTA ──────────────────────────────────── */}
-        {vuelta.length > 0 && (
-          <div>
-            <GroupLabel
-              label="Vuelta"
-              count={vuelta.length}
-              dotClass="bg-[#34c759]"
-            />
-            <ul
-              className="divide-y divide-[var(--color-border)]"
-              aria-label="Servicios de vuelta"
-            >
-              {vuelta.map((service) => (
-                <BusServiceCard key={service.id} service={service} />
-              ))}
-            </ul>
+      <div className="min-h-[200px]">
+        {activeList.length > 0 ? (
+          <ul
+            className="divide-y divide-[var(--color-border)] animate-in fade-in slide-in-from-bottom-2 duration-300"
+            aria-label={`Servicios de ${tab}`}
+          >
+            {activeList.map((service) => (
+              <BusServiceCard key={service.id} service={service} />
+            ))}
+          </ul>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-[var(--color-border)] rounded-xl bg-zinc-50 dark:bg-zinc-900/50 mt-2">
+            <p className="text-[14px] font-medium text-[var(--color-text-secondary)]">
+              No hay servicios de {tab} para este día.
+            </p>
           </div>
         )}
       </div>

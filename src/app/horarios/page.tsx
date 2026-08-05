@@ -36,7 +36,7 @@ export default function HorariosPage() {
 
   return (
     <main className="min-h-screen bg-black text-white font-sans max-w-md mx-auto pb-24">
-      <header className="bg-zinc-900/95 backdrop-blur-md border-b border-zinc-800/80 pt-10 pb-4 px-4 sticky top-0 z-50 flex flex-col shadow-xl gap-4">
+      <header className="pt-10 pb-2 px-4 flex flex-col gap-4">
         <div>
           <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2 mb-1">
             <Bus className="text-blue-500" />
@@ -53,9 +53,11 @@ export default function HorariosPage() {
         }`}>
           Viendo: {tab === 'ida' ? 'IDA hacia Córdoba' : 'VUELTA hacia Despeñaderos'}
         </div>
-        
-        {/* Tabs Ida/Vuelta */}
-        <div className="flex bg-zinc-800/80 p-1.5 rounded-xl shadow-inner">
+      </header>
+
+      {/* Tabs Ida/Vuelta fijados (Sticky) */}
+      <div className="sticky top-0 z-50 bg-black/95 backdrop-blur-md px-4 py-3 border-b border-zinc-800/80 shadow-md">
+        <div className="flex bg-zinc-800/80 p-1.5 rounded-xl shadow-inner max-w-md mx-auto">
           <button 
             onClick={() => setTab('ida')}
             className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'ida' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
@@ -69,7 +71,7 @@ export default function HorariosPage() {
             Vuelta
           </button>
         </div>
-      </header>
+      </div>
 
       <div className="p-4 space-y-6 mt-2">
         <ContextualControls />

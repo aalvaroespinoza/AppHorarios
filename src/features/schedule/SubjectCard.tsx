@@ -16,6 +16,9 @@ export function SubjectCard({ subject }: SubjectCardProps) {
     <li className="flex items-start justify-between gap-4 py-3">
       <div className="flex flex-col gap-0.5 min-w-0">
         <div className="flex items-center gap-2">
+          {subject.color && (
+            <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${subject.color.split(' ')[0]}`} />
+          )}
           <span className="text-[15px] font-medium text-[var(--color-text-primary)] truncate leading-snug">
             {subject.name}
           </span>

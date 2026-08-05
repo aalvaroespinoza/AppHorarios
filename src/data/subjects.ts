@@ -14,6 +14,7 @@ export const subjectData: SubjectData = {
       shift: 'mañana',
       modality: 'presencial',
       isOptional: false,
+      color: 'bg-green-200 text-green-900',
       classBlocks: [
         { day: 'lunes', startTime: '11:20', endTime: '12:50' },
       ],
@@ -24,6 +25,7 @@ export const subjectData: SubjectData = {
       shift: 'mañana',
       modality: 'presencial',
       isOptional: false,
+      color: 'bg-pink-300 text-pink-900',
       classBlocks: [
         { day: 'martes', startTime: '08:00', endTime: '11:10' },
         { day: 'jueves', startTime: '08:00', endTime: '11:10' },
@@ -35,6 +37,7 @@ export const subjectData: SubjectData = {
       shift: 'mañana',
       modality: 'presencial',
       isOptional: false,
+      color: 'bg-fuchsia-100 text-fuchsia-900',
       classBlocks: [
         { day: 'miercoles', startTime: '08:00', endTime: '10:25' },
         { day: 'jueves', startTime: '11:20', endTime: '14:00' },
@@ -46,6 +49,7 @@ export const subjectData: SubjectData = {
       shift: 'tarde',
       modality: 'presencial',
       isOptional: false,
+      color: 'bg-green-400 text-green-950',
       classBlocks: [
         { day: 'miercoles', startTime: '12:05', endTime: '15:40' },
         { day: 'jueves', startTime: '14:55', endTime: '18:05' },
@@ -57,6 +61,7 @@ export const subjectData: SubjectData = {
       shift: 'noche',
       modality: 'presencial',
       isOptional: false,
+      color: 'bg-purple-300 text-purple-900',
       classBlocks: [
         { day: 'martes', startTime: '17:20', endTime: '20:40' },
         { day: 'viernes', startTime: '19:55', endTime: '23:05' },
@@ -68,6 +73,7 @@ export const subjectData: SubjectData = {
       shift: 'tarde',
       modality: 'virtual',
       isOptional: false,
+      color: 'bg-blue-300 text-blue-900',
       classBlocks: [
         { day: 'viernes', startTime: '14:00', endTime: '17:10' },
       ],
@@ -78,6 +84,7 @@ export const subjectData: SubjectData = {
       shift: 'mañana',
       modality: 'virtual',
       isOptional: true,
+      color: 'bg-yellow-200 text-yellow-900',
       classBlocks: [
         { day: 'sabado', startTime: '09:00', endTime: '13:00' },
       ],

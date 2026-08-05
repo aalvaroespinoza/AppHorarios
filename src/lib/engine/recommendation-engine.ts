@@ -108,9 +108,15 @@ export const calcularColectivos = (
     }
 
     const ultimoBloque = classBlocks[classBlocks.length - 1];
-    const limiteSalidaTerminal = timeToMins(ultimoBloque.endTime);
+    let limiteSalidaTerminal = timeToMins(ultimoBloque.endTime);
+    
+    // Regla de Viernes ("Dormir en Córdoba"): Si no duerme en Córdoba, permitimos tomar el de las 23:00
+    // aunque la clase termine a las 23:05 (el usuario saldrá antes).
+    if (dia === 'viernes' && !duermeEnCordoba && ultimoBloque.endTime === '23:05') {
+      limiteSalidaTerminal = timeToMins('23:00');
+    }
 
-    // Debe salir después de que termine la última clase
+    // Debe salir después de que termine la última clase (con la excepción de viernes)
     opciones = opciones.filter((h) => timeToMins(h.horaSalida) >= limiteSalidaTerminal);
   }
 

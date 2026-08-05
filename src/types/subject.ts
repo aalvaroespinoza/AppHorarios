@@ -37,6 +37,8 @@ export interface Subject {
   modality: 'presencial' | 'virtual';
   /** Indica si la materia es electiva u opcional */
   isOptional?: boolean;
+  /** Color para la UI (clases de Tailwind) */
+  color?: string;
 }
 
 /**

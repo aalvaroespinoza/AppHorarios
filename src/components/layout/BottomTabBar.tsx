@@ -17,7 +17,6 @@ export default function BottomTabBar() {
     { id: '/manana', label: 'Mañana', icon: Sunrise },
     { id: '/horarios', label: 'Horarios', icon: Clock },
     { id: '/configuracion', label: 'Ajustes', icon: Settings },
-    { id: '/acerca', label: 'Acerca', icon: Info },
   ];
 
   return (
