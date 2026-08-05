@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import type { DayOfWeek } from '@/types/common';
 
 import { ScenarioTag } from '@/components/ui/ScenarioTag';
 import { SubjectList } from '@/features/schedule/SubjectList';
