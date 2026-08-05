@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import NativeCard from '@/components/ui/NativeCard';
-import { RefreshCw, Info, ChevronRight, Settings2, Bus, AlertTriangle, ShieldCheck, Mail } from 'lucide-react';
+import { useBec } from '@/hooks/useBec';
+import { RefreshCw, Info, ChevronRight, Settings2, Bus, AlertTriangle, ShieldCheck, Mail, Ticket } from 'lucide-react';
 
 export default function Configuracion() {
   const [isMounted, setIsMounted] = useState(false);
+  const bec = useBec();
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,7 +36,46 @@ export default function Configuracion() {
 
       <div className="p-4 space-y-6 mt-2">
         
-
+        {/* SECCIÓN: BEC */}
+        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both">
+          <h2 className="text-[13px] uppercase text-[var(--color-text-secondary)] font-medium tracking-wide mb-2 ml-4">
+            Boleto Educativo Cordobés
+          </h2>
+          <NativeCard className="p-5 bg-[var(--color-surface)] border border-[var(--color-border)] flex flex-col gap-3">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-green-500/20 p-2 rounded-xl text-green-500">
+                <Ticket size={24} />
+              </div>
+              <div>
+                <h3 className="font-semibold text-[18px]">Resumen Mensual</h3>
+                <p className="text-sm text-[var(--color-text-secondary)] capitalize">
+                  {new Date().toLocaleString('es-AR', { month: 'long', timeZone: 'America/Argentina/Buenos_Aires' })} {new Date().getFullYear()}
+                </p>
+              </div>
+            </div>
+            
+            <div className="bg-black/5 dark:bg-black/40 rounded-2xl p-4 border border-[var(--color-border)]">
+              <div className="text-center mb-4">
+                <p className="text-[12px] text-[var(--color-text-secondary)] uppercase tracking-wider font-semibold mb-1">Total Histórico</p>
+                <div className="text-4xl font-bold text-[var(--color-text-primary)]">
+                  {bec.obtenerResumenMensual(new Date().getMonth() + 1, new Date().getFullYear()).totalCombinado} <span className="text-xl text-[var(--color-text-secondary)] font-medium">viajes</span>
+                </div>
+              </div>
+              
+              <div className="flex justify-between items-center px-2 pt-4 border-t border-[var(--color-border)]">
+                <div className="text-center">
+                  <p className="text-[12px] text-[var(--color-text-secondary)] mb-1">Idas Usadas</p>
+                  <p className="text-xl font-bold text-green-400">{bec.obtenerResumenMensual(new Date().getMonth() + 1, new Date().getFullYear()).idaTotal}</p>
+                </div>
+                <div className="w-px h-8 bg-[var(--color-border)]" />
+                <div className="text-center">
+                  <p className="text-[12px] text-[var(--color-text-secondary)] mb-1">Vueltas Usadas</p>
+                  <p className="text-xl font-bold text-blue-400">{bec.obtenerResumenMensual(new Date().getMonth() + 1, new Date().getFullYear()).vueltaTotal}</p>
+                </div>
+              </div>
+            </div>
+          </NativeCard>
+        </section>
 
         {/* SECCIÓN: SISTEMA */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75 fill-mode-both">

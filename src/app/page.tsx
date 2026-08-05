@@ -3,13 +3,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
+import { useBec } from '@/hooks/useBec';
 import ContextualControls from '@/features/schedule/ContextualControls';
 import NativeCard from '@/components/ui/NativeCard';
 import RelojMinimalista from '@/components/RelojMinimalista';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
-import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon, CheckCircle2, Ticket } from 'lucide-react';
 import type { RawScheduleEntry } from '@/types/schedule';
 import type { DayOfWeek } from '@/types/common';
 
@@ -54,12 +55,14 @@ function HorarioCard({
   titulo, 
   recomendacion, 
   icon: Icon,
-  direction
+  direction,
+  bec
 }: { 
   titulo: string, 
   recomendacion: ReturnType<typeof calcularColectivos>, 
   icon: React.ElementType,
-  direction: 'ida' | 'vuelta'
+  direction: 'ida' | 'vuelta',
+  bec: ReturnType<typeof useBec>
 }) {
   const [verAlternativas, setVerAlternativas] = useState(false);
   const [yaTomado, setYaTomado] = useState(false);
@@ -108,6 +111,9 @@ function HorarioCard({
   const esVuelta = titulo.toLowerCase().includes('vuelta');
   const horaReal = esVuelta && currentRecomendado ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado?.horaSalida;
   
+  const registroHoy = bec.getRegistroHoy();
+  const becUsado = direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado;
+
   const minutosFaltantes = useCountdown(horaReal);
 
   if (!currentRecomendado) {
@@ -194,6 +200,22 @@ function HorarioCard({
         </div>
       )}
 
+      {/* Botón BEC */}
+      <div className="mb-4">
+        <button
+          onClick={() => !becUsado && bec.marcarViaje(direction)}
+          disabled={becUsado}
+          className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium transition-all ${
+            becUsado 
+              ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
+              : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 active:scale-[0.98]'
+          }`}
+        >
+          {becUsado ? <CheckCircle2 size={18} /> : <Ticket size={18} />}
+          {becUsado ? 'BEC Usado ✓' : 'Usar BEC'}
+        </button>
+      </div>
+
       {currentAlternativas.length > 0 && (
         <div className="border-t border-zinc-800/80 pt-4 mt-2">
           <button 
@@ -231,9 +253,10 @@ function HorarioCard({
   );
 }
 
-export default function HomePage() {
-  const escenario = useEscenario();
-  const [horaActualHHMM, setHoraActualHHMM] = useState<string>("00:00");
+export default function Hoy() {
+  const { cursaArquitectura, duermeEnCordoba, diaSeleccionado, isMounted, setDiaSeleccionado } = useEscenario();
+  const bec = useBec();
+  const [horaActualHHMM, setHoraActualHHMM] = useState("00:00");
   const [timeMounted, setTimeMounted] = useState(false);
 
   useEffect(() => {
@@ -249,9 +272,7 @@ export default function HomePage() {
     return () => clearInterval(interval);
   }, []);
   
-  if (!escenario.isMounted) return <div className="min-h-screen bg-black" />;
-
-  const { diaSeleccionado, cursaArquitectura, duermeEnCordoba } = escenario;
+  if (!isMounted) return <div className="min-h-screen bg-black" />;
 
   // Filtrar materias del día usando la nueva lógica de escenarios y bloques
   const map: Record<string, number> = {
@@ -355,7 +376,7 @@ export default function HomePage() {
                 0: 'lunes', 1: 'lunes', 2: 'martes', 3: 'miercoles',
                 4: 'jueves', 5: 'viernes', 6: 'sabado'
               };
-              escenario.setDiaSeleccionado(map[new Date().getDay()]);
+              setDiaSeleccionado(map[new Date().getDay()]);
             }}
             className="text-blue-400 font-bold text-sm bg-blue-500/10 px-3 py-1.5 rounded-full hover:bg-blue-500/20 transition-colors"
           >
@@ -372,7 +393,13 @@ export default function HomePage() {
 
       {/* Tarjetas de Resultados */}
       <div className="flex flex-col gap-6 mt-2">
-        <HorarioCard titulo="Viaje de Ida" recomendacion={recomendacionIda} icon={Bus} direction="ida" />
+        <HorarioCard 
+          titulo={`Ida hacia Córdoba`}
+          recomendacion={recomendacionIda} 
+          icon={Bus} 
+          direction="ida"
+          bec={bec}
+        />
         
         {/* Línea de Tiempo de Materias */}
         {materiasDelDia.length > 0 && (
@@ -432,7 +459,13 @@ export default function HomePage() {
           </NativeCard>
         )}
 
-        <HorarioCard titulo="Viaje de Vuelta" recomendacion={recomendacionVuelta} icon={Bus} direction="vuelta" />
+        <HorarioCard 
+          titulo={`Vuelta a Despeñaderos`}
+          recomendacion={recomendacionVuelta} 
+          icon={Bus} 
+          direction="vuelta"
+          bec={bec}
+        />
       </div>
 
     </motion.div>
