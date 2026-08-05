@@ -23,6 +23,10 @@ const getDiaActual = (): DiaSemana => {
   return dias[new Date().getDay()];
 };
 
+bot.start((ctx) => {
+  ctx.reply('👋 ¡Hola! Soy el bot local de AppHorarios. Usá /hoy para ver tus viajes de hoy.');
+});
+
 // Comando /hoy - Consultar el motor de forma proactiva
 bot.command('hoy', (ctx) => {
   const dia = getDiaActual();
