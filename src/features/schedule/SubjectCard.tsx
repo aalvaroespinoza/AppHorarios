@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from 'framer-motion';
 import type { Subject } from '@/types/subject';
 import { formatTimeRange } from '@/utils/date';
 
@@ -13,7 +16,18 @@ interface SubjectCardProps {
  */
 export function SubjectCard({ subject }: SubjectCardProps) {
   return (
-    <li className="flex items-start justify-between gap-4 py-3">
+    <motion.li 
+      variants={{
+        hidden: { opacity: 0, scale: 0.98, y: 10 },
+        visible: { 
+          opacity: 1, 
+          scale: 1, 
+          y: 0,
+          transition: { type: "spring", bounce: 0, duration: 0.4 }
+        }
+      }}
+      className="flex items-start justify-between gap-4 py-3"
+    >
       <div className="flex flex-col gap-0.5 min-w-0">
         <div className="flex items-center gap-2">
           {subject.color && (
@@ -60,6 +74,6 @@ export function SubjectCard({ subject }: SubjectCardProps) {
       >
         {subject.shift}
       </span>
-    </li>
+    </motion.li>
   );
 }

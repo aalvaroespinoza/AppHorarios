@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from 'framer-motion';
 import type { Subject } from '@/types/subject';
 import { SubjectCard } from './SubjectCard';
 
@@ -31,14 +34,23 @@ export function SubjectList({ subjects }: SubjectListProps) {
           Sin materias registradas para este día.
         </p>
       ) : (
-        <ul
+        <motion.ul
           className="divide-y divide-[var(--color-border)]"
           aria-label="Lista de materias"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { 
+              opacity: 1, 
+              transition: { staggerChildren: 0.1 } 
+            }
+          }}
         >
           {subjects.map((subject) => (
             <SubjectCard key={subject.id} subject={subject} />
           ))}
-        </ul>
+        </motion.ul>
       )}
     </section>
   );

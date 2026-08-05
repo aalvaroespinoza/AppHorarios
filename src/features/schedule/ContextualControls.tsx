@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
 import NativeCard from '@/components/ui/NativeCard';
 import NativeSwitch from '@/components/ui/NativeSwitch';
@@ -90,71 +91,109 @@ export default function ContextualControls() {
       </div>
 
       {/* Controles Dinámicos (solo martes o viernes) */}
-      {diaSeleccionado === 'martes' && (
-        <button 
-          onClick={() => setCursaArquitectura(!cursaArquitectura)}
-          className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden animate-in fade-in slide-in-from-top-2 ${
-            cursaArquitectura 
-              ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.15)]' 
-              : 'bg-[var(--color-surface)] border-[var(--color-border)]'
-          }`}
-        >
-          <div className={`absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl transition-opacity duration-500 ${cursaArquitectura ? 'opacity-100' : 'opacity-0'}`} />
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-xl transition-colors duration-300 ${cursaArquitectura ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-800/50 dark:bg-zinc-800 text-[var(--color-text-secondary)]'}`}>
-                <Building2 size={20} />
+      <AnimatePresence mode="popLayout">
+        {diaSeleccionado === 'martes' && (
+          <motion.button 
+            key="martes-btn"
+            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+            onClick={() => setCursaArquitectura(!cursaArquitectura)}
+            className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+              cursaArquitectura 
+                ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.15)]' 
+                : 'bg-[var(--color-surface)] border-[var(--color-border)]'
+            }`}
+          >
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl transition-opacity duration-500 ${cursaArquitectura ? 'opacity-100' : 'opacity-0'}`} />
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl transition-colors duration-300 ${cursaArquitectura ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-800/50 dark:bg-zinc-800 text-[var(--color-text-secondary)]'}`}>
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <span className={`font-semibold text-[16px] block leading-tight transition-colors duration-300 ${cursaArquitectura ? 'text-orange-900 dark:text-orange-50' : 'text-[var(--color-text-primary)]'}`}>
+                    Cursar Arquitectura
+                  </span>
+                  <span className={`text-[13px] block leading-tight mt-0.5 transition-colors duration-300 ${cursaArquitectura ? 'text-orange-700 dark:text-orange-200/70' : 'text-[var(--color-text-secondary)]'}`}>
+                    {cursaArquitectura ? 'Agregado al itinerario de hoy' : 'Tocar para cursar'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className={`font-semibold text-[16px] block leading-tight transition-colors duration-300 ${cursaArquitectura ? 'text-orange-900 dark:text-orange-50' : 'text-[var(--color-text-primary)]'}`}>
-                  Cursar Arquitectura
-                </span>
-                <span className={`text-[13px] block leading-tight mt-0.5 transition-colors duration-300 ${cursaArquitectura ? 'text-orange-700 dark:text-orange-200/70' : 'text-[var(--color-text-secondary)]'}`}>
-                  {cursaArquitectura ? 'Agregado al itinerario de hoy' : 'Tocar para cursar'}
-                </span>
-              </div>
+              <motion.div 
+                layout
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                cursaArquitectura ? 'bg-orange-500 border-orange-500' : 'border-zinc-300 dark:border-zinc-600'
+              }`}>
+                <AnimatePresence>
+                  {cursaArquitectura && (
+                    <motion.svg 
+                      initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </motion.svg>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </div>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-              cursaArquitectura ? 'bg-orange-500 border-orange-500 scale-110' : 'border-zinc-300 dark:border-zinc-600'
-            }`}>
-              {cursaArquitectura && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-            </div>
-          </div>
-        </button>
-      )}
+          </motion.button>
+        )}
 
-      {diaSeleccionado === 'viernes' && (
-        <button 
-          onClick={() => setDuermeEnCordoba(!duermeEnCordoba)}
-          className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden animate-in fade-in slide-in-from-top-2 ${
-            duermeEnCordoba 
-              ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-              : 'bg-[var(--color-surface)] border-[var(--color-border)]'
-          }`}
-        >
-          <div className={`absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl transition-opacity duration-500 ${duermeEnCordoba ? 'opacity-100' : 'opacity-0'}`} />
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-xl transition-colors duration-300 ${duermeEnCordoba ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-zinc-800/50 dark:bg-zinc-800 text-[var(--color-text-secondary)]'}`}>
-                <Bed size={20} />
+        {diaSeleccionado === 'viernes' && (
+          <motion.button 
+            key="viernes-btn"
+            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+            onClick={() => setDuermeEnCordoba(!duermeEnCordoba)}
+            className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+              duermeEnCordoba 
+                ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
+                : 'bg-[var(--color-surface)] border-[var(--color-border)]'
+            }`}
+          >
+            <div className={`absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl transition-opacity duration-500 ${duermeEnCordoba ? 'opacity-100' : 'opacity-0'}`} />
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-xl transition-colors duration-300 ${duermeEnCordoba ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-zinc-800/50 dark:bg-zinc-800 text-[var(--color-text-secondary)]'}`}>
+                  <Bed size={20} />
+                </div>
+                <div>
+                  <span className={`font-semibold text-[16px] block leading-tight transition-colors duration-300 ${duermeEnCordoba ? 'text-indigo-900 dark:text-indigo-50' : 'text-[var(--color-text-primary)]'}`}>
+                    Dormir en Córdoba
+                  </span>
+                  <span className={`text-[13px] block leading-tight mt-0.5 transition-colors duration-300 ${duermeEnCordoba ? 'text-indigo-700 dark:text-indigo-200/70' : 'text-[var(--color-text-secondary)]'}`}>
+                    {duermeEnCordoba ? 'Se cancelan regresos de hoy' : 'Tocar si te quedás'}
+                  </span>
+                </div>
               </div>
-              <div>
-                <span className={`font-semibold text-[16px] block leading-tight transition-colors duration-300 ${duermeEnCordoba ? 'text-indigo-900 dark:text-indigo-50' : 'text-[var(--color-text-primary)]'}`}>
-                  Dormir en Córdoba
-                </span>
-                <span className={`text-[13px] block leading-tight mt-0.5 transition-colors duration-300 ${duermeEnCordoba ? 'text-indigo-700 dark:text-indigo-200/70' : 'text-[var(--color-text-secondary)]'}`}>
-                  {duermeEnCordoba ? 'Se cancelan regresos de hoy' : 'Tocar si te quedás'}
-                </span>
-              </div>
+              <motion.div 
+                layout
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                duermeEnCordoba ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-300 dark:border-zinc-600'
+              }`}>
+                <AnimatePresence>
+                  {duermeEnCordoba && (
+                    <motion.svg 
+                      initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+                      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </motion.svg>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </div>
-            <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
-              duermeEnCordoba ? 'bg-indigo-500 border-indigo-500 scale-110' : 'border-zinc-300 dark:border-zinc-600'
-            }`}>
-              {duermeEnCordoba && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
-            </div>
-          </div>
-        </button>
-      )}
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Home, Clock, Settings, Sunrise, Info } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,7 +21,12 @@ export default function BottomTabBar() {
   ];
 
   return (
-    <nav className="fixed bottom-0 w-full z-50 backdrop-blur-xl bg-black/70 border-t border-zinc-800 pb-safe pt-2 px-4">
+    <motion.nav 
+      initial={{ y: "100%" }} 
+      animate={{ y: 0 }} 
+      transition={{ type: "spring", bounce: 0, duration: 0.6 }}
+      className="fixed bottom-0 w-full z-50 backdrop-blur-xl bg-black/70 border-t border-zinc-800 pb-safe pt-2 px-4"
+    >
       <div className="flex justify-around items-center max-w-md mx-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -53,6 +59,6 @@ export default function BottomTabBar() {
       </div>
       {/* Spacer para dispositivos con Home Indicator (notch inferior) en iOS */}
       <div className="h-6 w-full sm:hidden"></div>
-    </nav>
+    </motion.nav>
   );
 }

@@ -209,6 +209,7 @@ function HorarioCard({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
+                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 className="mt-4 flex flex-col gap-2 overflow-hidden"
               >
                 {currentAlternativas.map((alt: RawScheduleEntry, idx: number) => (
@@ -332,9 +333,9 @@ export default function HomePage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 15 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
+      initial={{ opacity: 0, scale: 0.98, y: 10 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: "spring", bounce: 0, duration: 0.4 }}
       className="p-4 max-w-md mx-auto flex flex-col gap-6"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
