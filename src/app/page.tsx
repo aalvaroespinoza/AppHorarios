@@ -1,195 +1,274 @@
-'use client';
+"use client";
 
-import { useMemo, useState, useEffect } from 'react';
-import { useEscenario } from '../hooks/useEscenario';
-import { calcularColectivoRecomendado } from '../engine/recommendationEngine';
-import { DiaSemana } from '../types';
-import Link from 'next/link';
-import ContadorVivo from '../components/ContadorVivo';
-import RelojMinimalista from '../components/RelojMinimalista';
-import IndicadorEstado from '../components/IndicadorEstado';
+import { useMemo, useState, useEffect } from "react";
+import { calcularColectivoRecomendado } from "../engine/recommendationEngine";
+import { DiaSemana, Horario, Materia } from "../types";
+import { MATERIAS } from "../data/materiasDB";
+import { ChevronLeft, ChevronRight, BookOpen, MapPin, Moon } from "lucide-react";
+import RelojMinimalista from "../components/RelojMinimalista";
 
-// Helper para obtener el día actual local
-const getDiaActual = (): DiaSemana => {
+// Helper para obtener el día local
+const getDiaSemana = (date: Date): DiaSemana => {
   const map: Record<number, DiaSemana> = {
-    0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
-    4: 'jueves', 5: 'viernes', 6: 'sabado'
+    0: "domingo", 1: "lunes", 2: "martes", 3: "miercoles",
+    4: "jueves", 5: "viernes", 6: "sabado",
   };
-  return map[new Date().getDay()];
+  return map[date.getDay()];
+};
+
+// Formateador "Miércoles 5 de agosto"
+const formatearFecha = (date: Date): string => {
+  const day = date.getDate();
+  const month = new Intl.DateTimeFormat("es-AR", { month: "long" }).format(date);
+  const weekday = new Intl.DateTimeFormat("es-AR", { weekday: "long" }).format(date);
+  return `${weekday.charAt(0).toUpperCase() + weekday.slice(1)} ${day} de ${month}`;
+};
+
+// Píldora de Countdown que envuelve RelojMinimalista
+const PildoraCountdown = ({ horaSalida }: { horaSalida: string }) => {
+  const [minutosFaltantes, setMinutosFaltantes] = useState<number | null>(null);
+
+  useEffect(() => {
+    const calcularFaltante = () => {
+      const now = new Date();
+      const [horas, minutos] = horaSalida.split(":").map(Number);
+      
+      const salidaDate = new Date(now);
+      salidaDate.setHours(horas, minutos, 0, 0);
+
+      const diffMs = salidaDate.getTime() - now.getTime();
+      const diffMin = Math.floor(diffMs / 60000);
+      setMinutosFaltantes(diffMin);
+    };
+
+    calcularFaltante();
+    const interval = setInterval(calcularFaltante, 10000);
+    return () => clearInterval(interval);
+  }, [horaSalida]);
+
+  if (minutosFaltantes === null) return null;
+
+  if (minutosFaltantes < 0) {
+    return (
+      <div className="bg-red-900/40 text-red-400 rounded-full px-3 py-1 text-sm font-medium border border-red-800/50">
+        Ya salió
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-emerald-900/40 text-emerald-400 rounded-full px-3 py-1 text-sm font-medium flex items-center gap-1.5">
+      Sale en {minutosFaltantes} min
+      {/* El RelojMinimalista se monta internamente como fue requerido, aunque lo mostremos sutilmente */}
+      <span className="opacity-40 text-[10px] hidden sm:inline-block"><RelojMinimalista /></span>
+    </div>
+  );
+};
+
+// Componente para renderizar la Tarjeta de Viaje (Ida o Vuelta)
+const ViajeCard = ({ 
+  titulo, 
+  recomendacion, 
+  esHoy 
+}: { 
+  titulo: string; 
+  recomendacion: { recomendado: Horario | null; siguiente_disponible: Horario | null; alternativas: Horario[] }; 
+  esHoy: boolean;
+}) => {
+  if (!recomendacion.recomendado) {
+    return null;
+  }
+
+  const rec = recomendacion.recomendado;
+  
+  // Unificar alternativas (siguiente disponible + opciones anteriores)
+  const opcionesCrudas = [recomendacion.siguiente_disponible, ...recomendacion.alternativas].filter(Boolean) as Horario[];
+  const alternativas = Array.from(new Set(opcionesCrudas.map(a => a.horaSalida + a.empresa)))
+    .map(id => opcionesCrudas.find(a => (a.horaSalida + a.empresa) === id)!)
+    .sort((a, b) => {
+      const timeA = a.horaSalida.split(':').map(Number);
+      const timeB = b.horaSalida.split(':').map(Number);
+      return (timeA[0]*60 + timeA[1]) - (timeB[0]*60 + timeB[1]);
+    });
+
+  return (
+    <div className="bg-zinc-900 rounded-3xl border border-zinc-800 overflow-hidden mb-6">
+      <div className="p-6 pb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-2 text-zinc-400 font-medium text-sm uppercase tracking-wider">
+            <MapPin size={16} />
+            {titulo}
+          </div>
+          {esHoy && <PildoraCountdown horaSalida={rec.horaSalida} />}
+        </div>
+        
+        <div className="flex items-end gap-3 mb-1">
+          <h2 className="text-6xl font-bold font-sans tracking-tight text-white leading-none">
+            {rec.horaSalida}
+          </h2>
+          <span className="text-lg font-semibold text-zinc-500 pb-1 uppercase">
+            {rec.empresa}
+          </span>
+        </div>
+      </div>
+      
+      {alternativas.length > 0 && (
+        <div className="border-t border-zinc-800/80 bg-zinc-900/40">
+          <div className="divide-y divide-zinc-800/50">
+            {alternativas.map((alt, idx) => (
+              <div key={idx} className="flex justify-between items-center px-6 py-3.5">
+                <span className="text-zinc-300 font-medium text-lg">{alt.horaSalida}</span>
+                <span className="text-zinc-500 text-sm">{alt.empresa}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default function Home() {
-  const { escenario, isMounted } = useEscenario();
-  const [dia, setDia] = useState<DiaSemana>('lunes');
-
-  // Estados para manejar los colectivos perdidos
-  const [idaPerdida, setIdaPerdida] = useState(false);
-  const [vueltaPerdida, setVueltaPerdida] = useState(false);
+  const [offsetDias, setOffsetDias] = useState(0);
+  const [fechaActual] = useState(new Date());
+  
+  // Controles Contextuales Dinámicos (Estado Local)
+  const [cursaArquitectura, setCursaArquitectura] = useState(true);
+  const [duermeCordoba, setDuermeCordoba] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setDia(getDiaActual());
+    setIsMounted(true);
   }, []);
 
+  const fechaVisible = useMemo(() => {
+    const d = new Date(fechaActual);
+    d.setDate(d.getDate() + offsetDias);
+    return d;
+  }, [fechaActual, offsetDias]);
+
+  const diaSemana = getDiaSemana(fechaVisible);
+  const esHoy = offsetDias === 0;
+
   const recomendacionIda = useMemo(() => {
-    return calcularColectivoRecomendado(dia, 'ida', escenario);
-  }, [dia, escenario]);
+    return calcularColectivoRecomendado(diaSemana, "ida", cursaArquitectura, duermeCordoba);
+  }, [diaSemana, cursaArquitectura, duermeCordoba]);
 
   const recomendacionVuelta = useMemo(() => {
-    return calcularColectivoRecomendado(dia, 'vuelta', escenario);
-  }, [dia, escenario]);
+    return calcularColectivoRecomendado(diaSemana, "vuelta", cursaArquitectura, duermeCordoba);
+  }, [diaSemana, cursaArquitectura, duermeCordoba]);
 
-  // Prevenir hydration mismatch
-  if (!isMounted) return <div className="min-h-screen bg-zinc-950 flex items-center justify-center text-zinc-500">Cargando...</div>;
+  const materiasDelDia = useMemo(() => {
+    return MATERIAS.filter((m) => m.dia === diaSemana).filter(m => {
+        if (m.obligatoria) return true;
+        if (diaSemana === 'martes' && m.nombre === 'Arquitectura' && cursaArquitectura) return true;
+        if (diaSemana === 'martes' && m.nombre === 'Arquitectura' && !cursaArquitectura) return false;
+        return false;
+    });
+  }, [diaSemana, cursaArquitectura]);
 
-  const noViaja = dia === 'domingo' || !recomendacionIda.recomendado;
+  if (!isMounted) return <div className="min-h-screen bg-black" />;
 
-  const idaActual = idaPerdida && recomendacionIda.siguiente_disponible 
-    ? recomendacionIda.siguiente_disponible 
-    : recomendacionIda.recomendado;
-
-  const vueltaActual = vueltaPerdida && recomendacionVuelta.siguiente_disponible 
-    ? recomendacionVuelta.siguiente_disponible 
-    : recomendacionVuelta.recomendado;
+  const labelDiaBoton = offsetDias === 0 ? "Hoy" : offsetDias === -1 ? "Ayer" : offsetDias === 1 ? "Mañana" : `${Math.abs(offsetDias)}d`;
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-zinc-100 font-sans p-6 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),3rem)] max-w-md mx-auto selection:bg-blue-500/30">
-      <header className="flex justify-between items-start mb-10 mt-2">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-zinc-50">AppHorarios</h1>
-          <p className="text-zinc-400 capitalize font-medium mt-1">Hoy es {dia}</p>
-        </div>
-        <div className="flex flex-col items-end gap-3">
-          <RelojMinimalista />
-          <Link 
-            href="/configuracion" 
-            className="p-3 rounded-full bg-zinc-900 shadow-xl shadow-black/20 border border-zinc-800 text-blue-500 hover:bg-zinc-800 transition-colors active:scale-95"
-            aria-label="Configuración"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-            </svg>
-          </Link>
+    <div className="flex flex-col min-h-screen p-6 pt-12 pb-32 max-w-md mx-auto">
+      
+      {/* 1. Header & Controles de Día */}
+      <header className="mb-8">
+        <h1 className="text-3xl font-semibold tracking-tight text-white capitalize mb-4">
+          {formatearFecha(fechaVisible)}
+        </h1>
+        
+        <div className="inline-flex items-center bg-zinc-900 rounded-full p-1 border border-zinc-800">
+          <button onClick={() => setOffsetDias(o => o - 1)} className="p-2 text-zinc-400 hover:text-white transition-colors active:scale-95">
+            <ChevronLeft size={20} />
+          </button>
+          <button onClick={() => setOffsetDias(0)} className="px-6 py-1.5 text-sm font-medium text-white bg-zinc-800 rounded-full mx-1 shadow-sm border border-zinc-700 active:scale-95">
+            {labelDiaBoton}
+          </button>
+          <button onClick={() => setOffsetDias(o => o + 1)} className="p-2 text-zinc-400 hover:text-white transition-colors active:scale-95">
+            <ChevronRight size={20} />
+          </button>
         </div>
       </header>
 
-      {noViaja ? (
-        <div className="bg-zinc-900 rounded-[2rem] p-8 shadow-xl shadow-black/20 border border-zinc-800 text-center flex flex-col items-center">
-          <div className="w-20 h-20 bg-zinc-800/50 text-blue-500 rounded-full flex items-center justify-center mb-6 text-4xl shadow-inner border border-zinc-700/50">☕</div>
-          <h2 className="text-2xl font-bold mb-2 text-zinc-100">Hoy no viajás.</h2>
-          <h3 className="text-xl font-medium text-zinc-400 mb-2">¡A descansar!</h3>
-          <p className="text-zinc-500 mt-2 text-sm">Aprovecha para adelantar TP o relajarte.</p>
-        </div>
-      ) : (
-        <div className="space-y-8">
-          
-          {/* SECCIÓN DE IDA */}
-          {idaActual && (
-            <section>
-              <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2">Recomendación Ida</h3>
-              <div className="bg-zinc-900 rounded-[2rem] p-6 shadow-xl shadow-black/20 border border-zinc-800 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-6 opacity-5 transform translate-x-4 -translate-y-4 group-hover:opacity-10 transition-opacity">
-                  <svg className="w-32 h-32 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path d="M8 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM15 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0z"></path><path d="M3 4a1 1 0 00-1 1v10a1 1 0 001 1h1.05a2.5 2.5 0 014.9 0H11a1 1 0 001-1v-4.03l2.843-1.606a2.5 2.5 0 011.696-.347l1.794.394A1 1 0 0119 9.873V15a1 1 0 001 1h.05a2.5 2.5 0 014.9 0h.5a1 1 0 001-1V9a1 1 0 00-.7-.954l-4.106-.713a2.5 2.5 0 00-2.456 1.077L18.064 10l-3.328-1.872a4.5 4.5 0 00-2.22-.577l-1.076-.118A1 1 0 0010 8.441V4a1 1 0 00-1-1H3z" clipRule="evenodd" fillRule="evenodd"></path></svg>
-                </div>
-                <div className="relative z-10">
-                  <div className="flex justify-between items-start mb-2">
-                    <div className="flex items-center gap-3">
-                      <p className="text-blue-500 text-sm font-semibold tracking-wide uppercase mt-0.5">{idaActual.empresa}</p>
-                      <IndicadorEstado horaSalida={idaActual.horaSalida} />
-                    </div>
-                    <ContadorVivo horaSalida={idaActual.horaSalida} />
-                  </div>
-                  <p className="text-6xl font-black tracking-tighter mb-4 text-zinc-50">{idaActual.horaSalida}</p>
-                  
-                  <div className="flex justify-between items-end mt-4">
-                    {idaActual.nota ? (
-                      <span className="text-xs font-medium bg-blue-600/20 text-blue-400 border border-blue-500/30 inline-block px-4 py-1.5 rounded-full backdrop-blur-sm">
-                        {idaActual.nota}
-                      </span>
-                    ) : <div/>}
-                    
-                    {!idaPerdida && recomendacionIda.siguiente_disponible && (
-                      <button 
-                        onClick={() => setIdaPerdida(true)}
-                        className="text-[11px] font-semibold text-zinc-400 hover:text-zinc-200 bg-zinc-800/50 hover:bg-zinc-700/80 px-4 py-2 rounded-full transition-all border border-zinc-700/50 active:scale-95 shadow-sm"
-                      >
-                        Lo perdí 🏃‍♂️
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {recomendacionIda.alternativas.length > 0 && !idaPerdida && (
-                <div className="mt-4 bg-zinc-900/50 rounded-2xl p-4 border border-zinc-800/50 flex gap-4 overflow-x-auto snap-x">
-                  <div className="text-[10px] font-extrabold text-zinc-600 self-center uppercase pr-2 tracking-widest flex-shrink-0 snap-start">
-                    Anteriores
-                  </div>
-                  {recomendacionIda.alternativas.map((alt, idx) => (
-                    <div key={idx} className="flex-shrink-0 bg-zinc-800/50 px-5 py-3 rounded-xl border border-zinc-700/50 snap-center opacity-75">
-                      <p className="text-[11px] font-semibold text-zinc-400 uppercase mb-0.5">{alt.empresa}</p>
-                      <p className="font-bold text-zinc-300 text-lg">{alt.horaSalida}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
-          {/* SECCIÓN DE VUELTA */}
-          {vueltaActual && (
-            <section>
-              <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3 ml-2 mt-8">Recomendación Vuelta</h3>
-              <div className="bg-blue-600 rounded-[2rem] p-6 shadow-xl shadow-blue-900/20 border border-blue-500 overflow-hidden relative text-white group">
-                <div className="relative z-10 flex justify-between items-center mb-1">
-                  <div className="flex items-center gap-3">
-                    <p className="text-blue-200 text-xs font-bold uppercase tracking-wider">{vueltaActual.empresa}</p>
-                    <IndicadorEstado horaSalida={vueltaActual.horaSalida} />
-                  </div>
-                  <div className="scale-95 origin-right">
-                    <ContadorVivo horaSalida={vueltaActual.horaSalida} />
-                  </div>
-                </div>
-                <div className="relative z-10 mt-2">
-                  <p className="text-5xl font-black tracking-tighter mb-4">{vueltaActual.horaSalida}</p>
-                  
-                  <div className="flex justify-between items-end mt-4 min-h-[32px]">
-                    {vueltaActual.nota ? (
-                      <span className="text-[11px] bg-blue-700/50 text-blue-100 max-w-[120px] font-medium leading-tight px-3 py-1.5 rounded-xl">
-                        {vueltaActual.nota}
-                      </span>
-                    ) : <div/>}
-
-                    {!vueltaPerdida && recomendacionVuelta.siguiente_disponible && (
-                      <button 
-                        onClick={() => setVueltaPerdida(true)}
-                        className="text-[11px] font-semibold text-white/90 hover:text-white bg-blue-500/50 hover:bg-blue-400/50 px-4 py-2 rounded-full transition-all border border-blue-400/30 active:scale-95 shadow-sm"
-                      >
-                        Lo perdí 🏃‍♂️
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {recomendacionVuelta.alternativas.length > 0 && !vueltaPerdida && (
-                <div className="mt-4 bg-blue-900/10 rounded-2xl p-4 border border-blue-900/20 flex gap-4 overflow-x-auto snap-x">
-                  <div className="text-[10px] font-extrabold text-blue-500/50 self-center uppercase pr-2 tracking-widest flex-shrink-0 snap-start">
-                    Opciones
-                  </div>
-                  {recomendacionVuelta.alternativas.map((alt, idx) => (
-                    <div key={idx} className="flex-shrink-0 bg-zinc-900/40 px-5 py-3 rounded-xl border border-zinc-800/50 snap-center">
-                      <p className="text-[11px] font-semibold text-zinc-500 uppercase mb-0.5">{alt.empresa}</p>
-                      <p className="font-bold text-zinc-400 text-lg">{alt.horaSalida}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
-
+      {/* 2. Controles Contextuales Dinámicos */}
+      {(diaSemana === "martes" || diaSemana === "viernes") && (
+        <div className="mb-6 bg-zinc-900 rounded-3xl border border-zinc-800 p-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${diaSemana === 'martes' ? 'bg-blue-500/20 text-blue-400' : 'bg-purple-500/20 text-purple-400'}`}>
+              {diaSemana === 'martes' ? <BookOpen size={20} /> : <Moon size={20} />}
+            </div>
+            <span className="font-medium text-zinc-200 text-sm">
+              {diaSemana === "martes" ? "¿Cursás Arquitectura hoy?" : "¿Te quedás a dormir en Cba?"}
+            </span>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input 
+              type="checkbox" 
+              className="sr-only peer"
+              checked={diaSemana === "martes" ? cursaArquitectura : duermeCordoba}
+              onChange={(e) => {
+                if (diaSemana === "martes") setCursaArquitectura(e.target.checked);
+                else setDuermeCordoba(e.target.checked);
+              }}
+            />
+            <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+          </label>
         </div>
       )}
-    </main>
+
+      {/* 3. Tarjetas de Viajes */}
+      {!recomendacionIda.recomendado && !recomendacionVuelta.recomendado && materiasDelDia.length === 0 ? (
+        <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-8 text-center mt-6">
+          <h2 className="text-xl font-bold mb-2 text-zinc-100">Día libre</h2>
+          <p className="text-zinc-500 text-sm">No hay viajes ni materias programadas para hoy.</p>
+        </div>
+      ) : (
+        <div className="mt-2">
+          
+          <ViajeCard 
+            titulo="Hacia Córdoba" 
+            recomendacion={recomendacionIda} 
+            esHoy={esHoy} 
+          />
+
+          {/* Tarjeta de Materias */}
+          {materiasDelDia.length > 0 && (
+            <div className="bg-zinc-900 rounded-3xl border border-zinc-800 p-6 mb-6">
+              <h3 className="text-sm font-semibold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <BookOpen size={18} />
+                Materias de {diaSemana}
+              </h3>
+              <div className="divide-y divide-zinc-800/50">
+                {materiasDelDia.map((m, idx) => (
+                  <div key={idx} className="py-3.5 flex justify-between items-center first:pt-0 last:pb-0">
+                    <div className="flex flex-col">
+                      <span className="text-zinc-100 font-medium text-lg">{m.nombre}</span>
+                      <span className="text-zinc-500 text-sm">
+                        {m.horaInicio} - {m.horaFin}
+                      </span>
+                    </div>
+                    {!m.obligatoria && (
+                      <span className="bg-zinc-800 text-zinc-400 text-xs px-2.5 py-1 rounded-full font-medium">
+                        Opcional
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <ViajeCard 
+            titulo="Regreso a Casa" 
+            recomendacion={recomendacionVuelta} 
+            esHoy={esHoy} 
+          />
+          
+        </div>
+      )}
+    </div>
   );
 }
