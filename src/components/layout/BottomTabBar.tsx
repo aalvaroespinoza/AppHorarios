@@ -36,7 +36,10 @@ export default function BottomTabBar() {
             <Link 
               key={tab.id} 
               href={tab.id}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => {
+                setActiveTab(tab.id);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
               className="flex flex-col items-center justify-center w-16 h-12"
             >
               <Icon 
