@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
 import ContextualControls from '@/features/schedule/ContextualControls';
 import NativeCard from '@/components/ui/NativeCard';
@@ -324,7 +325,10 @@ export default function HomePage() {
   const diaCapitalizado = diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1);
 
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
       className="p-4 max-w-md mx-auto flex flex-col gap-6"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
@@ -424,6 +428,6 @@ export default function HomePage() {
         <HorarioCard titulo="Viaje de Vuelta" recomendacion={recomendacionVuelta} icon={Bus} direction="vuelta" />
       </div>
 
-    </div>
+    </motion.div>
   );
 }
