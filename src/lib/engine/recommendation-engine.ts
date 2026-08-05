@@ -113,20 +113,16 @@ export const calcularColectivos = (
     }
   }
 
-  // Filtrado de las opciones que todavía no pasaron en el día real
+  // Si no se encontró un ideal (caso extremo donde ningún colectivo cumple las condiciones)
+  if (!idealBus) {
+    let todasOrdenadas = [...todasOpciones].sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+    idealBus = todasOrdenadas[0]; // Fallback genérico al primer colectivo del día
+  }
+
+  // Filtrado de las opciones que todavía no pasaron en el día real para mostrarlas como alternativas
   let opcionesFuturas = todasOpciones.filter((h) => timeToMins(h.horaSalida) >= timeToMins(horaActualHHMM));
 
-  // Si no se encontró un ideal (raro) o el ideal YA PASÓ de la hora actual real:
-  if (!idealBus || timeToMins(horaActualHHMM) > timeToMins(idealBus.horaSalida)) {
-     opcionesFuturas.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
-     idealBus = opcionesFuturas.length > 0 ? opcionesFuturas[0] : null;
-  }
-
-  if (!idealBus) {
-    return { recomendado: null, alternativas: [] };
-  }
-
-  // Las alternativas son el resto de las opciones futuras
+  // Las alternativas son todas las futuras EXCEPT el recomendado actual (si es que no pasó)
   let alternativas = opcionesFuturas.filter(h => h.horaSalida !== idealBus!.horaSalida);
   alternativas.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
 
