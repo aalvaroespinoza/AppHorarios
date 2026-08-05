@@ -15,6 +15,7 @@ const DIAS_SEMANA: { id: DayOfWeek; label: string }[] = [
 ];
 
 export default function ContextualControls() {
+  const {
     diaSeleccionado, 
     setDiaSeleccionado,
     isMounted
