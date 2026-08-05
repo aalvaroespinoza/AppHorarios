@@ -3,7 +3,9 @@
 import React from 'react';
 import { useEscenario } from '@/hooks/useEscenario';
 import NativeCard from '@/components/ui/NativeCard';
+import NativeSwitch from '@/components/ui/NativeSwitch';
 import { DayOfWeek } from '@/types/common';
+import { Building2, Bed } from 'lucide-react';
 
 const DIAS_SEMANA: { id: DayOfWeek; label: string }[] = [
   { id: 'lunes', label: 'Lunes' },
@@ -18,6 +20,10 @@ export default function ContextualControls() {
   const {
     diaSeleccionado, 
     setDiaSeleccionado,
+    cursaArquitectura,
+    setCursaArquitectura,
+    duermeEnCordoba,
+    setDuermeEnCordoba,
     isMounted
   } = useEscenario();
 
@@ -77,7 +83,40 @@ export default function ContextualControls() {
         </div>
       </div>
 
-      {/* Los switches contextuales (Arquitectura, Córdoba) han sido movidos a Configuración */}
+      {/* Controles Dinámicos (solo martes o viernes) */}
+      {diaSeleccionado === 'martes' && (
+        <NativeCard className="p-4 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-500 p-1.5 rounded-lg text-white shadow-sm">
+                <Building2 size={18} />
+              </div>
+              <div>
+                <span className="font-medium text-[16px] block leading-tight text-white">¿Cursás Arquitectura hoy?</span>
+                <span className="text-[12px] text-zinc-400 block leading-tight mt-0.5">Activa viaje a las 08:00</span>
+              </div>
+            </div>
+            <NativeSwitch checked={cursaArquitectura} onChange={setCursaArquitectura} />
+          </div>
+        </NativeCard>
+      )}
+
+      {diaSeleccionado === 'viernes' && (
+        <NativeCard className="p-4 mt-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="bg-indigo-500 p-1.5 rounded-lg text-white shadow-sm">
+                <Bed size={18} />
+              </div>
+              <div>
+                <span className="font-medium text-[16px] block leading-tight text-white">¿Dormís en Córdoba?</span>
+                <span className="text-[12px] text-zinc-400 block leading-tight mt-0.5">Cancela regresos de hoy</span>
+              </div>
+            </div>
+            <NativeSwitch checked={duermeEnCordoba} onChange={setDuermeEnCordoba} />
+          </div>
+        </NativeCard>
+      )}
     </div>
   );
 }

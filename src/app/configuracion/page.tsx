@@ -2,12 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import NativeCard from '@/components/ui/NativeCard';
-import NativeSwitch from '@/components/ui/NativeSwitch';
-import { useEscenario } from '@/hooks/useEscenario';
-import { RefreshCw, Info, ChevronRight, Settings2, Building2, Bed } from 'lucide-react';
+import { RefreshCw, Info, ChevronRight, Settings2 } from 'lucide-react';
 
 export default function Configuracion() {
-  const { cursaArquitectura, setCursaArquitectura, duermeEnCordoba, setDuermeEnCordoba } = useEscenario();
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -37,40 +34,7 @@ export default function Configuracion() {
 
       <div className="p-4 space-y-6 mt-2">
         
-        {/* SECCIÓN: PREFERENCIAS */}
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <h2 className="text-[13px] uppercase text-[var(--color-text-secondary)] font-medium tracking-wide mb-2 ml-4">Preferencias</h2>
-          <NativeCard className="p-0 overflow-hidden bg-[var(--color-surface)] border border-[var(--color-border)]">
 
-            {/* TOGGLE ARQUITECTURA */}
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <div className="bg-orange-500 p-1.5 rounded-lg text-white shadow-sm">
-                  <Building2 size={18} />
-                </div>
-                <div>
-                  <span className="font-medium text-[16px] block leading-tight text-[var(--color-text-primary)]">Cursar Arquitectura</span>
-                  <span className="text-[12px] text-[var(--color-text-secondary)] block leading-tight mt-0.5">Habilitar viajes tempranos (08:00)</span>
-                </div>
-              </div>
-              <NativeSwitch checked={cursaArquitectura} onChange={setCursaArquitectura} />
-            </div>
-
-            {/* TOGGLE CORDOBA */}
-            <div className="flex items-center justify-between p-4 border-t border-[var(--color-border)]">
-              <div className="flex items-center gap-3">
-                <div className="bg-indigo-500 p-1.5 rounded-lg text-white shadow-sm">
-                  <Bed size={18} />
-                </div>
-                <div>
-                  <span className="font-medium text-[16px] block leading-tight text-[var(--color-text-primary)]">Dormir en Córdoba</span>
-                  <span className="text-[12px] text-[var(--color-text-secondary)] block leading-tight mt-0.5">Cancela regresos a Despeñaderos</span>
-                </div>
-              </div>
-              <NativeSwitch checked={duermeEnCordoba} onChange={setDuermeEnCordoba} />
-            </div>
-          </NativeCard>
-        </section>
 
         {/* SECCIÓN: SISTEMA */}
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-75 fill-mode-both">
