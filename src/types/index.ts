@@ -30,7 +30,5 @@ export interface Materia {
 }
 
 export interface EscenarioUsuario {
-  cursaArquitecturaMartes: boolean;
-  duermeEnCordobaViernes: boolean;
-  minutosCaminandoTerminal: number;
+  tema: 'claro' | 'oscuro';
 }

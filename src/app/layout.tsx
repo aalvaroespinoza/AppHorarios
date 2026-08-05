@@ -1,12 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { BottomTabBar } from "@/components/BottomTabBar";
 
 export const viewport: Viewport = {
-  themeColor: "#2563eb",
+  themeColor: "#000000",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
   userScalable: false, // Optimización UI para parecer App Nativa
+  viewportFit: "cover",
 };
 
 export const metadata: Metadata = {
@@ -30,8 +32,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className="antialiased bg-slate-50 text-slate-900">
-        {children}
+      <body className="antialiased bg-black text-white">
+        <main className="pb-24 min-h-screen">
+          {children}
+        </main>
+        <BottomTabBar />
       </body>
     </html>
   );

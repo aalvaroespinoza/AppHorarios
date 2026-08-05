@@ -2,9 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { EscenarioUsuario } from '../types';
 
 const defaultEscenario: EscenarioUsuario = {
-  cursaArquitecturaMartes: true,
-  duermeEnCordobaViernes: true,
-  minutosCaminandoTerminal: 10,
+  tema: 'claro',
 };
 
 const STORAGE_KEY = 'appHorarios_escenario';

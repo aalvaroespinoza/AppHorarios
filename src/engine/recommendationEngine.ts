@@ -1,4 +1,4 @@
-import { DiaSemana, TipoViaje, EscenarioUsuario, Horario, Materia } from '../types';
+import { DiaSemana, TipoViaje, Horario, Materia } from '../types';
 import { MATERIAS } from '../data/materiasDB';
 import { HORARIOS_COLECTIVOS } from '../data/horariosDB';
 
@@ -16,13 +16,14 @@ const timeToMins = (time: string): number => {
 
 /**
  * Motor principal de recomendación. Es una función 100% pura y determinística.
- * Dado un día, el tipo de viaje y las variables del escenario del usuario, 
+ * Dado un día, el tipo de viaje y las variables de entorno,
  * determina exactamente qué colectivo tomar.
  */
 export const calcularColectivoRecomendado = (
   dia: DiaSemana,
   tipo: TipoViaje,
-  escenario: EscenarioUsuario
+  cursaArquitectura: boolean = true,
+  duermeCordoba: boolean = false
 ): { recomendado: Horario | null; siguiente_disponible: Horario | null; alternativas: Horario[] } => {
   
   // 1. Obtener las materias estáticas para el día solicitado
@@ -32,7 +33,7 @@ export const calcularColectivoRecomendado = (
   // Si no cursa Arquitectura, la ignoramos. Si es obligatoria (presencial), siempre se cursa.
   materiasDelDia = materiasDelDia.filter((m) => {
     if (m.obligatoria) return true;
-    if (dia === 'martes' && m.nombre === 'Arquitectura' && escenario.cursaArquitecturaMartes) {
+    if (dia === 'martes' && m.nombre === 'Arquitectura' && cursaArquitectura) {
       return true;
     }
     return false; // Ignora materias virtuales o condicionales que el usuario no cursará presencialmente hoy
@@ -49,10 +50,27 @@ export const calcularColectivoRecomendado = (
   const horariosDelDia = HORARIOS_COLECTIVOS[dia] || [];
 
   if (tipo === 'ida') {
+    // REGLA ESTRICTA DE TRÁFICO
+    // Si hay una materia que empieza a las 08:00, ignorar cálculos convencionales
+    // y devolver colectivos entre 06:30 y 06:45
+    const tieneMateriaA8 = materiasDelDia.some(m => m.horaInicio === '08:00');
+    if (tieneMateriaA8) {
+      const opcionesEspeciales = horariosDelDia
+        .filter(h => h.tipo === 'ida')
+        .filter(h => timeToMins(h.horaSalida) >= timeToMins('06:30') && timeToMins(h.horaSalida) <= timeToMins('06:45'))
+        .sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
+
+      const recomendado = opcionesEspeciales.length > 0 ? opcionesEspeciales[0] : null;
+      // El siguiente disponible es el próximo dentro de ese mismo rango filtrado
+      const siguiente_disponible = opcionesEspeciales.length > 1 ? opcionesEspeciales[1] : null;
+      const alternativas = opcionesEspeciales.length > 2 ? opcionesEspeciales.slice(1, 3) : [];
+
+      return { recomendado, siguiente_disponible, alternativas };
+    }
+
     // 3. Cálculo del "Horario Límite de Llegada" a la terminal en Córdoba
-    //    Es decir, debe llegar a la terminal restando el tiempo de caminata a la facultad
     const primeraMateria = materiasDelDia[0];
-    const limiteLlegadaTerminal = timeToMins(primeraMateria.horaInicio) - escenario.minutosCaminandoTerminal;
+    const limiteLlegadaTerminal = timeToMins(primeraMateria.horaInicio);
 
     // 4. Buscar en horariosDB el colectivo que cumpla la regla
     const opcionesIda = horariosDelDia
@@ -88,15 +106,15 @@ export const calcularColectivoRecomendado = (
   } else {
     // 5. Lógica a la inversa para el viaje de vuelta
     
-    // Regla de negocio especial: Si es viernes y duerme en Córdoba, no hay vuelta
-    if (dia === 'viernes' && escenario.duermeEnCordobaViernes) {
+    // Regla de negocio especial: Si duerme en Córdoba, no hay vuelta
+    if (duermeCordoba) {
       return { recomendado: null, siguiente_disponible: null, alternativas: [] };
     }
 
     // El Horario Límite de Salida es el tiempo al que el alumno logrará llegar a la terminal
-    // (hora en que termina su última clase + tiempo que demora en caminar)
+    // (hora en que termina su última clase)
     const ultimaMateria = materiasDelDia[materiasDelDia.length - 1];
-    const limiteSalidaTerminal = timeToMins(ultimaMateria.horaFin) + escenario.minutosCaminandoTerminal;
+    const limiteSalidaTerminal = timeToMins(ultimaMateria.horaFin);
 
     const opcionesVuelta = horariosDelDia
       .filter((h) => h.tipo === 'vuelta')
