@@ -2,19 +2,30 @@ import { DiaSemana, Horario, Materia } from '../../types';
 import { MATERIAS } from '../../data/materiasDB';
 import { HORARIOS_COLECTIVOS } from '../../data/horariosDB';
 
-const DURACION_VIAJE_MINUTOS = 60;
-const MARGEN_MINUTOS = 15;
+// Funciones puras para manipulación de horas (formato "HH:MM")
+const addMinutes = (timeHHMM: string, minsToAdd: number): string => {
+  const [hours, minutes] = timeHHMM.split(':').map(Number);
+  const totalMins = hours * 60 + minutes + minsToAdd;
+  const h = Math.floor(totalMins / 60) % 24;
+  const m = totalMins % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+};
 
-const timeToMins = (time: string): number => {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
+const subMinutes = (timeHHMM: string, minsToSub: number): string => {
+  const [hours, minutes] = timeHHMM.split(':').map(Number);
+  let totalMins = hours * 60 + minutes - minsToSub;
+  if (totalMins < 0) totalMins += 24 * 60;
+  const h = Math.floor(totalMins / 60) % 24;
+  const m = totalMins % 60;
+  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
 };
 
 export const calcularColectivos = (
   dia: DiaSemana,
   tipo: 'ida' | 'vuelta',
   cursaArquitectura: boolean,
-  duermeEnCordoba: boolean
+  duermeEnCordoba: boolean,
+  horaActualHHMM: string
 ): { recomendado: Horario | null, alternativas: Horario[] } => {
   
   // 1. Obtener y filtrar materias del día
@@ -32,52 +43,33 @@ export const calcularColectivos = (
     return { recomendado: null, alternativas: [] };
   }
 
-  // Ordenar cronológicamente
-  materiasDelDia.sort((a, b) => timeToMins(a.horaInicio) - timeToMins(b.horaInicio));
+  // Ordenar cronológicamente (usando strings ya que el formato es HH:MM)
+  materiasDelDia.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
 
-  // 2. Obtener horarios del día y filtrar por tipo de viaje
+  // 2. Obtener horarios base del día y tipo
   const horariosDelDia = HORARIOS_COLECTIVOS[dia] || [];
-  const opciones = horariosDelDia.filter((h: Horario) => h.tipo === tipo);
+  let opciones = horariosDelDia.filter((h: Horario) => h.tipo === tipo);
 
+  // 3. Lógica de Filtrado en Vivo (descartar los que ya pasaron)
+  opciones = opciones.filter((h: Horario) => h.horaSalida >= horaActualHHMM);
+
+  if (opciones.length === 0) {
+    return { recomendado: null, alternativas: [] };
+  }
+
+  // 4. Filtrado por tipo de viaje e itinerario académico
   if (tipo === 'ida') {
-    const tieneMateriaA8 = materiasDelDia.some((m) => m.horaInicio === '08:00');
-    
-    // REGLA DE ORO (Tráfico AM)
-    if (tieneMateriaA8) {
-      const opcionesAM = opciones
-        .filter((h) => timeToMins(h.horaSalida) >= timeToMins('06:30') && timeToMins(h.horaSalida) <= timeToMins('07:15'))
-        .sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
-
-      const recomendado = opcionesAM.find((h) => h.horaSalida === '06:30' || h.horaSalida === '06:40') || (opcionesAM.length > 0 ? opcionesAM[0] : null);
-      
-      let alternativas: Horario[] = [];
-      if (recomendado) {
-        const index = opcionesAM.indexOf(recomendado);
-        alternativas = opcionesAM.slice(index + 1);
-      }
-      
-      return { recomendado, alternativas };
-    } 
-    
-    // Para el resto de horarios de ida
     const primeraMateria = materiasDelDia[0];
-    const limiteLlegadaTerminal = timeToMins(primeraMateria.horaInicio) - MARGEN_MINUTOS;
-
-    const opcionesValidas = opciones
-      .filter((h) => {
-        const llegadaEstimada = timeToMins(h.horaSalida) + DURACION_VIAJE_MINUTOS;
-        return llegadaEstimada <= limiteLlegadaTerminal;
-      })
-      .sort((a, b) => timeToMins(b.horaSalida) - timeToMins(a.horaSalida)); // El que sale más tarde y llega a tiempo será el primero ([0])
-
-    const recomendado = opcionesValidas.length > 0 ? opcionesValidas[0] : null;
     
-    // Alternativas: las opciones más tempranas (re-ordenadas de menor a mayor hora de salida)
-    const alternativas = opcionesValidas.length > 1 
-      ? opcionesValidas.slice(1, 3).sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida)) 
-      : [];
-    
-    return { recomendado, alternativas };
+    // REGLA DE 8 AM: Si la PRIMERA materia es a las 08:00
+    if (primeraMateria.horaInicio === '08:00') {
+      opciones = opciones.filter((h) => h.horaSalida >= '06:30' && h.horaSalida <= '06:45');
+    } else {
+      // Regla general para el resto de horarios (ej. viernes a la tarde)
+      // Debe llegar al menos 15 minutos antes de la clase (viaje de 60 min)
+      const limiteSalida = subMinutes(primeraMateria.horaInicio, 75); // 60 viaje + 15 margen
+      opciones = opciones.filter((h) => h.horaSalida <= limiteSalida);
+    }
   } else {
     // VUELTA
     if (dia === 'viernes' && duermeEnCordoba) {
@@ -85,15 +77,18 @@ export const calcularColectivos = (
     }
 
     const ultimaMateria = materiasDelDia[materiasDelDia.length - 1];
-    const limiteSalidaTerminal = timeToMins(ultimaMateria.horaFin);
+    const limiteSalidaTerminal = ultimaMateria.horaFin;
 
-    const opcionesValidas = opciones
-      .filter((h) => timeToMins(h.horaSalida) > limiteSalidaTerminal)
-      .sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
-
-    const recomendado = opcionesValidas.length > 0 ? opcionesValidas[0] : null;
-    const alternativas = opcionesValidas.slice(1, 3);
-
-    return { recomendado, alternativas };
+    // Debe salir después de que termine la última clase
+    opciones = opciones.filter((h) => h.horaSalida >= limiteSalidaTerminal);
   }
+
+  // 5. Ordenar los resultados finales ascendente (el más próximo en el futuro primero)
+  opciones.sort((a, b) => a.horaSalida.localeCompare(b.horaSalida));
+
+  // 6. Retornar el recomendado y las alternativas
+  const recomendado = opciones.length > 0 ? opciones[0] : null;
+  const alternativas = opciones.slice(1);
+
+  return { recomendado, alternativas };
 };

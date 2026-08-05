@@ -150,6 +150,21 @@ function HorarioCard({
 
 export default function HomePage() {
   const escenario = useEscenario();
+  const [horaActualHHMM, setHoraActualHHMM] = useState<string>("00:00");
+  const [timeMounted, setTimeMounted] = useState(false);
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      const h = now.getHours().toString().padStart(2, '0');
+      const m = now.getMinutes().toString().padStart(2, '0');
+      setHoraActualHHMM(`${h}:${m}`);
+    };
+    updateTime();
+    setTimeMounted(true);
+    const interval = setInterval(updateTime, 60000);
+    return () => clearInterval(interval);
+  }, []);
   
   if (!escenario.isMounted) return <div className="min-h-screen bg-black" />;
 
@@ -168,8 +183,8 @@ export default function HomePage() {
   });
 
   // Ejecutar motor
-  const recomendacionIda = calcularColectivos(diaSeleccionado, 'ida', cursaArquitectura, duermeEnCordoba);
-  const recomendacionVuelta = calcularColectivos(diaSeleccionado, 'vuelta', cursaArquitectura, duermeEnCordoba);
+  const recomendacionIda = calcularColectivos(diaSeleccionado, 'ida', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
+  const recomendacionVuelta = calcularColectivos(diaSeleccionado, 'vuelta', cursaArquitectura, duermeEnCordoba, horaActualHHMM);
 
   // Capitalizar día
   const diaCapitalizado = diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1);

@@ -49,7 +49,20 @@ export default function ContextualControls() {
 
       {/* 1. Carrusel de Días */}
       <div className="overflow-x-auto no-scrollbar pb-2 -mx-4 px-4">
-        <div className="flex space-x-2">
+        <div className="flex space-x-2 items-center">
+          <button
+            onClick={() => {
+              const map: Record<number, DiaSemana> = {
+                0: 'lunes', 1: 'lunes', 2: 'martes', 3: 'miercoles',
+                4: 'jueves', 5: 'viernes', 6: 'sabado'
+              };
+              setDiaSeleccionado(map[new Date().getDay()]);
+            }}
+            className="whitespace-nowrap transition-all duration-200 text-blue-400 font-bold rounded-full px-4 py-2 hover:bg-zinc-800/40 flex items-center gap-1 shrink-0"
+          >
+            Hoy
+          </button>
+          <div className="w-[1px] h-6 bg-zinc-800 shrink-0"></div>
           {DIAS_SEMANA.map((dia) => {
             const isSelected = diaSeleccionado === dia.id;
             return (

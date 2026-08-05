@@ -9,7 +9,9 @@ export interface EscenarioUsuario {
 
 const getDiaActual = (): DiaSemana => {
   const dias: DiaSemana[] = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-  return dias[new Date().getDay()];
+  const diaIndex = new Date().getDay();
+  if (diaIndex === 0) return 'lunes'; // Si es domingo (0), por defecto mostramos lunes
+  return dias[diaIndex];
 };
 
 const defaultEscenario: EscenarioUsuario = {

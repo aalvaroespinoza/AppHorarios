@@ -15,7 +15,7 @@ export default function BottomTabBar() {
   const tabs = [
     { id: '/', label: 'Hoy', icon: Home },
     { id: '/horarios', label: 'Horarios', icon: Clock },
-    { id: '/ajustes', label: 'Ajustes', icon: Settings },
+    { id: '/configuracion', label: 'Ajustes', icon: Settings },
   ];
 
   return (

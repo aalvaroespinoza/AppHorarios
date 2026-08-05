@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Telegraf, Markup } from 'telegraf';
-import { calcularColectivoRecomendado } from '../../../../engine/recommendationEngine';
+import { calcularColectivos } from '../../../../lib/engine/recommendation-engine';
 import { MATERIAS } from '../../../../data/materiasDB';
 import { DiaSemana, Horario } from '../../../../types';
 
-// Soportamos ambos nombres de variables de entorno para evitar problemas
 const botToken = process.env.TELEGRAM_BOT_TOKEN || process.env.BOT_TOKEN;
 
 if (!botToken) {
-  throw new Error('El token del bot de Telegram no está definido en las variables de entorno.');
+  console.error('Falta TELEGRAM_BOT_TOKEN');
 }
 
-const bot = new Telegraf(botToken);
+const bot = new Telegraf(botToken || 'DUMMY_TOKEN_FOR_BUILD');
 
 // --- Helpers estáticos ---
 const getDiaActual = (): DiaSemana => {
@@ -19,7 +18,10 @@ const getDiaActual = (): DiaSemana => {
     0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
     4: 'jueves', 5: 'viernes', 6: 'sabado'
   };
-  return map[new Date().getDay()];
+  const d = new Date();
+  // Ajuste UTC-3 para Argentina si Vercel está en UTC (Opcional, pero recomendado)
+  d.setHours(d.getHours() - 3);
+  return map[d.getDay()];
 };
 
 const getDiaManana = (): DiaSemana => {
@@ -27,7 +29,17 @@ const getDiaManana = (): DiaSemana => {
     0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
     4: 'jueves', 5: 'viernes', 6: 'sabado'
   };
-  return map[(new Date().getDay() + 1) % 7];
+  const d = new Date();
+  d.setHours(d.getHours() - 3);
+  return map[(d.getDay() + 1) % 7];
+};
+
+const getHoraActualArgHHMM = (): string => {
+  const d = new Date();
+  d.setHours(d.getHours() - 3); // UTC-3 Argentina
+  const h = d.getHours().toString().padStart(2, '0');
+  const m = d.getMinutes().toString().padStart(2, '0');
+  return `${h}:${m}`;
 };
 
 const mainMenu = Markup.inlineKeyboard([
@@ -36,9 +48,7 @@ const mainMenu = Markup.inlineKeyboard([
 ]);
 
 // --- Lógica del Bot ---
-
 bot.start((ctx) => {
-  // Imagen genérica representativa de sierras de Córdoba / paisaje
   const imageUrl = 'https://images.unsplash.com/photo-1590077428593-a55bb07c4665?auto=format&fit=crop&w=800&q=80'; 
   const welcomeText = `👋 *¡Hola\\!* Soy el bot de AppHorarios\\.\n\n¿Qué necesitas consultar hoy?`;
   
@@ -58,19 +68,21 @@ const handleHoy = (ctx: any) => {
     return ctx.reply('☕ Hoy es Domingo. No viajás, ¡a descansar!', mainMenu);
   }
 
-  // Por defecto el bot asume que cursa arquitectura (true) y duerme allá (true)
-  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
-  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', true, true);
+  const horaActual = getHoraActualArgHHMM();
+  const recIda = calcularColectivos(dia, 'ida', true, true, horaActual);
+  const recVuelta = calcularColectivos(dia, 'vuelta', true, true, horaActual);
 
-  if (!recIda.recomendado) {
-    return ctx.reply('Hoy no tienes viajes programados según tu configuración.', mainMenu);
+  if (!recIda.recomendado && !recVuelta.recomendado) {
+    return ctx.reply('Hoy ya no tienes viajes recomendados disponibles.', mainMenu);
   }
 
   let respuesta = `🚌 *Resumen del día (${dia.toUpperCase()})*\n\n`;
-  respuesta += `*IDA:*\n`;
-  respuesta += `🏆 Recomendado: *${recIda.recomendado.horaSalida}* (${recIda.recomendado.empresa})\n`;
-  if (recIda.alternativas.length > 0) {
-    respuesta += `⏱️ Siguientes: ${recIda.alternativas.map(a => a.horaSalida).join(', ')}\n`;
+  if (recIda.recomendado) {
+    respuesta += `*IDA:*\n`;
+    respuesta += `🏆 Recomendado: *${recIda.recomendado.horaSalida}* (${recIda.recomendado.empresa})\n`;
+    if (recIda.alternativas.length > 0) {
+      respuesta += `⏱️ Siguientes: ${recIda.alternativas.map(a => a.horaSalida).join(', ')}\n`;
+    }
   }
   
   if (recVuelta.recomendado) {
@@ -80,7 +92,7 @@ const handleHoy = (ctx: any) => {
       respuesta += `⏱️ Siguientes: ${recVuelta.alternativas.map(a => a.horaSalida).join(', ')}\n`;
     }
   } else {
-    respuesta += `\n*VUELTA:*\nNo hay vuelta recomendada (Dormís allá).`;
+    respuesta += `\n*VUELTA:*\nNo hay vuelta recomendada.`;
   }
 
   return ctx.replyWithMarkdown(respuesta, mainMenu);
@@ -95,29 +107,14 @@ const handleManana = (ctx: any) => {
     return ctx.reply(`🏖️ Mañana es ${dia.charAt(0).toUpperCase() + dia.slice(1)}. No cursás, a disfrutar.`, mainMenu);
   }
 
-  let materiasDelDia = MATERIAS.filter((m) => m.dia === dia);
-  materiasDelDia = materiasDelDia.filter((m) => {
-    if (m.obligatoria) return true;
-    if (dia === 'martes' && m.nombre === 'Arquitectura' && true) return true;
-    return false;
-  });
-
-  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
+  // Se pasa 00:00 para asegurar que traiga todos los horarios del día de mañana
+  const recIda = calcularColectivos(dia, 'ida', true, true, '00:00');
   
-  if (!recIda.recomendado || materiasDelDia.length === 0) {
+  if (!recIda.recomendado) {
     return ctx.reply(`Mañana ${dia.charAt(0).toUpperCase() + dia.slice(1)} no tienes viajes programados.`, mainMenu);
   }
 
-  materiasDelDia.sort((a, b) => {
-    const minA = parseInt(a.horaInicio.split(':')[0]) * 60 + parseInt(a.horaInicio.split(':')[1]);
-    const minB = parseInt(b.horaInicio.split(':')[0]) * 60 + parseInt(b.horaInicio.split(':')[1]);
-    return minA - minB;
-  });
-
-  const primeraMateria = materiasDelDia[0];
-  const ultimaMateria = materiasDelDia[materiasDelDia.length - 1];
-
-  let respuesta = `🌅 *Mañana ${dia.charAt(0).toUpperCase() + dia.slice(1)} cursás de ${primeraMateria.horaInicio} a ${ultimaMateria.horaFin}.*\n\n`;
+  let respuesta = `🌅 *Mañana ${dia.charAt(0).toUpperCase() + dia.slice(1)}*\n\n`;
   respuesta += `Tu mejor opción de ida es el *${recIda.recomendado.empresa}* de las *${recIda.recomendado.horaSalida}*.`;
 
   return ctx.replyWithMarkdown(respuesta, mainMenu);
@@ -128,32 +125,22 @@ bot.action('cmd_manana', handleManana);
 
 const handleEstado = (ctx: any) => {
   const dia = getDiaActual();
-  const recIda = calcularColectivoRecomendado(dia, 'ida', true, true);
-  const recVuelta = calcularColectivoRecomendado(dia, 'vuelta', true, true);
+  const horaActual = getHoraActualArgHHMM();
+  const recIda = calcularColectivos(dia, 'ida', true, true, horaActual);
+  const recVuelta = calcularColectivos(dia, 'vuelta', true, true, horaActual);
   
-  const ahora = new Date();
-  const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
-  
-  let proximo: Horario | null = null;
-  
-  if (recIda.recomendado) {
-    const [h, m] = recIda.recomendado.horaSalida.split(':').map(Number);
-    if (h * 60 + m > minutosActuales) {
-      proximo = recIda.recomendado;
-    }
-  }
-  
-  if (!proximo && recVuelta.recomendado) {
-    const [h, m] = recVuelta.recomendado.horaSalida.split(':').map(Number);
-    if (h * 60 + m > minutosActuales) {
-      proximo = recVuelta.recomendado;
-    }
-  }
+  // Como calcularColectivos ya filtra los del pasado y devuelve el próximo como recomendado,
+  // simplemente usamos ese
+  let proximo: Horario | null = recIda.recomendado || recVuelta.recomendado;
   
   if (!proximo) {
     return ctx.reply('No hay más viajes programados para hoy.', mainMenu);
   }
   
+  const d = new Date();
+  d.setHours(d.getHours() - 3); // UTC-3
+  const minutosActuales = d.getHours() * 60 + d.getMinutes();
+
   const [h, m] = proximo.horaSalida.split(':').map(Number);
   const diff = (h * 60 + m) - minutosActuales;
   const horas = Math.floor(diff / 60);
