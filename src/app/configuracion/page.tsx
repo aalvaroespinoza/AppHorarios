@@ -1,10 +1,15 @@
 'use client';
 
-import { useEscenario } from '../../hooks/useEscenario';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function Configuracion() {
-  const { escenario, updateEscenario, isMounted } = useEscenario();
+  const [temaOscuro, setTemaOscuro] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   if (!isMounted) return <div className="min-h-screen bg-black" />;
 
@@ -32,8 +37,8 @@ export default function Configuracion() {
                 <input 
                   type="checkbox" 
                   id="tema"
-                  checked={escenario.tema === 'oscuro'}
-                  onChange={(e) => updateEscenario({ tema: e.target.checked ? 'oscuro' : 'claro' })}
+                  checked={temaOscuro}
+                  onChange={(e) => setTemaOscuro(e.target.checked)}
                   className="peer sr-only"
                 />
                 <div className="w-12 h-7 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-zinc-200 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-300 after:border-zinc-400 after:border after:rounded-full after:h-6 after:w-6 after:transition-all after:shadow-sm peer-checked:bg-blue-500 peer-checked:after:bg-white"></div>

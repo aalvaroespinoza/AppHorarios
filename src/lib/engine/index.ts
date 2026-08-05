@@ -10,14 +10,5 @@ export {
 } from './scenario-engine';
 
 export {
-  getRecommendations,
-  classifyIda,
-  classifyVuelta,
-  getFirstClassStartTime,
-  getLastClassEndTime,
-  MIN_MARGIN_MINUTES,
-} from './recommendation-engine';
-export type {
-  RecommendationGroup,
-  RecommendationResult,
+  calcularColectivos,
 } from './recommendation-engine';
