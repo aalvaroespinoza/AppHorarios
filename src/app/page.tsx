@@ -7,6 +7,7 @@ import { useBec } from '@/hooks/useBec';
 import ContextualControls from '@/features/schedule/ContextualControls';
 import NativeCard from '@/components/ui/NativeCard';
 import RelojMinimalista from '@/components/RelojMinimalista';
+import AntiSleepButton from '@/components/AntiSleepButton';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
@@ -122,6 +123,9 @@ function HorarioCard({
   const esVuelta = titulo.toLowerCase().includes('vuelta');
   const horaReal = esVuelta && currentRecomendado ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado?.horaSalida;
   
+  const targetLat = direction === 'ida' ? -31.4422 : -31.8153;
+  const targetLng = direction === 'ida' ? -64.1938 : -64.2894;
+
   const registroHoy = bec.getRegistroHoy();
   const becUsado = direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado;
 
@@ -210,9 +214,12 @@ function HorarioCard({
           <span className="leading-snug">{currentRecomendado.notas}</span>
         </div>
       )}
+      
+      {/* Botón Anti-Pestañeo */}
+      <AntiSleepButton targetLat={targetLat} targetLng={targetLng} />
 
       {/* Botón BEC */}
-      <div className="mb-4">
+      <div className="mb-4 mt-2">
         <button
           onClick={handleBecClick}
           className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium transition-all ${
