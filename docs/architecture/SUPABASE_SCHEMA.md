@@ -128,10 +128,10 @@ Este documento define el esquema conceptual y la estructura de la base de datos 
 
 ## 4. Triggers
 
-### 4.1. `notify_n8n_on_system_event`
-- **Objetivo:** Informar a n8n que hay nuevos eventos pendientes de ser procesados.
+### 4.1. `notify_backend_on_system_event`
+- **Objetivo:** Informar al Backend de Next.js que hay nuevos eventos pendientes de ser procesados.
 - **Mecanismo:** Se dispara *AFTER INSERT* en `system_events`.
-- **Lógica:** Ejecuta una función `http_request` que llama al Webhook de n8n. **Importante:** Solo envía un ping indicando que hay eventos nuevos, sin enviar el payload completo, previniendo cuellos de botella (Thundering Herd). n8n luego hará un GET de los eventos `processed = false`.
+- **Lógica:** Ejecuta una función `http_request` que llama al Webhook del Backend. **Importante:** Solo envía un ping indicando que hay eventos nuevos, sin enviar el payload completo, previniendo cuellos de botella (Thundering Herd). El backend luego hará un GET de los eventos `processed = false`.
 
 ### 4.2. `update_modified_column`
 - **Objetivo:** Mantener automáticamente la columna `updated_at`.
@@ -144,4 +144,4 @@ Este documento define el esquema conceptual y la estructura de la base de datos 
 ### 5.1. `daily_context_view`
 - **Descripción:** Una vista segura (Security Definer o con RLS adherido) que consolida el contexto diario del usuario en una sola llamada, optimizando la sincronización de la PWA.
 - **Columnas de salida:** `user_id`, `date`, `total_expenses`, `tasks_completed`, `active_events`.
-- **Razón:** Enviar a la IA (vía n8n) o mostrar en el dashboard principal el resumen sin tener que hacer 4 queries distintos.
+- **Razón:** Enviar a la IA (vía el Backend) o mostrar en el dashboard principal el resumen sin tener que hacer 4 queries distintos.

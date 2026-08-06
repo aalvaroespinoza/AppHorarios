@@ -1,6 +1,6 @@
 # Catálogo de Eventos LifeOS
 
-Este documento sirve como el contrato oficial de eventos para LifeOS. Al utilizar una Arquitectura Orientada a Eventos (Event-Driven Architecture), estos eventos actúan como el sistema nervioso central que conecta la PWA, Supabase, n8n y la API de Gemini.
+Este documento sirve como el contrato oficial de eventos para LifeOS. Al utilizar una Arquitectura Orientada a Eventos (Event-Driven Architecture), estos eventos actúan como el sistema nervioso central que conecta la PWA, Supabase, el Backend (Next.js) y la API de Gemini.
 
 ---
 
@@ -13,7 +13,7 @@ Todos los eventos deben seguir obligatoriamente la estructura `[Entidad][Acción
 
 ## Estructura General del Payload
 
-Todo evento emitido a través de Supabase o n8n debe incluir una estructura envolvente (wrapper) estándar para facilitar la trazabilidad:
+Todo evento emitido a través de Supabase o el Backend debe incluir una estructura envolvente (wrapper) estándar para facilitar la trazabilidad:
 ```json
 {
   "eventId": "uuid-v4",
@@ -31,7 +31,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 ### 1. ExpenseCreated
 - **Descripción:** Se emite cuando se registra un nuevo gasto financiero en el sistema.
 - **Quién lo emite:** LifeOS PWA (Módulo de Finanzas) -> Supabase.
-- **Quién lo consume:** n8n (para análisis de presupuesto mensual), integración con Google Sheets/Notion.
+- **Quién lo consume:** Backend (para análisis de presupuesto mensual), integración con Google Sheets/Notion.
 - **Datos asociados:**
   - `amount`: Number
   - `currency`: String
@@ -45,7 +45,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 ### 2. ExpenseUpdated
 - **Descripción:** Se emite cuando un gasto existente es modificado (ej. corrección de monto o cambio de categoría).
 - **Quién lo emite:** LifeOS PWA -> Supabase.
-- **Quién lo consume:** n8n (para impactar la actualización en tableros externos).
+- **Quién lo consume:** Backend (para impactar la actualización en tableros externos).
 - **Datos asociados:**
   - `expenseId`: String
   - `previousData`: Object
@@ -57,8 +57,8 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 
 ### 3. ReminderCreated
 - **Descripción:** Se emite cuando se agenda un nuevo recordatorio, ya sea basado en tiempo o en un contexto específico.
-- **Quién lo emite:** LifeOS PWA o la API de Gemini (deducido autónomamente vía n8n).
-- **Quién lo consume:** n8n (para programar notificaciones Push o en Telegram), LifeOS PWA (para mostrar en el Dashboard).
+- **Quién lo emite:** LifeOS PWA o la API de Gemini (deducido autónomamente vía Backend).
+- **Quién lo consume:** Backend (para programar notificaciones Push o en Telegram), LifeOS PWA (para mostrar en el Dashboard).
 - **Datos asociados:**
   - `message`: String
   - `triggerTime`: ISO 8601 Date String (opcional)
@@ -71,7 +71,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 ### 4. BusBoarded
 - **Descripción:** Se emite cuando el usuario marca explícitamente en la UI que ha subido a un colectivo.
 - **Quién lo emite:** LifeOS PWA (Módulo de Horarios).
-- **Quién lo consume:** n8n (para análisis de demoras reales), Memory Layer (para que Gemini aprenda hábitos de transporte).
+- **Quién lo consume:** Backend (para análisis de demoras reales), Memory Layer (para que Gemini aprenda hábitos de transporte).
 - **Datos asociados:**
   - `serviceId`: String (Línea/Empresa)
   - `scheduledDeparture`: ISO 8601 Date String
@@ -85,7 +85,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 ### 5. ScheduleCompleted
 - **Descripción:** Se emite cuando finaliza el último bloque de cursada o trabajo programado para el día.
 - **Quién lo emite:** LifeOS PWA (Scenario Engine) o automatización de calendario.
-- **Quién lo consume:** Gemini API (para generar un resumen del día y sugerencias para el día siguiente), n8n (para apagar alarmas o rutinas IoT).
+- **Quién lo consume:** Gemini API (para generar un resumen del día y sugerencias para el día siguiente), Backend (para apagar alarmas o rutinas IoT).
 - **Datos asociados:**
   - `date`: ISO 8601 Date String
   - `completedBlocks`: Number
@@ -97,7 +97,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 ### 6. TaskCompleted
 - **Descripción:** Se emite cuando una tarea accionable es marcada como completada.
 - **Quién lo emite:** LifeOS PWA.
-- **Quién lo consume:** n8n (módulo de gamificación y métricas de productividad), Memory Layer (cálculo de tiempos de finalización).
+- **Quién lo consume:** Backend (módulo de gamificación y métricas de productividad), Memory Layer (cálculo de tiempos de finalización).
 - **Datos asociados:**
   - `taskId`: String
   - `title`: String
@@ -110,7 +110,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 ### 7. PriceTrackingStarted
 - **Descripción:** Se emite cuando el usuario le solicita a LifeOS que comience a monitorear el precio de un producto en línea.
 - **Quién lo emite:** LifeOS PWA (Módulo de Bóveda/Compras) o bot de Telegram.
-- **Quién lo consume:** n8n (para crear y activar un flujo cronograma de web scraping).
+- **Quién lo consume:** Backend (para crear y activar un flujo cronograma de web scraping).
 - **Datos asociados:**
   - `itemName`: String
   - `url`: String
@@ -123,7 +123,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 ### 8. PriceTrackingStopped
 - **Descripción:** Se emite cuando se cancela el seguimiento de un producto o cuando el objetivo de compra fue alcanzado.
 - **Quién lo emite:** LifeOS PWA.
-- **Quién lo consume:** n8n (para desactivar el flujo cronograma correspondiente y ahorrar recursos).
+- **Quién lo consume:** Backend (para desactivar el flujo cronograma correspondiente y ahorrar recursos).
 - **Datos asociados:**
   - `trackingId`: String
   - `reason`: String ("purchased", "cancelled")
@@ -134,7 +134,7 @@ A continuación se detalla exclusivamente el contenido del objeto `data` para ca
 
 ### 9. MemoryUpdated
 - **Descripción:** Se emite cuando la Inteligencia Artificial deduce un nuevo hábito o "hecho" a partir del comportamiento del usuario y lo guarda en la memoria a largo plazo.
-- **Quién lo emite:** Gemini API (orquestado por n8n) -> Supabase.
+- **Quién lo emite:** Gemini API (orquestado por Backend) -> Supabase.
 - **Quién lo consume:** LifeOS PWA (sincroniza silenciosamente para adaptar la UI y las recomendaciones futuras al nuevo conocimiento).
 - **Datos asociados:**
   - `factId`: String

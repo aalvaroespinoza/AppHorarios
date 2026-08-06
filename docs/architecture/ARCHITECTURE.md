@@ -21,7 +21,7 @@ La experiencia del usuario nunca debe depender de la conectividad de red. LifeOS
 - **Database Events:** Supabase utiliza Triggers de base de datos y Webhooks para reaccionar a cualquier cambio (inserción, actualización, eliminación) y notificar al resto del sistema.
 
 ### Capa de Automatización (Nervous System)
-- **n8n:** El motor de flujos de trabajo central. Escucha los Database Events de Supabase y actúa como enrutador en la **Event Driven Architecture**. Conecta la base de datos con APIs externas (clima, transporte, calendarios) y con los modelos de inteligencia artificial.
+- **Next.js Backend:** El motor de flujos de trabajo central. Escucha los Database Events de Supabase y actúa como enrutador en la **Event Driven Architecture**. Conecta la base de datos con APIs externas (clima, transporte, calendarios) y con los modelos de inteligencia artificial.
 
 ### Capa de Inteligencia (Cerebro)
 - **Gemini API:** Modelos LLM encargados del procesamiento de lenguaje natural, toma de decisiones complejas, extracción de entidades y reconocimiento de patrones.
@@ -48,7 +48,7 @@ graph TD
     end
 
     subgraph Automation [Automation Layer]
-        N8N[n8n Workflow Engine]
+        BACKEND[Next.js API Routes]
     end
 
     subgraph AI [Intelligence Layer]
@@ -57,9 +57,9 @@ graph TD
     end
 
     SW <-->|Network Sync| Supabase
-    Realtime -->|Triggers| N8N
-    N8N <-->|Prompts & Context| Gemini
-    N8N <-->|Reads/Writes Facts| Memory
+    Realtime -->|Triggers| BACKEND
+    BACKEND <-->|Prompts & Context| Gemini
+    BACKEND <-->|Reads/Writes Facts| Memory
     Memory -.->|Stored in| Supabase
 ```
 
@@ -75,11 +75,11 @@ Para comprender el diseño Event-Driven, aquí se detalla el ciclo de vida compl
 2. **Escritura Local (Local First):** El evento se guarda instantáneamente en **IndexedDB**. La UI reacciona sin demoras, ocultando el colectivo y mostrando el siguiente.
 3. **Sincronización en Segundo Plano:** El Service Worker (Background Sync) detecta que hay un nuevo evento local sin subir y lo sincroniza hacia la nube en el momento que haya red disponible.
 4. **Llegada a Supabase:** El evento (`TransitEvent`) se inserta en la tabla de Supabase.
-5. **Database Event (Trigger):** La inserción dispara un trigger en PostgreSQL. Supabase envía inmediatamente un Webhook hacia **n8n**.
-6. **Enrutamiento y Enriquecimiento:** **n8n** recibe el webhook. Extrae contexto adicional (por ejemplo, consulta la API del clima local para saber que está lloviendo fuertemente).
-7. **Procesamiento de IA (Inferencia):** n8n envía el evento enriquecido a la **Gemini API**. Se le instruye buscar patrones.
+5. **Database Event (Trigger):** La inserción dispara un trigger en PostgreSQL. Supabase envía inmediatamente un Webhook hacia una **API Route de Next.js**.
+6. **Enrutamiento y Enriquecimiento:** La **API Route** recibe el webhook. Extrae contexto adicional (por ejemplo, consulta la API del clima local para saber que está lloviendo fuertemente).
+7. **Procesamiento de IA (Inferencia):** El backend envía el evento enriquecido a la **Gemini API**. Se le instruye buscar patrones.
 8. **Creación del Conocimiento:** Gemini deduce una correlación: *"Cuando llueve fuerte, el bus de las 14:30 se llena más rápido"*.
-9. **Guardado en Memory Layer:** n8n toma esta inferencia generada por Gemini y la inserta como un nuevo "Hecho" (Fact) estructurado en la **Memory Layer** dentro de Supabase.
+9. **Guardado en Memory Layer:** El backend toma esta inferencia generada por Gemini y la inserta como un nuevo "Hecho" (Fact) estructurado en la **Memory Layer** dentro de Supabase.
 10. **Aprendizaje Aplicado:** En la siguiente sincronización, este nuevo "Hecho" baja al dispositivo del usuario. La próxima vez que llueva, el motor de recomendación local de LifeOS leerá el IndexedDB y sugerirá automáticamente salir más temprano, completando el ciclo de aprendizaje.
 
 ### Diagrama del Flujo End-to-End
@@ -90,7 +90,7 @@ sequenceDiagram
     participant App as PWA (IndexedDB)
     participant Sync as Background Sync
     participant DB as Supabase
-    participant n8n as n8n (Enrutador)
+    participant Backend as Next.js API (Enrutador)
     participant Gemini as Gemini API
     participant Memory as Memory Layer
 
@@ -98,10 +98,10 @@ sequenceDiagram
     App-->>User: UI Actualiza Instantáneamente (Local-First)
     App->>Sync: Encola evento para subir
     Sync->>DB: Sincroniza nuevo TransitEvent
-    DB->>n8n: Dispara Database Event (Webhook)
-    n8n->>Gemini: Envía Evento + Contexto (Clima, Hora)
-    Gemini-->>n8n: Retorna deducción ("Bus 14:30 lleno con lluvia")
-    n8n->>Memory: Inserta deducción como nuevo Fact
+    DB->>Backend: Dispara Database Event (Webhook)
+    Backend->>Gemini: Envía Evento + Contexto (Clima, Hora)
+    Gemini-->>Backend: Retorna deducción ("Bus 14:30 lleno con lluvia")
+    Backend->>Memory: Inserta deducción como nuevo Fact
     Memory-->>DB: Persiste el Fact en Supabase
     DB->>Sync: Sync baja la Memory Layer actualizada
     Sync->>App: IndexedDB incorpora nuevo conocimiento

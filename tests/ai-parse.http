@@ -1,0 +1,43 @@
+### Manual Tests para el Endpoint de NLP (LifeOS)
+### Requiere tener el servidor corriendo localmente (npm run dev) en el puerto 3000.
+### Instala la extensión "REST Client" en VS Code para ejecutar estos requests directamente.
+
+---
+
+### Prueba 1: Tarea (Recordatorio)
+POST http://localhost:3000/api/ai/parse
+Content-Type: application/json
+
+{
+  "text": "Recordame llamar al médico mañana a las 10 de la mañana."
+}
+
+###
+
+### Prueba 2: Gasto (Finanzas)
+POST http://localhost:3000/api/ai/parse
+Content-Type: application/json
+
+{
+  "text": "Compré café por 2500."
+}
+
+###
+
+### Prueba 3: Evento (Agenda)
+POST http://localhost:3000/api/ai/parse
+Content-Type: application/json
+
+{
+  "text": "Tengo examen el lunes que viene en la facultad."
+}
+
+###
+
+### Prueba 4: Trivial (Unknown)
+POST http://localhost:3000/api/ai/parse
+Content-Type: application/json
+
+{
+  "text": "Qué lindo día hace hoy, lástima que llueva más tarde."
+}

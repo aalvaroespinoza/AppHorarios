@@ -23,19 +23,19 @@ LifeOS utiliza un enfoque pragmático para la Inteligencia Artificial. No es un 
 
 ## 2. Optimización: Costo, Latencia y Llamadas
 
-Para evitar una facturación sorpresa en Google Cloud Platform y cuellos de botella de red, se implementan las siguientes técnicas en n8n:
+Para evitar una facturación sorpresa en Google Cloud Platform y cuellos de botella de red, se implementan las siguientes técnicas en el Backend de Next.js:
 
 1. **Selección Dinámica de Modelos:**
    - Usar **Gemini 1.5 Flash (o superior, variante ligera)** para Extracción de Entidades, Clasificación y Enrutamiento. Estos son rápidos y 10x más baratos.
    - Usar **Gemini 1.5 Pro** de manera exclusiva para la *Generación de Insights y Memoria* al final del día, donde el razonamiento profundo es vital y la latencia no importa.
-2. **Procesamiento por Lotes (Batching):** En lugar de hacer una petición a la API cada vez que el usuario carga un gasto rápido, n8n los encola y le pide a Gemini que clasifique 10 gastos en una sola llamada estructurada de JSON Array.
+2. **Procesamiento por Lotes (Batching):** En lugar de hacer una petición a la API cada vez que el usuario carga un gasto rápido, el backend los encola y le pide a Gemini que clasifique 10 gastos en una sola llamada estructurada de JSON Array.
 3. **Filtro Semántico Previo:** Antes de enviar el resumen del día a Gemini, se filtran de la base de datos (con queries tradicionales) las tareas mundanas o redundantes para reducir dramáticamente el conteo de *Input Tokens*.
 
 ---
 
 ## 3. Diseño de Casos de Uso y Prompts
 
-Gemini siempre será llamado a través de la API REST o SDK forzando el tipo de respuesta a `application/json` (`response_mime_type: "application/json"`) para garantizar compatibilidad nativa con los webhooks de n8n.
+Gemini siempre será llamado a través de la API REST o SDK forzando el tipo de respuesta a `application/json` (`response_mime_type: "application/json"`) para garantizar compatibilidad nativa con los rutas de API de Next.js.
 
 ### 3.1. Extracción de Entidades (Agenda y Tareas)
 - **Objetivo:** Convertir lenguaje natural del usuario a JSON estructurado para insertarlo en Supabase.
@@ -67,7 +67,7 @@ Gemini siempre será llamado a través de la API REST o SDK forzando el tipo de 
 
 ### 3.3. Memoria a Largo Plazo y RAG
 - **Objetivo:** Construir la base de datos de conocimiento de LifeOS utilizando la base vectorial (`pgvector`).
-- **Técnica:** Cuando el usuario pide un consejo, n8n realiza primero un *Similarity Search* (búsqueda por similitud vectorial) en la tabla `memory_facts`. Los 5 hechos con mayor similitud se inyectan en el prompt para darle contexto a la respuesta de Gemini (Retrieval-Augmented Generation).
+- **Técnica:** Cuando el usuario pide un consejo, el backend realiza primero un *Similarity Search* (búsqueda por similitud vectorial) en la tabla `memory_facts`. Los 5 hechos con mayor similitud se inyectan en el prompt para darle contexto a la respuesta de Gemini (Retrieval-Augmented Generation).
 
 ### 3.4. Generación de Insights (Consolidación Diaria)
 - **Objetivo:** Evaluar cómo transcurrió el día del usuario, contrastando lo planeado vs lo ejecutado, para generar un nuevo Hábito/Memoria (Insight).

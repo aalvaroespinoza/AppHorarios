@@ -14,7 +14,7 @@ This roadmap outlines the journey from AppHorarios to the full LifeOS platform.
 
 ## Phase 3: AI Integration & Automation
 - Incorporating Gemini for smart recommendations.
-- n8n workflows for background data syncing.
+- Next.js API Routes for background data syncing.
 
 ## Phase 4: Full LifeOS (See `FUTURE.md`)
 - Task management, habits, memory.

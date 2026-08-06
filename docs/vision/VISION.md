@@ -6,7 +6,7 @@ LifeOS is the evolution of a simple bus scheduling application into a comprehens
 ## Objectives
 - **Centralization:** Bring together schedules, tasks, habits, and context (like weather and location).
 - **Proactive Recommendations:** Anticipate user needs, such as when to leave for class based on real-time transit data and personal schedules.
-- **AI Integration:** Leverage LLMs (like Gemini) and automation tools (like n8n) to reduce friction in planning and executing daily tasks.
+- **AI Integration:** Leverage LLMs (like Gemini) and automation tools (like Next.js API Routes) to reduce friction in planning and executing daily tasks.
 - **Extensibility:** Build a modular system where new "features" or "apps" can be plugged in without disrupting the core experience.
 
 ## The Evolution from AppHorarios

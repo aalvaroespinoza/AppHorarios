@@ -6,13 +6,18 @@ Este documento define la estrategia de almacenamiento local para LifeOS. Al adop
 
 ## 1. Estrategia Offline-First
 
-La interfaz de usuario (UI) de LifeOS está completamente desacoplada de la latencia de red. La regla de oro es: **La PWA lee y escribe exclusivamente contra la base de datos local (IndexedDB)**. 
+La interfaz de usuario (UI) de LifeOS está completamente desacoplada de la latencia de red. La regla de oro es: **La PWA lee y escribe exclusivamente contra la base de datos local (IndexedDB)** utilizando el Patrón de Repositorio Genérico (`src/core/db/repository.ts`). 
 
 La red se trata puramente como un mecanismo asíncrono de transporte (sincronización en segundo plano). Esto garantiza que interacciones críticas, como marcar un colectivo como "Abordado" o completar una tarea, ocurran en 0 milisegundos de latencia percibida, independientemente de si el usuario está en el subsuelo sin señal.
 
 ---
 
 ## 2. Definición del Almacenamiento
+
+### Arquitectura de Base de Datos Local (`src/core/db`)
+Para garantizar abstracción de dominios y reutilización máxima, LifeOS implementa una capa de acceso a base de datos agnóstica:
+- **`client.ts`:** Gestor global de IndexedDB mediante Promises nativas, que inicializa automáticamente los *Object Stores* necesarios (agenda, gastos, tareas, etc.) y sus índices de sincronización sin depender de librerías externas.
+- **`repository.ts` (`BaseRepository<T>`)**: Patrón de persistencia genérica que estandariza las operaciones CRUD (`save`, `getById`, `update`, `delete` y `getPendingSync`) en cualquier dominio de la aplicación, inyectando silenciosamente los metadatos de sincronización (`sync_status`, `updated_at`).
 
 ### ¿Qué VIVE en IndexedDB? (Estado Local)
 El dispositivo mantiene una réplica parcial de la base de datos de Supabase, optimizada para las necesidades inmediatas del usuario:
@@ -25,15 +30,15 @@ El dispositivo mantiene una réplica parcial de la base de datos de Supabase, op
 Para proteger el almacenamiento del dispositivo (evitando inflar el espacio a gigabytes) y por cuestiones de privacidad/rendimiento:
 - **Vectores de IA:** Los embeddings vectoriales (`memory_facts.embedding`) utilizados para las búsquedas de Gemini no bajan al cliente, ya que la UI no realiza operaciones matemáticas de álgebra lineal ni RAG.
 - **Archivo Histórico:** Eventos, gastos y tareas con antigüedad mayor a 6 meses. Permanecen accesibles vía red si el usuario solicita una búsqueda profunda, pero no residen en el almacenamiento inicial de IndexedDB.
-- **Configuraciones de Automatización:** Prompts crudos de Gemini, flujos de n8n o claves de API.
+- **Configuraciones de Automatización:** Prompts crudos de Gemini, endpoints del backend o claves de API.
 
 ---
 
 ## 3. Estrategia de Sincronización
 
 ### ¿Qué se sincroniza?
-- **Sincronización de Subida (Upload / Outbox):** Las escrituras locales no actualizan directamente las tablas de dominio remotas. En su lugar, cualquier mutación local (ej. marcar una tarea completa) se empaqueta como un registro en la tabla `system_events` local. La sincronización sube esta cola de eventos (Append-Only) hacia Supabase.
-- **Sincronización de Bajada (Download / Inbox):** Descarga de las resoluciones del servidor, nuevos eventos generados por n8n (ej. reuniones del calendario de Google) o deducciones hechas por Gemini.
+- **Sincronización de Subida (Upload / Outbox):** Las escrituras locales no actualizan directamente las tablas de dominio remotas de manera síncrona. Cualquier mutación a través de un `BaseRepository` queda marcada localmente bajo un `sync_status` (`pending_insert`, `pending_update`, `pending_delete`). Luego, un proceso de fondo extrae este Outbox para sincronizarlo hacia Supabase.
+- **Sincronización de Bajada (Download / Inbox):** Descarga de las resoluciones del servidor, nuevos eventos generados por el backend (ej. reuniones del calendario de Google) o deducciones hechas por Gemini.
 
 ### ¿Cuándo se sincroniza?
 1. **Cold Start (Al arrancar):** Cada vez que se abre la aplicación, realiza un sondeo optimizado pidiendo a Supabase solo las filas modificadas desde el último `last_sync_timestamp`.
@@ -47,13 +52,13 @@ Para proteger el almacenamiento del dispositivo (evitando inflar el espacio a gi
 Cuando el usuario interactúa estando sin conexión, el Service Worker asume la responsabilidad de la transferencia futura.
 - Utiliza la **Background Sync API** (`registration.sync.register('lifeos-sync')`).
 - Si la conexión falla o el usuario cierra la PWA antes de que termine el upload, el sistema operativo (Chrome/Android/iOS según soporte) "despierta" silenciosamente al Service Worker cuando detecta conectividad estable.
-- El Service Worker vacía la bandeja de salida (IndexedDB `system_events` donde `processed = false`) enviándola al endpoint de Supabase y resolviendo los estados pendientes localmente, sin necesidad de que la aplicación visual esté abierta.
+- El Service Worker extrae las entidades utilizando `BaseRepository.getPendingSync()`, enviándolas al endpoint de Supabase y resolviendo los estados pendientes localmente (marcando `sync_status = 'synced'`), sin necesidad de que la aplicación visual esté abierta.
 
 ---
 
 ## 5. Resolución de Conflictos
 
-Dado que Supabase (PostgreSQL) no es una base de datos distribuida con soporte nativo para CRDTs (Conflict-free Replicated Data Types), LifeOS soluciona los conflictos utilizando una combinación de dos patrones:
+Dado que Supabase (PostgreSQL) no es una base de datos distribuida con soporte nativo para CRDTs (Conflict-free Replicated Data Types), LifeOS soluciona los conflictos utilizando una combinación de dos patrones apoyados por el `BaseRepository`:
 
 1. **Event Sourcing para Acciones (Conflict-Free):**
    - Las acciones atómicas (ej. registrar que se subió al bus, crear un gasto) son eventos de adición (`Insert Only`) en el outbox. No generan conflictos, ya que el servidor simplemente procesa el historial de eventos en el orden en el que ocurrieron (`emitted_at`).
@@ -61,7 +66,7 @@ Dado que Supabase (PostgreSQL) no es una base de datos distribuida con soporte n
 2. **Last Write Wins (LWW) para Mutaciones de Entidades:**
    - Si un usuario edita un mismo registro en dos dispositivos offline (ej. cambia el título de una tarea en el móvil y en la PC de forma simultánea), la resolución al sincronizar se basa en un Timestamp Absoluto UTC.
    - El registro con el `updated_at` más reciente sobrescribe al más antiguo de manera autoritativa.
-   - A nivel de la UI local, todo registro mutado offline mantiene una bandera `is_dirty = true` hasta que la sincronización confirme que el servidor (Supabase) asimiló la escritura sin conflictos mayores.
+   - A nivel de la UI local, el `sync_status` gestionado por el repositorio nos permite saber exactamente qué registro local es el que debe prevalecer ante una colisión de subida.
 
 ---
 

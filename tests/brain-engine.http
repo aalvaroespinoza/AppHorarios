@@ -1,0 +1,33 @@
+### Pruebas para el Brain Engine
+### Requisito: npm run dev (localhost:3000)
+### Extensión de VS Code requerida: REST Client
+
+---
+
+### Prueba 1: Gasto
+POST http://localhost:3000/api/core/brain
+Content-Type: application/json
+
+{
+  "text": "Compré café por 2500."
+}
+
+###
+
+### Prueba 2: Recordatorio (Tarea)
+POST http://localhost:3000/api/core/brain
+Content-Type: application/json
+
+{
+  "text": "Recordame llamar al médico mañana."
+}
+
+###
+
+### Prueba 3: Agenda (Evento)
+POST http://localhost:3000/api/core/brain
+Content-Type: application/json
+
+{
+  "text": "No olvidar el examen del lunes en la facultad de 8 a 12."
+}

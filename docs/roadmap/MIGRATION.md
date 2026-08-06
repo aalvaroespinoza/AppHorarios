@@ -91,21 +91,39 @@ Para asegurar la estabilidad, la evoluciÃ³n estÃ¡ dividida en fases pequeÃ±as e 
 
 ---
 
-## Fase 6: Base de Datos MVP Local
+## Fase 6: Base de Datos MVP Local (IndexedDB)
 
-**Objetivo Claro:** Reemplazar el servicio de datos asÃ­ncrono (creado en Fase 4) por una base de datos real en el dispositivo (ej. RxDB, Dexie o IndexedDB).
+**Objetivo Claro:** Reemplazar el servicio de datos asÃ­ncrono y el estado persistente por una base de datos real en el dispositivo (IndexedDB).
 **Dependencias:** Fases 4 y 5.
 **Archivos Afectados:**
-- Modifica: `package.json` (nuevas dependencias), `src/lib/services/*`
-- Crea: `src/lib/db/*`
+- Modifica: `src/core/hooks/*`, `src/context/*`
+- Crea: `src/core/utils/indexedDB.ts`
 
 **Riesgos:**
-- Aumento del tamaÃ±o del bundle de la aplicaciÃ³n.
+- Aumento del tiempo de montaje inicial al depender de IndexedDB asÃ­ncrono.
 - Complicaciones para migraciones de esquemas en clientes existentes de la PWA.
 
 **Criterios de AceptaciÃ³n:**
-- El servicio de datos ahora lee y escribe directamente en la base de datos local en vez de usar los JSON hardcodeados.
-- El usuario final no nota diferencia en el funcionamiento, salvo la capacidad tÃ©cnica nueva para editar sus propios horarios u rutinas localmente en futuras vistas.
+- La PWA guarda todo su estado de manera asÃ­ncrona utilizando IndexedDB.
+- El usuario final no nota diferencia en el funcionamiento.
+
+---
+
+## Fase 7: IntegraciÃ³n de Supabase (SincronizaciÃ³n Cloud)
+
+**Objetivo Claro:** Proveer los cimientos para la nube de LifeOS implementando Supabase SSR y preparar la autenticaciÃ³n y la capa de acceso a base de datos.
+**Dependencias:** Ninguna estrictamente funcional para la UI, pero prepara la conexiÃ³n al Backend.
+**Archivos Afectados:**
+- Crea: `src/core/utils/supabase/client.ts`, `src/core/utils/supabase/server.ts`, `src/core/utils/supabase/middleware.ts`
+- Modifica: `src/proxy.ts` (Next.js 16 Middleware), `package.json`
+
+**Riesgos:**
+- Romper el build por conflictos de compatibilidad de middlewares o variables de entorno omitidas.
+
+**Criterios de AceptaciÃ³n:**
+- SDKs oficiales (`@supabase/supabase-js`, `@supabase/ssr`) instalados.
+- Clientes para Server Components, Client Components y Middleware debidamente separados.
+- Proyecto compila exitosamente.
 
 ---
 
@@ -113,3 +131,131 @@ Para asegurar la estabilidad, la evoluciÃ³n estÃ¡ dividida en fases pequeÃ±as e 
 1. **Sin dependencias superfluas:** Solo instalar lo estrictamente necesario.
 2. **ValidaciÃ³n:** El PR debe aprobar `npm run lint` y `npm run build` antes del merge.
 3. **No regresiÃ³n:** Las funcionalidades base (calcular mÃ¡rgenes de colectivo y la lÃ­nea temporal de materias) nunca deben dejar de funcionar.
+
+---
+
+## Fase 8: Infraestructura Base para IA (Gemini)
+
+**Objetivo Claro:** Preparar la conexión con el LLM instalando el SDK oficial y creando una capa de abstracción estricta en el servidor para evitar fuga de API Keys.
+**Dependencias:** Ninguna estrictamente.
+**Archivos Afectados:**
+- Modifica: .env.local, package.json`n- Crea: src/core/ai/*`n
+**Riesgos:**
+- Llamadas accidentales a la API desde el cliente (exposición de claves).
+
+**Criterios de Aceptación:**
+- Dependencia @google/generative-ai instalada.
+- Las llaves viven solo en .env.local y el SDK se instancia solo en el backend.
+- El servicio base fuerza que las respuestas sean en JSON estructurado.
+- Pasa validación de compilación.
+
+---
+
+## Fase 9: Primer Endpoint Inteligente (NLP)
+
+**Objetivo Claro:** Crear una API Route que consuma el GeminiService para probar la extracción de lenguaje natural a JSON estructurado.
+**Dependencias:** Fase 8 completada.
+**Archivos Afectados:**
+- Crea: src/app/api/ai/parse/route.ts`n- Crea: 	ests/ai-parse.http`n
+**Riesgos:**
+- Ninguno, es un endpoint independiente sin conexión a BD ni UI.
+
+**Criterios de Aceptación:**
+- El endpoint extrae exitosamente tareas, eventos y gastos de un texto natural.
+- Las fechas se infieren usando el ISO string actual como ancla temporal.
+- Retorna exclusivamente JSON estructurado.
+
+---
+
+## Fase 10: Sync Engine (Local First a Cloud)
+
+**Objetivo Claro:** Crear el orquestador principal que une IndexedDB con Supabase implementando Background Sync, resolución de conflictos y reintentos automáticos.
+**Dependencias:** Fases 6 (Local DB) y 7 (Supabase) completadas.
+**Archivos Afectados:**
+- Crea: src/core/sync/*`n
+**Riesgos:**
+- Problemas de compatibilidad cruzada en navegadores para Background Sync.
+
+**Criterios de Aceptación:**
+- Cola de reintentos (Exponential Backoff) implementada.
+- Observador de estados (idle, syncing, offline, error) disponible para la UI.
+- Resolución de conflictos mediante Last Write Wins (LWW).
+- La interfaz de usuario no es bloqueada por el proceso de sincronización.
+
+---
+
+## Fase 11: Infraestructura del Brain Engine
+
+**Objetivo Claro:** Construir la arquitectura modular que actuará como cerebro central de LifeOS, encargada de orquestar prompts, interpretar intenciones y extraer entidades, actuando como capa superior a la API de Gemini pura.
+**Dependencias:** Fase 8 (API Gemini) completada.
+**Archivos Afectados:**
+- Crea: src/core/brain/*`n
+**Riesgos:**
+- Ninguno funcional. Es código pasivo.
+
+**Criterios de Aceptación:**
+- Estructura modular creada (/intents, /entities, /prompts, /services, /types).
+- Contratos (Interfaces TypeScript) fuertemente tipados definidos.
+- Ausencia total de dependencias directas en la UI.
+
+---
+
+## Fase 12: Integración Activa del Brain Engine
+
+**Objetivo Claro:** Implementar la lógica activa en el servicio del Brain Engine y exponerla mediante una API Route para extraer entidades estandarizadas desde lenguaje natural.
+**Dependencias:** Fases 8 (Gemini) y 11 (Brain Infra) completadas.
+**Archivos Afectados:**
+- Crea: src/app/api/core/brain/route.ts`n- Crea: 	ests/brain-engine.http`n- Modifica: src/core/brain/services/index.ts, prompts/index.ts`n
+**Riesgos:**
+- Inconsistencias de formato por alucinaciones del modelo (mitigadas forzando responseMimeType y proveyendo un esquema rígido).
+
+**Criterios de Aceptación:**
+- El endpoint /api/core/brain devuelve exitosamente el análisis del intent, nivel de confianza, y campos extraídos.
+- Usa el contexto de fecha y zona horaria provistos dinámicamente.
+
+---
+
+## Fase 13: Preparación de Interfaz para Insights
+
+**Objetivo Claro:** Construir los componentes visuales (Cards, Skeletons, Estados Vacíos) que renderizarán los hallazgos del Brain Engine en el Dashboard principal, inyectándolos de forma no destructiva.
+**Dependencias:** Fase 1 y 12 completadas.
+**Archivos Afectados:**
+- Modifica: src/app/page.tsx`n- Crea: src/features/insights/*`n
+**Riesgos:**
+- Desplazamiento brusco del layout (CLS - Cumulative Layout Shift) en móviles.
+
+**Criterios de Aceptación:**
+- Existen los componentes InsightCard, InsightSkeleton y EmptyInsights.
+- El diseño mantiene el fondo negro y el glassmorphism preexistente.
+- El orquestador DashboardInsights maneja grácilmente la ausencia de datos sin romper la experiencia actual.
+
+---
+
+## Fase 14: Flujo Completo de IA (End-to-End)
+
+**Objetivo Claro:** Cerrar el ciclo entre la Interfaz de Usuario y el Brain Engine permitiendo input natural, procesamiento en la nube con Gemini, y renderizado de Insights estructurados en tiempo real. No se incluye persistencia.
+**Dependencias:** Fases 12 y 13 completadas.
+**Archivos Afectados:**
+- Modifica: src/features/insights/DashboardInsights.tsx`n
+**Riesgos:**
+- Latencia percibida (mitigada por Skeletons de espera).
+
+**Criterios de Aceptación:**
+- Se agregó un Smart Input estéticamente cohesivo al Dashboard.
+- El usuario puede escribir lenguaje natural y ver el resultado interpretado visualmente.
+- No se agregan nuevas dependencias al frontend ni se muta IndexedDB aún.
+
+---
+
+## Fase 15: Auditoría y Refactorización Final (Clean Code)
+
+**Objetivo Claro:** Resolver la deuda técnica masiva identificada en la Auditoría Inicial (CODE_AUDIT.md) aplicando el Principio de Responsabilidad Única.
+**Archivos Afectados:**
+- Modifica: src/app/page.tsx, src/features/insights/DashboardInsights.tsx`n- Crea: src/hooks/useTodaySchedule.ts`n
+**Resolución de Problemas Reales:**
+- Se extrajo toda la lógica masiva (filtro de escenarios, cálculo de timelines y ruteos de colectivos) desde el componente de UI (\page.tsx\) hacia un hook dedicado (\useTodaySchedule\).
+- Se redujo el peso cognitivo del archivo principal en más del 50%.
+- Se corrigió una potencial advertencia (Warning) de React al iterar listas de Insights usando \crypto.randomUUID()\ en vez del índice del array.
+
+**Estado Pre-Producción:** El compilador de producción (\
+ext build\) arrojó 0 advertencias, 0 errores, y los tiempos de compilación son excepcionales.
