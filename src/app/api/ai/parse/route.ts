@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     const prompt = `Contexto temporal: Hoy es ${anchorDate}.\n\nTexto del usuario: "${body.text}"\n\nExtrae las entidades en el JSON solicitado.`;
 
     // Usamos el modelo Flash que es 10x más rápido y económico, ideal para clasificación NLP simple.
-    const response = await GeminiService.askJson('gemini-1.5-flash', {
+    const response = await GeminiService.askJson('gemini-3.5-flash', {
       systemInstruction: SYSTEM_PROMPT,
       prompt
     });

@@ -13,7 +13,7 @@ export class GeminiService {
    * Optimizado para usar responseMimeType y systemInstructions.
    */
   static async askJson<T>(
-    modelName: 'gemini-1.5-flash' | 'gemini-1.5-pro' | 'gemini-2.0-flash',
+    modelName: 'gemini-2.5-flash' | 'gemini-3.5-flash' | 'gemini-2.5-pro',
     payload: GeminiRequestPayload
   ): Promise<GeminiResponse<T>> {
     
