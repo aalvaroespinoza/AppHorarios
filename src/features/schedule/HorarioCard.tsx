@@ -36,11 +36,50 @@ export function HorarioCard({
   
   const [currentRecomendado, setCurrentRecomendado] = useState<RawScheduleEntry | null>(recomendacion.recomendado);
   const [currentAlternativas, setCurrentAlternativas] = useState<RawScheduleEntry[]>(recomendacion.alternativas);
+  const [probLluvia, setProbLluvia] = useState<number | null>(null);
 
   useEffect(() => {
     setCurrentRecomendado(recomendacion.recomendado);
     setCurrentAlternativas(recomendacion.alternativas);
   }, [recomendacion]);
+
+  // Obtener clima de Open-Meteo
+  useEffect(() => {
+    if (!currentRecomendado) return;
+    
+    // Si es ida salimos de Despeñaderos, si es vuelta salimos de Córdoba
+    const lat = direction === 'ida' ? -31.8153 : -31.4422;
+    const lng = direction === 'ida' ? -64.2894 : -64.1938;
+    
+    const fetchWeather = async () => {
+      try {
+        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=precipitation_probability&timezone=America%2FArgentina%2FBuenos_Aires&forecast_days=2`);
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        // Calcular hora real de salida
+        const esVuelta = direction === 'vuelta';
+        const horaReal = esVuelta ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado.horaSalida;
+        const horaSalidaNum = parseInt(horaReal.split(':')[0], 10);
+        
+        // Formatear hoy como YYYY-MM-DD
+        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+        const hoyDateStr = formatter.format(new Date()); // YYYY-MM-DD
+        
+        const targetTimeStr = `${hoyDateStr}T${horaSalidaNum.toString().padStart(2, '0')}:00`;
+        const index = data.hourly.time.indexOf(targetTimeStr);
+        
+        if (index !== -1) {
+          const prob = data.hourly.precipitation_probability[index];
+          setProbLluvia(prob);
+        }
+      } catch (error) {
+        console.error("Error fetching weather:", error);
+      }
+    };
+    
+    fetchWeather();
+  }, [currentRecomendado, direction]);
 
   const registroHoy = bec.getRegistroHoy();
   const becUsado = direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado;
@@ -168,6 +207,13 @@ export function HorarioCard({
       )}
       
       <AntiSleepButton targetLat={targetLat} targetLng={targetLng} />
+      
+      {probLluvia !== null && probLluvia > 40 && (
+        <div className="bg-blue-900/40 border border-blue-500/30 text-blue-300 px-4 py-2.5 rounded-2xl mb-4 text-sm font-medium flex items-center gap-2">
+          <span>🌧️</span>
+          <span>Probabilidad de lluvia del {probLluvia}% a la hora de salida. ¡Salí con margen!</span>
+        </div>
+      )}
 
       {currentAlternativas.length > 0 && (
         <div className="border-t border-zinc-800/80 pt-4 mt-2">
