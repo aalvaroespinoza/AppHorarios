@@ -184,7 +184,11 @@ function HorarioCard({
                 }`}></span>
               </span>
               <span>
-                Hora est. de Llegada: {calcularHoraLlegada(currentRecomendado.horaSalida, direction)}
+                {minutosFaltantes > 0 
+                  ? `Sale en ${minutosFaltantes} min` 
+                  : minutosFaltantes === 0 
+                    ? 'Saliendo...' 
+                    : 'Ya salió'}
               </span>
             </div>
           </div>
@@ -194,7 +198,9 @@ function HorarioCard({
       {currentRecomendado.notas && (
         <div className="bg-blue-950/20 border border-blue-900/30 p-3 rounded-2xl mb-4 text-sm text-blue-200 flex gap-2 items-start">
           <MapPin size={16} className="text-blue-400 shrink-0 mt-0.5" />
-          <span className="leading-snug">{currentRecomendado.notas}</span>
+          <span className="leading-snug">
+            {currentRecomendado.notas.replace(/llegada estimada/i, `Llegada estimada a las ${calcularHoraLlegada(currentRecomendado.horaSalida, direction)}`)}
+          </span>
         </div>
       )}
       
