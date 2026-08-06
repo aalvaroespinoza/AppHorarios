@@ -18,10 +18,11 @@ export default function LifeOSConsole() {
   const [history, setHistory] = useState<CommandHistory[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const initialTextRef = useRef('');
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [history]);
+  }, [history, inputText]);
 
   useEffect(() => {
     // Inicializar SpeechRecognition
@@ -31,12 +32,14 @@ export default function LifeOSConsole() {
         recognitionRef.current = new SpeechRecognition();
         recognitionRef.current.continuous = false;
         recognitionRef.current.lang = 'es-AR';
-        recognitionRef.current.interimResults = false;
+        recognitionRef.current.interimResults = true;
 
         recognitionRef.current.onresult = (event: any) => {
-          const transcript = event.results[0][0].transcript;
-          setInputText((prev) => prev ? prev + ' ' + transcript : transcript);
-          setIsListening(false);
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+          }
+          setInputText((initialTextRef.current ? initialTextRef.current + ' ' : '') + transcript);
         };
 
         recognitionRef.current.onerror = (event: any) => {
@@ -56,6 +59,7 @@ export default function LifeOSConsole() {
       recognitionRef.current?.stop();
       setIsListening(false);
     } else {
+      initialTextRef.current = inputText;
       recognitionRef.current?.start();
       setIsListening(true);
     }
@@ -75,6 +79,7 @@ export default function LifeOSConsole() {
     ]);
     
     setInputText('');
+    initialTextRef.current = '';
     setIsSubmitting(true);
     
     // Parar el mic si estaba escuchando y enviamos
@@ -122,10 +127,10 @@ export default function LifeOSConsole() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-black text-neutral-200">
+    <div className="flex flex-col h-[100dvh] bg-black text-neutral-200">
       
       {/* Header Minimalista */}
-      <div className="pt-safe px-4 py-4 border-b border-neutral-900/50 flex items-center justify-center relative">
+      <div className="pt-safe px-4 py-4 border-b border-neutral-900/50 flex items-center justify-center relative flex-shrink-0">
         <h1 className="text-sm font-medium tracking-wide flex items-center gap-2">
           <Sparkles size={16} className="text-indigo-400" />
           LifeOS
@@ -133,9 +138,9 @@ export default function LifeOSConsole() {
       </div>
 
       {/* Historial de Comandos */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pt-safe pb-4">
         {history.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[70vh] text-neutral-600 gap-3 opacity-50">
+          <div className="flex flex-col items-center justify-center h-full text-neutral-600 gap-3 opacity-50">
             <TerminalSquare size={32} className="opacity-50" />
             <p className="text-sm">En qué te ayudo hoy?</p>
           </div>
@@ -176,8 +181,8 @@ export default function LifeOSConsole() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input de Comando (Bottom Fixed) - pb-24 evita que choque con BottomTabBar */}
-      <div className="fixed bottom-0 left-0 w-full px-4 pb-24 pt-4 bg-gradient-to-t from-black via-black to-transparent">
+      {/* Input de Comando (Flujo Normal Flex) */}
+      <div className="w-full px-4 pb-24 pt-4 bg-gradient-to-t from-black via-black to-transparent flex-shrink-0">
         <div className="max-w-md mx-auto relative">
           <form onSubmit={handleSubmit} className="relative flex items-center shadow-2xl shadow-indigo-900/20 bg-neutral-900 rounded-2xl p-1 border border-neutral-800">
             <button

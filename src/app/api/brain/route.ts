@@ -18,6 +18,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { text } = body;
+    
+    console.log('Iniciando API Brain', { text });
 
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'Falta el texto a analizar' }, { status: 400 });
@@ -60,7 +62,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data: parsedData }, { status: 200 });
   } catch (error: any) {
-    console.error('Error en /api/brain:', error);
+    console.error('Error en API Brain:', error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Unknown error' }, 
       { status: 500 }
