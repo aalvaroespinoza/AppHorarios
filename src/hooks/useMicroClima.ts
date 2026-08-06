@@ -30,7 +30,7 @@ export function useMicroClima(destino: Destino, horaLlegada: string) {
         try {
           parsedCache = JSON.parse(cached);
         } catch (e) {
-          // invalid cache
+          console.error(`[MicroClima] Error parsing cache para ${destino}:`, e);
         }
       }
 
@@ -48,18 +48,29 @@ export function useMicroClima(destino: Destino, horaLlegada: string) {
           const res = await fetch(url);
           if (res.ok) {
             const data = await res.json();
+            if (data.error) {
+              console.error(`[MicroClima] Error devuelto por la API de Open-Meteo:`, data.error, data.reason);
+            }
             dataToUse = data;
             localStorage.setItem(cacheKey, JSON.stringify({ timestamp: now, data }));
-          } else if (parsedCache) {
-            // Fallback a caché vieja si falla la red
-            dataToUse = parsedCache.data;
+          } else {
+            console.error(`[MicroClima] Error HTTP ${res.status} al consultar Open-Meteo para ${destino}`);
+            if (parsedCache) {
+              dataToUse = parsedCache.data;
+            }
           }
         } catch (error) {
-          // Error de red, usar caché si existe
+          console.error(`[MicroClima] Excepción de red al intentar fetchear clima para ${destino}:`, error);
           if (parsedCache) {
             dataToUse = parsedCache.data;
           }
         }
+      }
+
+      if (!dataToUse) {
+        console.error(`[MicroClima] No hay dataToUse disponible para ${destino} (sin caché y fetch fallido).`);
+        if (isMounted) setClimaState('⚠️');
+        return;
       }
 
       if (dataToUse && isMounted && horaLlegada) {
