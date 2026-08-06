@@ -37,7 +37,7 @@ const DIRECTION_CONFIG = {
 export function BusServiceCard({ service }: BusServiceCardProps) {
   const config = DIRECTION_CONFIG[service.direction];
   const destino = service.direction === 'ida' ? 'cordoba' : 'despeñaderos';
-  const climaEmoji = useMicroClima(destino, service.arrivalTime);
+  const clima = useMicroClima(destino, service.arrivalTime);
 
   return (
     <li className="flex items-start gap-3.5 py-3">
@@ -60,7 +60,16 @@ export function BusServiceCard({ service }: BusServiceCardProps) {
             </span>
             {/* Flecha + hora de llegada + Clima */}
             <span className="text-[13px] text-[var(--color-text-secondary)] flex items-center gap-1">
-              → {service.arrivalTime} {climaEmoji && <span className="ml-2">{climaEmoji}</span>}
+              → {service.arrivalTime} 
+              {clima && (
+                <span 
+                  className="ml-2 flex items-center gap-1 bg-zinc-800/50 px-1.5 py-0.5 rounded-md text-[11px]" 
+                  title={`Temp: ${clima.temp}°C, Lluvia: ${clima.lluvia}%`}
+                >
+                  <span>{clima.emoji}</span>
+                  <span className="opacity-80">{clima.texto}</span>
+                </span>
+              )}
             </span>
           </div>
 

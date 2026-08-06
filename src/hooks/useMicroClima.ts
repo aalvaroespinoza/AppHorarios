@@ -2,6 +2,13 @@ import { useState, useEffect } from 'react';
 
 type Destino = 'cordoba' | 'despeñaderos';
 
+export interface MicroClimaData {
+  emoji: string;
+  texto: string;
+  temp: number;
+  lluvia: number;
+}
+
 interface ClimaCache {
   timestamp: number;
   data: any;
@@ -16,7 +23,7 @@ const COORDS = {
 };
 
 export function useMicroClima(destino: Destino, horaLlegada: string) {
-  const [climaState, setClimaState] = useState<string | null>(null);
+  const [climaState, setClimaState] = useState<MicroClimaData | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,33 +76,33 @@ export function useMicroClima(destino: Destino, horaLlegada: string) {
 
       if (!dataToUse) {
         console.error(`[MicroClima] No hay dataToUse disponible para ${destino} (sin caché y fetch fallido).`);
-        if (isMounted) setClimaState('⚠️');
+        if (isMounted) setClimaState({ emoji: '⚠️', texto: 'Error de red', temp: 0, lluvia: 0 });
         return;
       }
 
       if (dataToUse && isMounted && horaLlegada) {
-        const horaExacta = horaLlegada.split(':')[0].padStart(2, '0');
-        const targetSuffix = `T${horaExacta}:00`;
+        const horaExacta = horaLlegada.split(':')[0];
+        const index = parseInt(horaExacta, 10);
         
-        console.log(`[MicroClima] Destino: ${destino}, Hora Llegada Recibida: ${horaLlegada}, Buscando sufijo: ${targetSuffix}`);
+        console.log(`[MicroClima] Destino: ${destino}, Hora Llegada Recibida: ${horaLlegada}, Índice calculado: ${index}`);
         
-        const index = dataToUse.hourly.time.findIndex((t: string) => t.endsWith(targetSuffix));
+        if (isNaN(index) || index < 0 || !dataToUse.hourly?.time || index >= dataToUse.hourly.time.length) {
+          console.error(`[MicroClima] Índice ${index} fuera de rango o datos inválidos en la respuesta de la API`);
+          setClimaState({ emoji: '⚠️', texto: 'Error de datos', temp: 0, lluvia: 0 });
+          return;
+        }
+
+        const probLluvia = dataToUse.hourly.precipitation_probability[index];
+        const temp = dataToUse.hourly.temperature_2m[index];
         
-        if (index !== -1) {
-          const probLluvia = dataToUse.hourly.precipitation_probability[index];
-          const temp = dataToUse.hourly.temperature_2m[index];
-          
-          console.log(`[MicroClima] Encontrado! Temp: ${temp}°C, Lluvia: ${probLluvia}%`);
-          
-          let result = '';
-          if (probLluvia > 30) result += '☔ ';
-          if (temp < 18) result += '🧥';
-          
-          result = result.trim();
-          setClimaState(result || '🌤️');
+        console.log(`[MicroClima] Encontrado! Temp: ${temp}°C, Lluvia: ${probLluvia}%`);
+        
+        if (probLluvia > 30) {
+          setClimaState({ emoji: '☔', texto: 'Puede llover', temp, lluvia: probLluvia });
+        } else if (temp < 18) {
+          setClimaState({ emoji: '🧥', texto: 'Llevar abrigo', temp, lluvia: probLluvia });
         } else {
-          console.log(`[MicroClima] No se encontró la hora exacta en la respuesta de la API`);
-          setClimaState('🌤️');
+          setClimaState({ emoji: '🌤️', texto: 'Clima ideal', temp, lluvia: probLluvia });
         }
       }
     };
