@@ -160,35 +160,40 @@ function HorarioCard({
               {currentRecomendado.horaSalida}
             </div>
           )}
-          <div className="text-zinc-400 text-sm font-medium mt-3">
-            Hora estimada de Llegada: {calcularHoraLlegada(currentRecomendado.horaSalida, direction)}
-          </div>
         </div>
+        
         {minutosFaltantes !== null && (
-          <div className={`font-medium px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm ${
-            minutosFaltantes > 0 && minutosFaltantes <= 60 
-              ? 'bg-blue-900/40 text-blue-400 animate-pulse' 
-              : minutosFaltantes < 0
-                ? 'bg-red-900/30 text-red-400'
-                : 'bg-zinc-800 text-zinc-300'
-          }`}>
-            <span className="relative flex h-2 w-2">
-              {minutosFaltantes > 0 && minutosFaltantes <= 60 && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              )}
-              <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                minutosFaltantes > 0 && minutosFaltantes <= 60 
-                  ? 'bg-blue-500' 
-                  : minutosFaltantes < 0
-                    ? 'bg-red-500'
-                    : 'bg-zinc-500'
-              }`}></span>
-            </span>
-            {minutosFaltantes > 0 
-              ? `en ${minutosFaltantes} min` 
-              : minutosFaltantes === 0 
-                ? 'Saliendo...' 
-                : 'Ya salió'}
+          <div className="flex flex-col items-end gap-2">
+            <div className={`font-medium px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm ${
+              minutosFaltantes > 0 && minutosFaltantes <= 60 
+                ? 'bg-blue-900/40 text-blue-400 animate-pulse' 
+                : minutosFaltantes < 0
+                  ? 'bg-red-900/30 text-red-400'
+                  : 'bg-zinc-800/80 text-zinc-300'
+            }`}>
+              <span className="relative flex h-2 w-2">
+                {minutosFaltantes > 0 && minutosFaltantes <= 60 && (
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                )}
+                <span className={`relative inline-flex rounded-full h-2 w-2 ${
+                  minutosFaltantes > 0 && minutosFaltantes <= 60 
+                    ? 'bg-blue-500' 
+                    : minutosFaltantes < 0
+                      ? 'bg-red-500'
+                      : 'bg-zinc-500'
+                }`}></span>
+              </span>
+              <span>
+                {minutosFaltantes > 0 
+                  ? `Sale en ${minutosFaltantes} min` 
+                  : minutosFaltantes === 0 
+                    ? 'Saliendo...' 
+                    : 'Ya salió'}
+              </span>
+            </div>
+            <div className="text-zinc-500 text-xs font-medium px-1">
+              Llegada est. {calcularHoraLlegada(currentRecomendado.horaSalida, direction)}
+            </div>
           </div>
         )}
       </div>
