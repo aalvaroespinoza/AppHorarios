@@ -2,22 +2,18 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Home, Clock, Settings, Sunrise, Info } from 'lucide-react';
+import { Home, Clock, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function BottomTabBar() {
   const pathname = usePathname();
-
-  // Para simular el estado activo si no estamos usando el router real de Next.js
-  // (Aunque lo ideal es usar usePathname)
   const [activeTab, setActiveTab] = useState(pathname || '/');
 
   const tabs = [
-    { id: '/', label: 'Hoy', icon: Home },
-    { id: '/manana', label: 'Mañana', icon: Sunrise },
+    { id: '/', label: 'Viaje', icon: Home },
+    { id: '/academia', label: 'Academia', icon: BookOpen },
     { id: '/horarios', label: 'Horarios', icon: Clock },
-    { id: '/configuracion', label: 'Ajustes', icon: Settings },
   ];
 
   return (
