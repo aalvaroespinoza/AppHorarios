@@ -8,6 +8,7 @@ import ContextualControls from '@/features/schedule/ContextualControls';
 import NativeCard from '@/components/ui/NativeCard';
 import RelojMinimalista from '@/components/RelojMinimalista';
 import AntiSleepButton from '@/components/AntiSleepButton';
+import EntertainmentSelector from '@/components/EntertainmentSelector';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
@@ -417,6 +418,9 @@ export default function Hoy() {
           direction="ida"
           bec={bec}
         />
+        
+        {/* Modo Viaje (Entretenimiento) */}
+        <EntertainmentSelector />
         
         {/* Línea de Tiempo de Materias */}
         {materiasDelDia.length > 0 && (
