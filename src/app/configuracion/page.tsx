@@ -159,8 +159,8 @@ export default function Configuracion() {
 
         {/* FOOTER: Acerca de */}
         <div className="mt-12 text-center flex flex-col gap-1 text-zinc-500 pb-10">
-          <p className="text-sm font-semibold tracking-wide">MoviTempo v1.0</p>
-          <p className="text-xs">Desarrollado para AppHorarios PWA</p>
+          <p className="text-sm font-semibold tracking-wide">AppHorarios v2.0</p>
+          <p className="text-xs">Tu Planner Personalizado</p>
           <p className="text-xs mt-2 text-zinc-600">© 2026 Todos los derechos reservados.</p>
         </div>
       </div>
