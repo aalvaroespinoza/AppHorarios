@@ -4,10 +4,12 @@ import { motion } from 'framer-motion';
 import { Music } from 'lucide-react';
 
 const options = [
-  { label: 'Rock Nacional', url: 'spotify:search:rock+nacional+argentino' },
-  { label: 'Trap', url: 'spotify:search:trap+argentino' },
-  { label: 'Reggaetón', url: 'spotify:search:reggaeton' },
-  { label: 'Rap', url: 'spotify:search:rap' },
+  { label: 'Playlist 1', url: 'spotify:playlist:0KSrhygf74dHRge1AmoAUt' },
+  { label: 'Playlist 2', url: 'spotify:playlist:4mqOCbTwQ2NUzFsKZnQ3YT' },
+  { label: 'Playlist 3', url: 'spotify:playlist:6ACBy2RHlSjUIrrr2iWHmr' },
+  { label: 'Playlist 4', url: 'spotify:playlist:2ijtVRH8rnUBsatc60N7Jr' },
+  { label: 'Playlist 5', url: 'spotify:playlist:6c3erhsizpRRLjZub5shsB' },
+  { label: 'Playlist 6', url: 'spotify:playlist:37i9dQZF1E371Blon1t7ay' },
 ];
 
 export default function EntertainmentSelector() {
