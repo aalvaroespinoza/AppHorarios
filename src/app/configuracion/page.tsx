@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NativeCard from '@/components/ui/NativeCard';
-import { Bell, RefreshCw, Moon, Sun, ChevronLeft, Trash2, Ticket } from 'lucide-react';
+import { Bell, RefreshCw, Moon, Sun, ChevronLeft, Trash2, Ticket, Info, ChevronRight } from 'lucide-react';
+import Link from 'next/link';
 import { useBec } from '@/hooks/useBec';
 
 export default function Configuracion() {
@@ -134,6 +135,25 @@ export default function Configuracion() {
                 </div>
               </div>
             </div>
+          </NativeCard>
+        </section>
+
+        {/* SECCIÓN 4: Información */}
+        <section className="mb-6">
+          <h2 className="text-[13px] uppercase text-zinc-500 font-medium tracking-wide mb-2 ml-4">Información</h2>
+          <NativeCard className="p-0 overflow-hidden bg-zinc-900 border-none">
+            <Link 
+              href="/acerca"
+              className="w-full flex items-center justify-between p-3 active:bg-zinc-800/50 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-blue-500/20 text-blue-400 p-1.5 rounded-[10px]">
+                  <Info size={18} />
+                </div>
+                <span className="font-medium text-[16px] text-white">Acerca de la App</span>
+              </div>
+              <ChevronRight size={18} className="text-zinc-500" />
+            </Link>
           </NativeCard>
         </section>
 

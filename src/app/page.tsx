@@ -14,7 +14,8 @@ import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/
 import { calcularHoraLlegada } from '@/utils/time';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
-import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon, CheckCircle2, Ticket } from 'lucide-react';
+import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon, CheckCircle2, Ticket, LayoutGrid } from 'lucide-react';
+import Link from 'next/link';
 import type { RawScheduleEntry } from '@/types/schedule';
 import type { DayOfWeek } from '@/types/common';
 
@@ -388,8 +389,16 @@ export default function Hoy() {
           >
             Hoy
           </button>
-          <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm">
-            <RelojMinimalista />
+          <div className="flex gap-2">
+            <Link 
+              href="/horarios"
+              className="bg-zinc-900 w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm hover:bg-zinc-800 transition-colors"
+            >
+              <LayoutGrid size={16} className="text-zinc-400" />
+            </Link>
+            <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm">
+              <RelojMinimalista />
+            </div>
           </div>
         </div>
       </header>
