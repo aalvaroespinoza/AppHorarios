@@ -62,6 +62,11 @@ const LUMASA_IDA_SALIDA = ['07:20', '09:20', '11:20', '13:20', '15:20', '17:20',
 const LUMASA_IDA_LLEGADA = ['08:20', '10:20', '12:20', '14:20', '16:20', '18:20', '20:20', '22:20'];
 
 // ─── VUELTA (Córdoba → Despeñaderos), Lunes a Viernes ────────────────────
+const CANELO_VUELTA = [
+  '06:25', '07:50', '09:20', '10:50', '12:20', '13:40', 
+  '15:20', '16:40', '18:20', '20:00', '21:20', '23:00'
+];
+
 const INTERCORDOBA_VUELTA = [
   '07:00', '09:45', '10:30', '12:15', '13:15', '14:00', '16:00', '17:00', '18:15', '20:00', '21:15',
 ];
@@ -92,6 +97,7 @@ export const rawScheduleEntries: RawScheduleEntry[] = [
   ...expandirLunesAViernes('intercordoba', 'ida', INTERCORDOBA_IDA),
   ...expandirLunesAViernes('lumasa', 'ida', LUMASA_IDA_SALIDA, LUMASA_IDA_LLEGADA),
 
+  ...expandirLunesAViernes('canelo', 'vuelta', CANELO_VUELTA),
   ...expandirLunesAViernes('intercordoba', 'vuelta', INTERCORDOBA_VUELTA),
   ...expandirLunesAViernes('lumasa', 'vuelta', LUMASA_VUELTA_SALIDA, LUMASA_VUELTA_LLEGADA),
 
