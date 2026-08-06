@@ -19,11 +19,10 @@ const getDiaActual = (d: Date): DayOfWeek | 'domingo' => {
 export async function GET(req: NextRequest) {
   // 1. Verificación de Seguridad Serverless
   // Protegemos el endpoint para que nadie pueda ejecutarlo y mandar mensajes spam
-  const url = new URL(req.url);
-  const authSecret = url.searchParams.get('secret');
+  const authHeader = req.headers.get('authorization');
 
-  if (authSecret !== CRON_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized. Secret is invalid.' }, { status: 401 });
+  if (authHeader !== `Bearer ${CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized. Invalid Bearer token.' }, { status: 401 });
   }
 
   // 2. Verificación de entorno
