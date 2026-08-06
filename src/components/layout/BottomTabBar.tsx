@@ -17,7 +17,6 @@ export default function BottomTabBar() {
   const tabs = [
     { id: '/', label: 'Viaje', icon: Home },
     { id: '/academia', label: 'Agenda', icon: BookOpen },
-    { id: '/finanzas', label: 'Finanzas', icon: Wallet },
   ];
 
   return (
