@@ -1,4 +1,4 @@
-import type { ID, DayOfWeek } from './common';
+import type { ID, DayOfWeek } from '@/core/types/common';
 import type { BusService } from './schedule';
 import type { Subject } from './subject';
 

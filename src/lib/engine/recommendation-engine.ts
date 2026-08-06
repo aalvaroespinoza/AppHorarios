@@ -1,4 +1,4 @@
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 import type { Direction, RawScheduleEntry } from '@/types/schedule';
 import { determineScenario, findScenario } from './scenario-engine';
 import { subjectData } from '@/data/subjects';

@@ -1,2 +1,2 @@
 // Barrel de componentes
-export * from './ui';
+export * from '@/core/components/ui';

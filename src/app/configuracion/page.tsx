@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import NativeCard from '@/components/ui/NativeCard';
+import NativeCard from '@/core/components/ui/NativeCard';
 import { Bell, RefreshCw, Moon, Sun, ChevronLeft, Trash2, Ticket, Info, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { useBec } from '@/hooks/useBec';

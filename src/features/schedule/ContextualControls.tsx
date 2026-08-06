@@ -3,9 +3,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
-import NativeCard from '@/components/ui/NativeCard';
-import NativeSwitch from '@/components/ui/NativeSwitch';
-import { DayOfWeek } from '@/types/common';
+import NativeCard from '@/core/components/ui/NativeCard';
+import NativeSwitch from '@/core/components/ui/NativeSwitch';
+import { DayOfWeek } from '@/core/types/common';
 import { Building2, Bed } from 'lucide-react';
 
 const DIAS_SEMANA: { id: DayOfWeek; label: string }[] = [

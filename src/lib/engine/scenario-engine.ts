@@ -4,7 +4,7 @@ import type {
   ScenarioEngineOptions,
   Scenario,
 } from '@/types/scenario';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 import { scenarios } from '@/data/scenarios';
 
 // ─── Constantes internas ──────────────────────────────────────────────────────

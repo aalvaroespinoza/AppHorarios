@@ -1,6 +1,6 @@
 "use client";
 
-import { useLocalStorageState } from './useLocalStorageState';
+import { useLocalStorageState } from '@/core/hooks/useLocalStorageState';
 
 export interface BecDayRecord {
   fecha: string; // Formato YYYY-MM-DD

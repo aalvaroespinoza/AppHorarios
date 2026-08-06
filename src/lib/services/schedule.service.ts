@@ -1,5 +1,5 @@
 import type { BusService } from '@/types/schedule';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 import type { Company } from '@/types/company';
 import type { RawScheduleEntry } from '@/types/schedule';
 import {
@@ -7,7 +7,7 @@ import {
   filterByDay,
   filterByDirection,
 } from '@/lib/parsers/schedule-parser';
-import { compareTime } from '@/utils/time';
+import { compareTime } from '@/core/utils/time';
 
 // ─── Tipos del servicio ───────────────────────────────────────────────────────
 

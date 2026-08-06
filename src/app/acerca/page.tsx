@@ -1,6 +1,6 @@
 import { Info, Bus, Mail, AlertTriangle, ShieldCheck } from 'lucide-react';
-import NativeCard from '@/components/ui/NativeCard';
-import { Header } from '@/components/ui/Header';
+import NativeCard from '@/core/components/ui/NativeCard';
+import { Header } from '@/core/components/ui/Header';
 
 export default function AcercaPage() {
   return (

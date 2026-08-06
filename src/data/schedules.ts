@@ -1,5 +1,5 @@
 import type { RawScheduleEntry, Direction } from '@/types/schedule';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 
 /**
  * Base de datos cruda de horarios de colectivo.

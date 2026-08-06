@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2 } from 'lucide-react';
-import NativeCard from '@/components/ui/NativeCard';
+import NativeCard from '@/core/components/ui/NativeCard';
 import AntiSleepButton from '@/components/AntiSleepButton';
-import { calcularHoraLlegada } from '@/utils/time';
+import { calcularHoraLlegada } from '@/core/utils/time';
 import { addMinutes, OFFSET_PARADA_VUELTA_MIN } from '@/lib/engine/recommendation-engine';
 import { useCountdown } from '@/hooks/useCountdown';
 import type { RawScheduleEntry } from '@/types/schedule';

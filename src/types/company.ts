@@ -1,4 +1,4 @@
-import type { ID } from './common';
+import type { ID } from '@/core/types/common';
 
 /**
  * Empresa operadora de colectivos.

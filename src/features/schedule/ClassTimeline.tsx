@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Clock, CheckCircle2 } from 'lucide-react';
-import NativeCard from '@/components/ui/NativeCard';
+import NativeCard from '@/core/components/ui/NativeCard';
 
 interface Materia {
   nombre: string;

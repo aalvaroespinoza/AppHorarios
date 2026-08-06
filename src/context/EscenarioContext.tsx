@@ -1,7 +1,8 @@
 "use client";
 
 import React, { createContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { DayOfWeek } from '@/types/common';
+import { DayOfWeek } from '@/core/types/common';
+import { idb } from '@/core/utils/indexedDB';
 
 export interface EscenarioUsuario {
   diaSeleccionado: DayOfWeek;
@@ -41,30 +42,34 @@ export function EscenarioProvider({ children }: { children: ReactNode }) {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    setIsMounted(true);
-    try {
-      const item = window.localStorage.getItem(STORAGE_KEY);
-      if (item) {
-        const storedEscenario = JSON.parse(item) as Partial<EscenarioUsuario>;
-        const cleanEscenario: Partial<EscenarioUsuario> = {};
-        if (storedEscenario.diaSeleccionado) cleanEscenario.diaSeleccionado = storedEscenario.diaSeleccionado;
-        if (typeof storedEscenario.cursaArquitectura === 'boolean') cleanEscenario.cursaArquitectura = storedEscenario.cursaArquitectura;
-        if (typeof storedEscenario.duermeEnCordoba === 'boolean') cleanEscenario.duermeEnCordoba = storedEscenario.duermeEnCordoba;
-        
-        setEscenario((prev) => ({ ...prev, ...cleanEscenario }));
+    let isCancelled = false;
+    const loadState = async () => {
+      try {
+        const storedEscenario = await idb.get<Partial<EscenarioUsuario>>(STORAGE_KEY);
+        if (!isCancelled && storedEscenario) {
+          const cleanEscenario: Partial<EscenarioUsuario> = {};
+          if (storedEscenario.diaSeleccionado) cleanEscenario.diaSeleccionado = storedEscenario.diaSeleccionado;
+          if (typeof storedEscenario.cursaArquitectura === 'boolean') cleanEscenario.cursaArquitectura = storedEscenario.cursaArquitectura;
+          if (typeof storedEscenario.duermeEnCordoba === 'boolean') cleanEscenario.duermeEnCordoba = storedEscenario.duermeEnCordoba;
+          
+          setEscenario((prev) => ({ ...prev, ...cleanEscenario }));
+        }
+      } catch (error) {
+        console.error('Error al intentar leer del IndexedDB:', error);
       }
-    } catch (error) {
-      console.error('Error al intentar leer del localStorage:', error);
-    }
+      if (!isCancelled) setIsMounted(true);
+    };
+    loadState();
+    return () => { isCancelled = true; };
   }, []);
 
   const saveEscenario = useCallback((nuevoEstado: EscenarioUsuario) => {
     try {
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nuevoEstado));
+        idb.set(STORAGE_KEY, nuevoEstado).catch(console.error);
       }
     } catch (error) {
-      console.error('Error al guardar en localStorage:', error);
+      console.error('Error al guardar en IndexedDB:', error);
     }
   }, []);
 

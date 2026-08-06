@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 
-import { ScenarioTag } from '@/components/ui/ScenarioTag';
+import { ScenarioTag } from '@/core/components/ui/ScenarioTag';
 import { SubjectList } from '@/features/schedule/SubjectList';
 import { BusScheduleList } from '@/features/schedule/BusScheduleList';
 import { determineScenario, findScenario } from '@/lib/engine';
@@ -11,7 +11,7 @@ import { getScheduleForDay } from '@/lib/services';
 import { subjectData } from '@/data/subjects';
 import { rawScheduleEntries } from '@/data/schedules';
 import { companies } from '@/data/companies';
-import { formatDateLong } from '@/utils/date';
+import { formatDateLong } from '@/core/utils/date';
 
 import { useEscenario } from '@/hooks/useEscenario';
 

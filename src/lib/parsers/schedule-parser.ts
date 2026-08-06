@@ -1,5 +1,5 @@
 import type { BusService, RawScheduleEntry, Direction } from '@/types/schedule';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 
 // ─── Contador interno para generar IDs deterministas ─────────────────────────
 

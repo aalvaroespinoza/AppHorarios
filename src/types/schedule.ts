@@ -1,4 +1,4 @@
-import type { ID, DayOfWeek, TimeString } from './common';
+import type { ID, DayOfWeek, TimeString } from '@/core/types/common';
 
 /**
  * Sentido del viaje.

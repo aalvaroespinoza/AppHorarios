@@ -7,7 +7,7 @@ import Link from 'next/link';
 import { useAgenda } from '@/hooks/useAgenda';
 import { useEscenario } from '@/hooks/useEscenario';
 import { useFinanzas } from '@/hooks/useFinanzas';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 import { MiniCalendar } from '@/features/academia/MiniCalendar';
 import { AgendaView } from '@/features/academia/AgendaView';
 import { FloatingActions } from '@/features/academia/FloatingActions';

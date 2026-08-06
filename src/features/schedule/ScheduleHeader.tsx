@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { LayoutGrid } from 'lucide-react';
 import RelojMinimalista from '@/components/RelojMinimalista';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 
 interface ScheduleHeaderProps {
   diaCapitalizado: string;

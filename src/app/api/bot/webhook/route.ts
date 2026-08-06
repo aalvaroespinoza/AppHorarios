@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Telegraf, Markup } from 'telegraf';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '../../../../lib/engine/recommendation-engine';
-import { DayOfWeek } from '../../../../types/common';
+import { DayOfWeek } from '@/core/types/common';
 import { RawScheduleEntry } from '../../../../types/schedule';
 import { getScheduleForDay } from '../../../../lib/services';
 import { rawScheduleEntries } from '../../../../data/schedules';

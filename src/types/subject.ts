@@ -1,4 +1,4 @@
-import type { ID, DayOfWeek, Shift, TimeString } from './common';
+import type { ID, DayOfWeek, Shift, TimeString } from '@/core/types/common';
 
 /**
  * Bloque horario de una materia (ej.: un día con hora de inicio y fin).

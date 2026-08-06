@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { calcularColectivos, timeToMins } from '@/lib/engine/recommendation-engine';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 
 export async function GET(request: Request) {
   // Obtener fecha y hora actual en la zona horaria de Argentina

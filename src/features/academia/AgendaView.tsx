@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { Clock, Plus, Trash2 } from 'lucide-react';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 import type { useAgenda } from '@/hooks/useAgenda';
 
 interface AgendaViewProps {

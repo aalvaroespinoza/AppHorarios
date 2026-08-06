@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

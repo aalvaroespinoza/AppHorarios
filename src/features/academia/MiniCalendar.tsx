@@ -6,10 +6,10 @@ import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-reac
 import { useDeadlines } from '@/hooks/useDeadlines';
 import { useAgenda } from '@/hooks/useAgenda';
 import { useEscenario } from '@/hooks/useEscenario';
-import NativeCard from '@/components/ui/NativeCard';
+import NativeCard from '@/core/components/ui/NativeCard';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
-import type { DayOfWeek } from '@/types/common';
+import type { DayOfWeek } from '@/core/types/common';
 
 export function MiniCalendar() {
   const [currentDate] = useState(new Date());

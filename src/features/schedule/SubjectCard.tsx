@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import type { Subject } from '@/types/subject';
-import { formatTimeRange } from '@/utils/date';
+import { formatTimeRange } from '@/core/utils/date';
 
 interface SubjectCardProps {
   subject: Subject;

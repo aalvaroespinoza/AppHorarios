@@ -1,4 +1,4 @@
-import type { DayOfWeek } from './common';
+import type { DayOfWeek } from '@/core/types/common';
 import type { Subject } from './subject';
 
 /**

@@ -1,6 +1,10 @@
-# AppHorarios
+# LifeOS
 
-> PWA para saber qué colectivo tomar desde **Despeñaderos → UTN Córdoba** según el día de cursada.
+> **LifeOS** is an extensible personal platform to manage daily routines, schedule, and automation, evolving from its origins as **AppHorarios**.
+>
+> *(Currently tracking bus schedules from **Despeñaderos → UTN Córdoba** based on class days)*
+> 
+> See the `docs/` folder for the complete platform vision and architecture.
 
 ---
 

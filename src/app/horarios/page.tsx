@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useEscenario } from '@/hooks/useEscenario';
 import { rawScheduleEntries } from '@/data/schedules';
-import NativeCard from '@/components/ui/NativeCard';
+import NativeCard from '@/core/components/ui/NativeCard';
 import { Bus, MapPin, Settings } from 'lucide-react';
 import Link from 'next/link';
 import ContextualControls from '@/features/schedule/ContextualControls';
