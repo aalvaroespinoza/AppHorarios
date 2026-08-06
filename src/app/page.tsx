@@ -52,6 +52,14 @@ function useCountdown(horaSalida: string | undefined) {
   return minutosFaltantes;
 }
 
+const formatMinutosFaltantes = (mins: number) => {
+  if (mins < 60) return `${mins} min`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+};
+
 /**
  * Componente Tarjeta de Colectivo (Ida o Vuelta)
  */
@@ -185,7 +193,7 @@ function HorarioCard({
               </span>
               <span>
                 {minutosFaltantes > 0 
-                  ? `Sale en ${minutosFaltantes} min` 
+                  ? `Sale en ${formatMinutosFaltantes(minutosFaltantes)}` 
                   : minutosFaltantes === 0 
                     ? 'Saliendo...' 
                     : 'Ya salió'}
