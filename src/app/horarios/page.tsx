@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useEscenario } from '@/hooks/useEscenario';
 import { rawScheduleEntries } from '@/data/schedules';
 import NativeCard from '@/components/ui/NativeCard';
-import { Bus, MapPin } from 'lucide-react';
+import { Bus, MapPin, Settings } from 'lucide-react';
+import Link from 'next/link';
 import ContextualControls from '@/features/schedule/ContextualControls';
 import type { RawScheduleEntry } from '@/types/schedule';
 
@@ -37,12 +38,17 @@ export default function HorariosPage() {
   return (
     <main className="min-h-screen bg-black text-white font-sans max-w-md mx-auto pb-24">
       <header className="pt-10 pb-2 px-4 flex flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2 mb-1">
-            <Bus className="text-blue-500" />
-            Todos los Horarios
-          </h1>
-          <p className="text-sm text-zinc-400 leading-tight">Consulta la grilla completa de colectivos agrupada por empresa.</p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2 mb-1">
+              <Bus className="text-blue-500" />
+              Todos los Horarios
+            </h1>
+            <p className="text-sm text-zinc-400 leading-tight">Consulta la grilla completa de colectivos.</p>
+          </div>
+          <Link href="/configuracion" className="w-10 h-10 bg-zinc-800/80 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+            <Settings size={20} />
+          </Link>
         </div>
         
         {/* Indicador de Vista Actual */}
