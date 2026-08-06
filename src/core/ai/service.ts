@@ -35,7 +35,8 @@ export class GeminiService {
       const response = await result.response;
       const text = response.text();
       
-      const parsedData = JSON.parse(text) as T;
+      const cleanText = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+      const parsedData = JSON.parse(cleanText) as T;
 
       return {
         success: true,

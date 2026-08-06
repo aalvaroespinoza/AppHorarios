@@ -54,13 +54,15 @@ export async function POST(request: Request) {
 
     if (dbError) {
       console.error('Error insertando en Supabase:', dbError);
-      // Retornamos error interno de DB pero seguimos, o podemos fallar
-      return NextResponse.json({ error: 'Error guardando en base de datos', details: dbError }, { status: 500 });
+      throw new Error(`Error en Supabase: ${dbError.message}`);
     }
 
     return NextResponse.json({ success: true, data: parsedData }, { status: 200 });
   } catch (error: any) {
     console.error('Error en /api/brain:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Unknown error' }, 
+      { status: 500 }
+    );
   }
 }

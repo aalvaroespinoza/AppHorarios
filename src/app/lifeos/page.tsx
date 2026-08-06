@@ -40,7 +40,8 @@ export default function LifeOSConsole() {
       });
 
       if (!response.ok) {
-        throw new Error('Error en el servidor');
+        const errorData = await response.json().catch(() => ({ error: 'Error en el servidor' }));
+        throw new Error(errorData.error || 'Error en el servidor');
       }
 
       const data = await response.json();
@@ -54,13 +55,13 @@ export default function LifeOSConsole() {
         )
       );
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error enviando al cerebro:', error);
-      // Actualizar estado a error
+      // Actualizar estado a error con el mensaje real devuelto por la API
       setHistory((prev) => 
         prev.map((cmd) => 
           cmd.id === commandId 
-            ? { ...cmd, status: 'error', result: 'Error procesando el comando' } 
+            ? { ...cmd, status: 'error', result: error instanceof Error ? error.message : 'Error procesando el comando' } 
             : cmd
         )
       );
