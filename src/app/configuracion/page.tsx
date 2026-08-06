@@ -3,10 +3,12 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NativeCard from '@/components/ui/NativeCard';
-import { Bell, RefreshCw, Moon, Sun, ChevronLeft, Trash2 } from 'lucide-react';
+import { Bell, RefreshCw, Moon, Sun, ChevronLeft, Trash2, Ticket } from 'lucide-react';
+import { useBec } from '@/hooks/useBec';
 
 export default function Configuracion() {
   const router = useRouter();
+  const bec = useBec();
   const [isMounted, setIsMounted] = useState(false);
   const [notisA, setNotisA] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
@@ -27,6 +29,12 @@ export default function Configuracion() {
   };
 
   if (!isMounted) return <div className="min-h-screen bg-black" />;
+
+  const currentDate = new Date();
+  const mesNum = currentDate.getMonth() + 1;
+  const year = currentDate.getFullYear();
+  const mesString = currentDate.toLocaleString('es-AR', { month: 'long' });
+  const resumenBec = bec.obtenerResumenMensual(mesNum, year);
 
   return (
     <main className="min-h-screen bg-zinc-950 text-white font-sans max-w-md mx-auto pb-10">
@@ -94,6 +102,36 @@ export default function Configuracion() {
                 className={`w-12 h-7 rounded-full p-0.5 cursor-pointer transition-colors ${darkMode ? 'bg-green-500' : 'bg-zinc-700'}`}
               >
                 <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${darkMode ? 'translate-x-5' : 'translate-x-0'}`} />
+              </div>
+            </div>
+          </NativeCard>
+        </section>
+
+        {/* SECCIÓN 3: Boleto Educativo */}
+        <section className="mb-6">
+          <h2 className="text-[13px] uppercase text-zinc-500 font-medium tracking-wide mb-2 ml-4">Boleto Educativo</h2>
+          <NativeCard className="p-0 overflow-hidden bg-zinc-900 border-none">
+            <div className="p-4 flex flex-col gap-4">
+              <div className="flex items-center gap-3">
+                <div className="bg-emerald-500 p-1.5 rounded-[10px] text-white">
+                  <Ticket size={18} fill="currentColor" />
+                </div>
+                <div>
+                  <span className="font-medium text-[16px] text-white block leading-tight">Resumen de Viajes</span>
+                  <span className="text-[13px] text-zinc-400 capitalize">{mesString} {year}</span>
+                </div>
+              </div>
+              
+              <div className="bg-zinc-950/60 rounded-xl p-5 flex flex-col items-center justify-center text-center border border-zinc-800/60">
+                <p className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold mb-1">Total usados</p>
+                <div className="text-5xl font-bold text-white mb-2">
+                  {resumenBec.totalCombinado}
+                </div>
+                <div className="text-[13px] font-medium text-zinc-500 flex gap-2 items-center">
+                  <span className="text-emerald-400">Idas: {resumenBec.idaTotal}</span>
+                  <span className="text-zinc-700">|</span>
+                  <span className="text-blue-400">Vueltas: {resumenBec.vueltaTotal}</span>
+                </div>
               </div>
             </div>
           </NativeCard>
