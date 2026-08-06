@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Timer, DollarSign, LayoutGrid, Settings, Info, Mic } from 'lucide-react';
+import { Menu, X, Timer, DollarSign, LayoutGrid, Settings, Info, Mic, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { useFinanzas } from '@/hooks/useFinanzas';
@@ -78,6 +78,11 @@ export function FloatingActions({ finanzas, agenda }: { finanzas: ReturnType<typ
                   <Link href="/horarios" className="flex items-center gap-3 w-full p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 transition-colors">
                     <div className="bg-blue-500/20 p-2 rounded-lg text-blue-400"><LayoutGrid size={18} /></div>
                     <span className="font-medium text-sm text-zinc-200 flex-1">Horarios Completos</span>
+                  </Link>
+
+                  <Link href="/boveda" className="flex items-center gap-3 w-full p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 transition-colors">
+                    <div className="bg-amber-500/20 p-2 rounded-lg text-amber-400"><KeyRound size={18} /></div>
+                    <span className="font-medium text-sm text-zinc-200 flex-1">Bóveda de Datos</span>
                   </Link>
 
                   <Link href="/configuracion" className="flex items-center gap-3 w-full p-3 rounded-xl bg-zinc-800/50 hover:bg-zinc-800 border border-zinc-700/50 transition-colors">

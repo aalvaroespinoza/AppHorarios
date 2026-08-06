@@ -22,6 +22,8 @@ function getDiaActualStr(): DayOfWeek {
   return map[jsDay] || 'lunes';
 }
 
+import { BateriaMentalSection } from '@/features/academia/BateriaMentalSection';
+
 export default function AcademiaPage() {
   const { diaSeleccionado, setDiaSeleccionado, isMounted } = useEscenario();
   const agenda = useAgenda();
@@ -109,6 +111,9 @@ export default function AcademiaPage() {
 
       {/* Mini Calendar Section */}
       <MiniCalendar />
+
+      {/* Batería Mental */}
+      <BateriaMentalSection />
 
     </motion.div>
   );
