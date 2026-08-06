@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
     // Usar la abstracción de Gemini construida en la Fase 1
     const aiResponse = await GeminiService.askJson<ParsedAction>(
-      'gemini-1.5-flash',
+      'gemini-1.5-flash-latest',
       {
         systemInstruction: SYSTEM_PROMPT,
         prompt: text

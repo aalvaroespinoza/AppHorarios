@@ -12,7 +12,7 @@ export class BrainEngineService implements IBrainService {
     const prompt = `Contexto temporal actual: ${context.currentDateIso} (Timezone: ${context.userTimezone}).\n\nTexto provisto por el usuario: "${text}"`;
 
     const response = await GeminiService.askJson<BrainAnalysisResult>(
-      'gemini-1.5-flash',
+      'gemini-1.5-flash-latest',
       {
         systemInstruction: SystemPrompts.CLASSIFICATION,
         prompt: prompt,
