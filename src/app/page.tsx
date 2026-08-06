@@ -69,8 +69,6 @@ function HorarioCard({
   bec: ReturnType<typeof useBec>
 }) {
   const [verAlternativas, setVerAlternativas] = useState(false);
-  const [yaTomado, setYaTomado] = useState(false);
-  const [storageKey, setStorageKey] = useState('');
   
   const [currentRecomendado, setCurrentRecomendado] = useState<RawScheduleEntry | null>(recomendacion.recomendado);
   const [currentAlternativas, setCurrentAlternativas] = useState<RawScheduleEntry[]>(recomendacion.alternativas);
@@ -80,6 +78,9 @@ function HorarioCard({
     setCurrentAlternativas(recomendacion.alternativas);
   }, [recomendacion]);
 
+  const registroHoy = bec.getRegistroHoy();
+  const becUsado = direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado;
+
   const handleSwap = (alt: RawScheduleEntry, idx: number) => {
     if (!currentRecomendado) return;
     const newAlts = [...currentAlternativas];
@@ -87,39 +88,14 @@ function HorarioCard({
     newAlts.sort((a, b) => a.horaSalida.localeCompare(b.horaSalida));
     setCurrentRecomendado(alt);
     setCurrentAlternativas(newAlts);
+    setVerAlternativas(false);
   };
-  
-  useEffect(() => {
-    // Usar la fecha local para construir la clave
-    const d = new Date();
-    d.setHours(d.getHours() - 3); // Ajuste UTC-3
-    const today = d.toISOString().split('T')[0];
-    const key = `tomado:${today}:${direction}`;
-    setStorageKey(key);
-    
-    if (localStorage.getItem(key) === 'true') {
-      setYaTomado(true);
-    }
-  }, [direction]);
 
   const toggleTomado = () => {
-    const newValue = !yaTomado;
-    setYaTomado(newValue);
-    if (newValue) {
-      localStorage.setItem(storageKey, 'true');
+    if (becUsado) {
+      bec.desmarcarViaje(direction);
     } else {
-      localStorage.removeItem(storageKey);
-    }
-  };
-  
-  const handleBecClick = () => {
-    bec.marcarViaje(direction);
-    if (!becUsado && !yaTomado) {
-      setYaTomado(true);
-      localStorage.setItem(storageKey, 'true');
-    } else if (becUsado && yaTomado) {
-      setYaTomado(false);
-      localStorage.removeItem(storageKey);
+      bec.marcarViaje(direction);
     }
   };
   
@@ -128,9 +104,6 @@ function HorarioCard({
   
   const targetLat = direction === 'ida' ? -31.4422 : -31.8153;
   const targetLng = direction === 'ida' ? -64.1938 : -64.2894;
-
-  const registroHoy = bec.getRegistroHoy();
-  const becUsado = direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado;
 
   const minutosFaltantes = useCountdown(horaReal);
 
@@ -149,9 +122,9 @@ function HorarioCard({
   }
 
   return (
-    <NativeCard className={`flex flex-col relative overflow-hidden transition-all duration-300 ${yaTomado ? 'opacity-70 grayscale-[0.3]' : ''}`}>
+    <NativeCard className={`flex flex-col relative overflow-hidden transition-all duration-300 ${becUsado ? 'opacity-70 grayscale-[0.3]' : ''}`}>
       {/* Efecto de resplandor decorativo */}
-      <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${yaTomado ? 'bg-green-500/10' : 'bg-blue-500/10'}`} />
+      <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${becUsado ? 'bg-green-500/10' : 'bg-blue-500/10'}`} />
 
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2 text-zinc-400">
@@ -161,13 +134,13 @@ function HorarioCard({
         <button 
           onClick={toggleTomado}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-            yaTomado 
-              ? 'bg-green-900/30 text-green-400 border-green-800/50' 
+            becUsado 
+              ? 'bg-green-900/30 text-green-400 border-green-800/50 hover:bg-green-900/50' 
               : 'bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-800 hover:text-white'
           }`}
         >
           <CheckCircle2 size={16} />
-          {yaTomado ? 'Completado' : 'Ya lo tomé'}
+          {becUsado ? 'BEC Usado ✓' : 'Ya lo tomé'}
         </button>
       </div>
 
@@ -223,21 +196,6 @@ function HorarioCard({
       
       {/* Botón Anti-Pestañeo */}
       <AntiSleepButton targetLat={targetLat} targetLng={targetLng} />
-
-      {/* Botón BEC */}
-      <div className="mb-4 mt-2">
-        <button
-          onClick={handleBecClick}
-          className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium transition-all ${
-            becUsado 
-              ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
-              : 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 active:scale-[0.98]'
-          }`}
-        >
-          {becUsado ? <CheckCircle2 size={18} /> : <Ticket size={18} />}
-          {becUsado ? 'BEC Usado ✓ (Tocar para deshacer)' : 'Usar BEC'}
-        </button>
-      </div>
 
       {currentAlternativas.length > 0 && (
         <div className="border-t border-zinc-800/80 pt-4 mt-2">

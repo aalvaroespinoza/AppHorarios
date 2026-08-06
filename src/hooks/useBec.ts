@@ -130,10 +130,39 @@ export function useBec() {
     localStorage.removeItem('historialBec');
   };
 
+  /**
+   * Desmarca un viaje como usado en el día actual (zona horaria Argentina).
+   */
+  const desmarcarViaje = (tipo: 'ida' | 'vuelta') => {
+    const hoy = new Date();
+    const formatter = new Intl.DateTimeFormat('en-CA', { 
+      timeZone: 'America/Argentina/Buenos_Aires',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const fechaString = formatter.format(hoy);
+
+    setHistorialBec(prev => {
+      const copy = [...prev];
+      const index = copy.findIndex(record => record.fecha === fechaString);
+
+      if (index >= 0) {
+        copy[index] = {
+          ...copy[index],
+          idaUsado: tipo === 'ida' ? false : copy[index].idaUsado,
+          vueltaUsado: tipo === 'vuelta' ? false : copy[index].vueltaUsado,
+        };
+      }
+      return copy;
+    });
+  };
+
   return {
     historialBec,
     isMounted,
     marcarViaje,
+    desmarcarViaje,
     obtenerResumenMensual,
     getRegistroHoy,
     reiniciarHistorial
