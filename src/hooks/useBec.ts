@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useLocalStorageState } from './useLocalStorageState';
 
 export interface BecDayRecord {
   fecha: string; // Formato YYYY-MM-DD
@@ -15,30 +15,7 @@ export interface BecMonthSummary {
 }
 
 export function useBec() {
-  const [historialBec, setHistorialBec] = useState<BecDayRecord[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-
-  // Hidratación desde localStorage
-  useEffect(() => {
-    setIsMounted(true);
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('historialBec');
-      if (stored) {
-        try {
-          setHistorialBec(JSON.parse(stored));
-        } catch (e) {
-          console.error("Error al parsear historialBec:", e);
-        }
-      }
-    }
-  }, []);
-
-  // Sincronización automática a localStorage
-  useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
-      localStorage.setItem('historialBec', JSON.stringify(historialBec));
-    }
-  }, [historialBec, isMounted]);
+  const [historialBec, setHistorialBec, isMounted] = useLocalStorageState<BecDayRecord[]>('historialBec', []);
 
   /**
    * Marca un viaje como usado en el día actual (zona horaria Argentina).

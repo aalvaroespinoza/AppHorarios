@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useLocalStorageState } from './useLocalStorageState';
 
 export interface Transaccion {
   id: string;
@@ -12,28 +12,7 @@ export interface Transaccion {
 }
 
 export function useFinanzas() {
-  const [transacciones, setTransacciones] = useState<Transaccion[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('academia_finanzas_movimientos');
-      if (stored) {
-        try {
-          setTransacciones(JSON.parse(stored));
-        } catch (e) {
-          console.error("Error parsing academia_finanzas_movimientos:", e);
-        }
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
-      localStorage.setItem('academia_finanzas_movimientos', JSON.stringify(transacciones));
-    }
-  }, [transacciones, isMounted]);
+  const [transacciones, setTransacciones, isMounted] = useLocalStorageState<Transaccion[]>('academia_finanzas_movimientos', []);
 
   const agregarTransaccion = (nuevaTransaccion: Transaccion) => {
     setTransacciones(prev => [nuevaTransaccion, ...prev]);

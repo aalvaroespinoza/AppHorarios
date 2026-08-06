@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useLocalStorageState } from './useLocalStorageState';
 
 export interface Deadline {
   id: string;
@@ -10,28 +10,7 @@ export interface Deadline {
 }
 
 export function useDeadlines() {
-  const [deadlines, setDeadlines] = useState<Deadline[]>([]);
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('academia_deadlines');
-      if (stored) {
-        try {
-          setDeadlines(JSON.parse(stored));
-        } catch (e) {
-          console.error("Error parsing academia_deadlines:", e);
-        }
-      }
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
-      localStorage.setItem('academia_deadlines', JSON.stringify(deadlines));
-    }
-  }, [deadlines, isMounted]);
+  const [deadlines, setDeadlines, isMounted] = useLocalStorageState<Deadline[]>('academia_deadlines', []);
 
   const agregarDeadline = (nuevo: Deadline) => {
     setDeadlines(prev => [...prev, nuevo]);

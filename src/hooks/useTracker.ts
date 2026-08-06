@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useLocalStorageState } from './useLocalStorageState';
 
 export interface TrackerState {
   modulosCompletados: string[];
@@ -15,30 +15,8 @@ const defaultState: TrackerState = {
 };
 
 export function useTracker(certificacionId: string = 'eJPT') {
-  const [state, setState] = useState<TrackerState>(defaultState);
-  const [isMounted, setIsMounted] = useState(false);
-
   const storageKey = `academia_tracker_${certificacionId}`;
-
-  useEffect(() => {
-    setIsMounted(true);
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        try {
-          setState(JSON.parse(stored));
-        } catch (e) {
-          console.error(`Error parsing ${storageKey}:`, e);
-        }
-      }
-    }
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (isMounted && typeof window !== 'undefined') {
-      localStorage.setItem(storageKey, JSON.stringify(state));
-    }
-  }, [state, isMounted, storageKey]);
+  const [state, setState, isMounted] = useLocalStorageState<TrackerState>(storageKey, defaultState);
 
   const marcarModulo = (moduloId: string, completado: boolean) => {
     setState(prev => {
