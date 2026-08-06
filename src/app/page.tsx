@@ -184,15 +184,8 @@ function HorarioCard({
                 }`}></span>
               </span>
               <span>
-                {minutosFaltantes > 0 
-                  ? `Sale en ${minutosFaltantes} min` 
-                  : minutosFaltantes === 0 
-                    ? 'Saliendo...' 
-                    : 'Ya salió'}
+                Hora est. de Llegada: {calcularHoraLlegada(currentRecomendado.horaSalida, direction)}
               </span>
-            </div>
-            <div className="text-zinc-500 text-xs font-medium px-1">
-              Llegada est. {calcularHoraLlegada(currentRecomendado.horaSalida, direction)}
             </div>
           </div>
         )}
