@@ -2,20 +2,22 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Timer, DollarSign, LayoutGrid, Settings, Info, Plus } from 'lucide-react';
+import { Menu, X, Timer, DollarSign, LayoutGrid, Settings, Info, Mic } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { useFinanzas } from '@/hooks/useFinanzas';
+import type { useAgenda } from '@/hooks/useAgenda';
 
 // Importación perezosa de los widgets pesados
 const PomodoroWidget = dynamic(() => import('@/components/PomodoroWidget'), { ssr: false });
 const FinanzasRapidasWidget = dynamic(() => import('./FinanzasWidget'), { ssr: false });
+const VoiceRecorder = dynamic(() => import('./VoiceRecorder'), { ssr: false });
 
-export function FloatingActions({ finanzas }: { finanzas: ReturnType<typeof useFinanzas> }) {
+export function FloatingActions({ finanzas, agenda }: { finanzas: ReturnType<typeof useFinanzas>, agenda: ReturnType<typeof useAgenda> }) {
   const [showMenu, setShowMenu] = useState(false);
   
   // Vistas activas dentro del popover
-  const [activeView, setActiveView] = useState<'menu' | 'pomodoro' | 'finanzas'>('menu');
+  const [activeView, setActiveView] = useState<'menu' | 'pomodoro' | 'finanzas' | 'mic'>('menu');
 
   const closePopover = () => {
     setShowMenu(false);
@@ -26,12 +28,12 @@ export function FloatingActions({ finanzas }: { finanzas: ReturnType<typeof useF
     <>
       {/* Floating Top Right Buttons */}
       <div className="absolute top-4 right-4 flex gap-2 z-40" style={{ top: 'max(1rem, env(safe-area-inset-top))' }}>
-        <a 
-          href="shortcuts://run-shortcut?name=agregar%20recordatorio"
+        <button 
+          onClick={() => { setShowMenu(true); setActiveView('mic'); }}
           className="w-10 h-10 bg-blue-600 border border-blue-500/50 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-900/20 active:scale-90 transition-all hover:bg-blue-500"
         >
-          <Plus size={20} />
-        </a>
+          <Mic size={20} />
+        </button>
         <button 
           onClick={() => { setShowMenu(true); setActiveView('menu'); }}
           className="w-10 h-10 bg-zinc-800/80 backdrop-blur border border-zinc-700/50 rounded-full flex items-center justify-center text-zinc-300 shadow-lg active:scale-90 transition-all hover:bg-zinc-700"
@@ -103,6 +105,10 @@ export function FloatingActions({ finanzas }: { finanzas: ReturnType<typeof useF
 
             {activeView === 'finanzas' && (
               <FinanzasRapidasWidget finanzas={finanzas} onClose={closePopover} />
+            )}
+
+            {activeView === 'mic' && (
+              <VoiceRecorder agenda={agenda} onClose={closePopover} />
             )}
           </motion.div>
         )}

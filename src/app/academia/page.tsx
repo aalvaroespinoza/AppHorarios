@@ -64,7 +64,7 @@ export default function AcademiaPage() {
       className="p-4 max-w-md mx-auto flex flex-col gap-6 pb-28 relative min-h-screen"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
-      <FloatingActions finanzas={finanzas} />
+      <FloatingActions finanzas={finanzas} agenda={agenda} />
 
       {/* Header */}
       <header className="flex flex-col gap-2 mt-2">
