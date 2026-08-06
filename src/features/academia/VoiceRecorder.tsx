@@ -151,14 +151,14 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
   const confirmAndSave = () => {
     if (!parsedData) return;
     
-    // 1. Guardar en Agenda local
+    // 1. Guardar en Agenda local (sin disparar el .ics del calendario)
     agenda.agregarEvento({
       id: `voice-${Date.now()}`,
       titulo: editTitulo,
       horaInicio: parsedData.horaInicio,
       horaFin: parsedData.horaInicio, // No fin para recordatorios simples
       dia: parsedData.diaSemana
-    });
+    }, true);
 
     // 2. Disparar iOS Shortcut
     // Formato exacto JSON stringificado según URL scheme de Apple: input=text&text=...

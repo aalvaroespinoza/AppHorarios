@@ -45,9 +45,11 @@ export function useAgenda() {
     }
   }, [eventos, isMounted]);
 
-  const agregarEvento = (nuevoEvento: CustomEvent) => {
+  const agregarEvento = (nuevoEvento: CustomEvent, skipICS: boolean = false) => {
     setEventos(prev => [...prev, nuevoEvento]);
-    descargarICS(nuevoEvento);
+    if (!skipICS) {
+      descargarICS(nuevoEvento);
+    }
   };
 
   const descargarICS = (evento: CustomEvent) => {
