@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
 import { useBec } from '@/hooks/useBec';
@@ -382,7 +383,14 @@ export default function Hoy() {
       {/* Header */}
       <header className="flex justify-between items-end mt-2 mb-2">
         <div>
-          <p className="text-zinc-500 text-sm font-medium tracking-wide uppercase mb-1">App Horarios</p>
+          <Image 
+            src="/logo.png" 
+            alt="MoviTempo Logo" 
+            width={120} 
+            height={24} 
+            className="h-5 w-auto object-contain mb-1 opacity-90"
+            priority
+          />
           <h1 className="text-3xl font-bold tracking-tight text-white">
             {diaCapitalizado}
           </h1>
