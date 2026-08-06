@@ -11,8 +11,8 @@ const CACHE_KEY_PREFIX = 'micro_clima_';
 const CACHE_EXPIRY_MS = 3 * 60 * 60 * 1000; // 3 horas
 
 const COORDS = {
-  cordoba: { lat: -31.4167, lng: -64.1833 }, // Centro de Cba aprox
-  despeñaderos: { lat: -31.8153, lng: -64.2894 }
+  cordoba: { lat: -31.4135, lng: -64.181 },
+  despeñaderos: { lat: -31.815, lng: -64.289 }
 };
 
 export function useMicroClima(destino: Destino, horaLlegada: string) {
@@ -63,15 +63,11 @@ export function useMicroClima(destino: Destino, horaLlegada: string) {
       }
 
       if (dataToUse && isMounted) {
-        // Formatear la hora objetivo para buscar en el array de Open-Meteo
-        const horaNum = parseInt(horaLlegada.split(':')[0], 10);
+        const horaExacta = horaLlegada.split(':')[0].padStart(2, '0');
+        const targetSuffix = `T${horaExacta}:00`;
         
-        // Open-Meteo devuelve tiempos como YYYY-MM-DDTHH:00
-        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
-        const dateStr = formatter.format(new Date()); // YYYY-MM-DD
-        const targetTimeStr = `${dateStr}T${horaNum.toString().padStart(2, '0')}:00`;
+        const index = dataToUse.hourly.time.findIndex((t: string) => t.endsWith(targetSuffix));
         
-        const index = dataToUse.hourly.time.indexOf(targetTimeStr);
         if (index !== -1) {
           const probLluvia = dataToUse.hourly.precipitation_probability[index];
           const temp = dataToUse.hourly.temperature_2m[index];

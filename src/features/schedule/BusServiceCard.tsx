@@ -1,3 +1,5 @@
+"use client";
+
 import type { ResolvedBusService } from '@/lib/services/schedule.service';
 import { useMicroClima } from '@/hooks/useMicroClima';
 
@@ -58,7 +60,7 @@ export function BusServiceCard({ service }: BusServiceCardProps) {
             </span>
             {/* Flecha + hora de llegada + Clima */}
             <span className="text-[13px] text-[var(--color-text-secondary)] flex items-center gap-1">
-              → {service.arrivalTime} {climaEmoji && <span>{climaEmoji}</span>}
+              → {service.arrivalTime} {climaEmoji && <span className="ml-2">{climaEmoji}</span>}
             </span>
           </div>
 
