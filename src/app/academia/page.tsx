@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { Plus, Clock, Trash2, Calendar as CalendarIcon, Timer, DollarSign, X, Check } from 'lucide-react';
 import Link from 'next/link';
@@ -88,10 +88,26 @@ export default function AcademiaPage() {
   const [tipoR, setTipoR] = useState<'ingreso' | 'gasto'>('gasto');
 
   const [diaActual, setDiaActual] = useState<DayOfWeek>('lunes');
+  
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setDiaActual(getDiaActualStr());
   }, []);
+
+  useEffect(() => {
+    if (!scrollContainerRef.current) return;
+    
+    const activeBtn = scrollContainerRef.current.querySelector('[data-active="true"]') as HTMLButtonElement;
+    if (activeBtn) {
+      const container = scrollContainerRef.current;
+      const scrollLeft = activeBtn.offsetLeft - (container.clientWidth / 2) + (activeBtn.clientWidth / 2);
+      container.scrollTo({
+        left: scrollLeft,
+        behavior: 'smooth'
+      });
+    }
+  }, [diaSeleccionado, isMounted]);
 
   if (!isMounted || !agenda.isMounted || !finanzas.isMounted) return null;
 
@@ -226,17 +242,18 @@ export default function AcademiaPage() {
           CENTRO DE CONTROL
         </h2>
         <h1 className="text-3xl font-bold tracking-tight text-white pr-32 leading-tight">
-          Academia 📚
+          Planner 📚
         </h1>
       </header>
 
       {/* Day Selector */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 mt-2">
+      <div ref={scrollContainerRef} className="flex gap-2 overflow-x-auto no-scrollbar pb-1 mt-2">
         {DIAS.map((dia) => {
           const isHoyReal = dia === diaActual;
           return (
             <button
               key={dia}
+              data-active={diaSeleccionado === dia}
               onClick={() => setDiaSeleccionado(dia)}
               className={`relative px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap ${
                 diaSeleccionado === dia 

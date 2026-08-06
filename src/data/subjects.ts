@@ -9,17 +9,6 @@ export const subjectData: SubjectData = {
   updatedAt: new Date().toISOString(),
   subjects: [
     {
-      id: 'ingles-i',
-      name: 'Inglés I',
-      shift: 'mañana',
-      modality: 'presencial',
-      isOptional: false,
-      color: 'bg-green-200 text-green-900',
-      classBlocks: [
-        { day: 'lunes', startTime: '11:20', endTime: '12:50' },
-      ],
-    },
-    {
       id: 'arquitectura-computadoras',
       name: 'Arquitectura de Computadoras',
       shift: 'mañana',
@@ -76,17 +65,6 @@ export const subjectData: SubjectData = {
       color: 'bg-blue-300 text-blue-900',
       classBlocks: [
         { day: 'viernes', startTime: '14:00', endTime: '17:10' },
-      ],
-    },
-    {
-      id: 'fisica-i',
-      name: 'Física I',
-      shift: 'mañana',
-      modality: 'virtual',
-      isOptional: true,
-      color: 'bg-yellow-200 text-yellow-900',
-      classBlocks: [
-        { day: 'sabado', startTime: '09:00', endTime: '13:00' },
       ],
     },
   ],
