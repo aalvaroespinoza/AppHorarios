@@ -105,7 +105,9 @@ export default function FinanzasPage() {
           <div className="relative">
             <span className="absolute left-4 top-3 text-zinc-500 font-bold">$</span>
             <input 
-              type="number"
+              type="text"
+              inputMode="decimal"
+              pattern="[0-9]*"
               placeholder="0.00"
               value={monto}
               onChange={(e) => setMonto(e.target.value)}

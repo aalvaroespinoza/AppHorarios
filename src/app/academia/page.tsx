@@ -198,7 +198,12 @@ export default function AcademiaPage() {
               <div className="relative">
                 <span className="absolute left-3 top-2.5 text-zinc-500 font-bold text-sm">$</span>
                 <input 
-                  type="number" placeholder="0.00" value={montoR} onChange={(e) => setMontoR(e.target.value)}
+                  type="text" 
+                  inputMode="decimal"
+                  pattern="[0-9]*"
+                  placeholder="0.00" 
+                  value={montoR} 
+                  onChange={(e) => setMontoR(e.target.value)}
                   className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-7 pr-3 py-2 text-white font-bold focus:outline-none focus:border-blue-500"
                 />
               </div>
