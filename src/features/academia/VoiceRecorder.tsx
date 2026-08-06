@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Check, X, Edit2 } from 'lucide-react';
 import type { useAgenda } from '@/hooks/useAgenda';
@@ -40,11 +40,14 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
       recognition.interimResults = true;
       recognition.continuous = false;
 
+      let finalTranscript = '';
+      
       recognition.onresult = (event: any) => {
         let currentTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           currentTranscript += event.results[i][0].transcript;
         }
+        finalTranscript = currentTranscript;
         setTranscript(currentTranscript);
       };
 
@@ -55,7 +58,7 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
 
       recognition.onend = () => {
         if (isRecording) {
-          processTranscript();
+          processTranscript(finalTranscript);
         }
       };
 
@@ -76,16 +79,17 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
   };
 
   // Autostart
-  useState(() => {
-    setTimeout(startRecording, 100);
-  });
+  useEffect(() => {
+    const timer = setTimeout(startRecording, 100);
+    return () => clearTimeout(timer);
+  }, []);
 
-  const processTranscript = async () => {
+  const processTranscript = async (textToProcessObj: string) => {
     setIsRecording(false);
     setIsProcessing(true);
     
     // Fallback if empty
-    const textToProcess = transcript.trim();
+    const textToProcess = textToProcessObj.trim();
     if (!textToProcess) {
       setErrorStr('No escuché nada. Intenta de nuevo.');
       setIsProcessing(false);
@@ -157,12 +161,12 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
     });
 
     // 2. Disparar iOS Shortcut
-    // Formato exacto JSON stringificado
+    // Formato exacto JSON stringificado según URL scheme de Apple: input=text&text=...
     const payload = JSON.stringify({
       titulo: editTitulo,
       fecha: parsedData.fecha // ISO string
     });
-    const url = `shortcuts://x-callback-url/run-shortcut?name=CrearRecordatorioApp&input=${encodeURIComponent(payload)}`;
+    const url = `shortcuts://x-callback-url/run-shortcut?name=CrearRecordatorioApp&input=text&text=${encodeURIComponent(payload)}`;
     
     window.location.href = url;
     onClose();
