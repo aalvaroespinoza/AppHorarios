@@ -2,16 +2,26 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-react';
 import { useDeadlines } from '@/hooks/useDeadlines';
+import { useAgenda } from '@/hooks/useAgenda';
+import { useEscenario } from '@/hooks/useEscenario';
 import NativeCard from '@/components/ui/NativeCard';
+import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
+import { subjectData } from '@/data/subjects';
+import type { DayOfWeek } from '@/types/common';
 
 export function MiniCalendar() {
   const [currentDate] = useState(new Date());
   const monthName = currentDate.toLocaleString('es-AR', { month: 'long' });
   const year = currentDate.getFullYear();
   
-  const { deadlines, agregarDeadline, calcularDiasFaltantes, isMounted } = useDeadlines();
+  const { deadlines, agregarDeadline, calcularDiasFaltantes, isMounted: isDeadMounted } = useDeadlines();
+  const agenda = useAgenda();
+  const { cursaArquitectura, isMounted: isEscMounted } = useEscenario();
+
+  const isMounted = isDeadMounted && agenda.isMounted && isEscMounted;
+
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [newDead, setNewDead] = useState({ titulo: '', fecha: '' });
@@ -24,6 +34,74 @@ export function MiniCalendar() {
     if (dayNum > 0 && dayNum <= daysInMonth) return dayNum;
     return null;
   });
+
+  // Helpers para combinar fuentes
+  const getEventsForDate = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    const dateObjLocal = new Date(y, m - 1, d);
+    const jsDay = dateObjLocal.getDay();
+    
+    const map: Record<number, DayOfWeek> = {
+      1: 'lunes', 2: 'martes', 3: 'miercoles', 4: 'jueves', 5: 'viernes', 6: 'sabado', 0: 'lunes'
+    };
+    const dayOfWeek = map[jsDay];
+    
+    const combined: any[] = [];
+    
+    // 1. Clases
+    const scenarioId = determineScenario({ referenceDate: dateObjLocal, tuesdayHasArquitectura: cursaArquitectura });
+    const scenario = scenarioId ? findScenario(scenarioId) : null;
+    
+    if (scenario) {
+      subjectData.subjects.forEach(sub => {
+        if (scenario.activeSubjectIds.includes(sub.id)) {
+          sub.classBlocks.forEach(block => {
+            if (block.day === dayOfWeek) {
+              combined.push({
+                id: `clase-${sub.id}-${block.day}`,
+                tipo: 'clase',
+                titulo: sub.name,
+                horaInicio: block.startTime,
+                horaFin: block.endTime,
+                color: sub.color || 'bg-blue-500'
+              });
+            }
+          });
+        }
+      });
+    }
+    
+    // 2. Eventos Manuales
+    const agendaEventos = agenda.eventos.filter(e => e.dia === dayOfWeek);
+    agendaEventos.forEach(e => {
+      combined.push({
+        id: `evento-${e.id}`,
+        tipo: 'evento',
+        titulo: e.titulo,
+        horaInicio: e.horaInicio,
+        horaFin: e.horaFin,
+        color: 'bg-zinc-500'
+      });
+    });
+    
+    // 3. Deadlines
+    const dayDeadlines = deadlines.filter(d => d.fecha === dateStr);
+    dayDeadlines.forEach(dl => {
+      combined.push({
+        id: `deadline-${dl.id}`,
+        tipo: 'deadline',
+        titulo: dl.titulo,
+        horaInicio: '23:59',
+        horaFin: '23:59',
+        color: dl.colorIcono || 'bg-emerald-500',
+        dlFaltan: calcularDiasFaltantes(dl.fecha)
+      });
+    });
+    
+    // Ordenar cronológicamente
+    combined.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
+    return combined;
+  };
 
   const handleSaveDeadline = () => {
     if (newDead.titulo && newDead.fecha) {
@@ -40,10 +118,7 @@ export function MiniCalendar() {
 
   if (!isMounted) return null;
 
-  // Encontrar deadlines para el día seleccionado
-  const selectedDeadlines = selectedDate 
-    ? deadlines.filter(d => d.fecha === selectedDate)
-    : [];
+  const combinedEvents = selectedDate ? getEventsForDate(selectedDate) : [];
 
   return (
     <div className="flex flex-col gap-4">
@@ -99,8 +174,19 @@ export function MiniCalendar() {
           {daysArray.map((day, idx) => {
             const isToday = day === currentDate.getDate();
             const dateStr = day ? `${year}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
-            const dayDeadlines = dateStr ? deadlines.filter(d => d.fecha === dateStr) : [];
             const isSelected = selectedDate === dateStr;
+            
+            let dots: string[] = [];
+            if (dateStr) {
+              const evs = getEventsForDate(dateStr);
+              // Para no llenar de puntos si hay 5 clases, agrupamos por tipo o mostramos máx 3
+              const uniqueTypes = Array.from(new Set(evs.map(e => e.tipo)));
+              dots = uniqueTypes.map(t => {
+                if (t === 'clase') return 'bg-blue-400';
+                if (t === 'deadline') return 'bg-emerald-500';
+                return 'bg-zinc-400';
+              });
+            }
 
             return (
               <button 
@@ -118,10 +204,10 @@ export function MiniCalendar() {
                 }`}
               >
                 <span>{day}</span>
-                {dayDeadlines.length > 0 && (
+                {dots.length > 0 && (
                   <div className="flex gap-0.5 mt-0.5">
-                    {dayDeadlines.map((dl, i) => (
-                      <span key={i} className={`w-1.5 h-1.5 rounded-full ${dl.colorIcono}`} />
+                    {dots.map((color, i) => (
+                      <span key={i} className={`w-1.5 h-1.5 rounded-full ${color}`} />
                     ))}
                   </div>
                 )}
@@ -132,31 +218,54 @@ export function MiniCalendar() {
       </section>
 
       <AnimatePresence mode="popLayout">
-        {selectedDeadlines.length > 0 && (
+        {combinedEvents.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: "spring", bounce: 0.4 }}
           >
-            <NativeCard className="flex flex-col gap-3 py-4 border-emerald-900/30 bg-gradient-to-br from-zinc-900/90 to-emerald-950/20">
-              {selectedDeadlines.map(dl => {
-                const faltan = calcularDiasFaltantes(dl.fecha);
-                return (
-                  <div key={dl.id} className="flex items-center gap-4">
-                    <div className="flex-1">
-                      <p className="text-zinc-400 text-xs font-semibold mb-1 tracking-wider uppercase">Deadline</p>
-                      <h3 className="text-white font-bold text-base leading-tight">{dl.titulo}</h3>
+            <NativeCard className="flex flex-col gap-3 py-4 border-zinc-800/80 bg-gradient-to-br from-zinc-900/90 to-zinc-950/90">
+              <div className="flex flex-col gap-0 relative">
+                {/* Línea vertical continua */}
+                <div className="absolute left-[9px] top-3 bottom-3 w-0.5 bg-zinc-800 rounded-full" />
+
+                {combinedEvents.map((ev, idx) => {
+                  const isDeadline = ev.tipo === 'deadline';
+                  const isClase = ev.tipo === 'clase';
+                  
+                  return (
+                    <div key={ev.id} className="relative pl-8 py-3">
+                      {/* Punto en la línea */}
+                      <div className={`absolute left-[3px] top-[22px] w-3.5 h-3.5 bg-zinc-900 border-[2.5px] rounded-full z-10 ${
+                        isDeadline ? 'border-emerald-500' : isClase ? 'border-blue-500' : 'border-zinc-500'
+                      }`} />
+                      
+                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-zinc-400 text-xs font-semibold mb-1 tracking-wider uppercase flex items-center gap-1">
+                              {isDeadline ? '⏳ Entrega' : isClase ? '📘 Clase' : '📅 Evento'}
+                            </p>
+                            <h3 className="text-white font-bold text-base leading-tight">{ev.titulo}</h3>
+                            <p className="text-zinc-400 text-sm mt-1.5 font-medium">
+                              {isDeadline ? 'Todo el día' : `${ev.horaInicio} - ${ev.horaFin}`}
+                            </p>
+                          </div>
+                          
+                          {isDeadline && (
+                            <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl flex flex-col items-center justify-center min-w-[70px]">
+                              <span className="text-emerald-400 font-black text-xs leading-none text-center">
+                                {ev.dlFaltan === 0 ? '¡Hoy!' : ev.dlFaltan < 0 ? 'Pasó' : `${ev.dlFaltan}d`}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 px-4 py-2.5 rounded-2xl flex flex-col items-center justify-center min-w-[90px]">
-                      <span className="text-2xl mb-0.5">⏳</span>
-                      <span className="text-emerald-400 font-black text-sm leading-none">
-                        {faltan === 0 ? '¡Hoy!' : faltan < 0 ? 'Pasó' : `${faltan} días`}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </NativeCard>
           </motion.div>
         )}
