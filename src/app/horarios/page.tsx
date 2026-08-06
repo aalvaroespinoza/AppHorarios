@@ -86,23 +86,29 @@ export default function HorariosPage() {
           {Object.keys(agrupadosPorEmpresa).length > 0 ? (
             <div className="flex flex-col gap-6">
               {Object.entries(agrupadosPorEmpresa).map(([empresa, horarios]) => (
-                <NativeCard key={empresa} className="p-0 overflow-hidden border border-zinc-800">
-                  <div className={`px-4 py-3 border-b border-zinc-800 font-bold tracking-wide uppercase text-sm ${tab === 'ida' ? 'bg-blue-500/10 text-blue-400' : 'bg-[#34c759]/10 text-[#34c759]'}`}>
-                    {empresa}
+                <NativeCard key={empresa} className="p-0 overflow-hidden border border-zinc-800 bg-zinc-950">
+                  <div className={`px-4 py-3 border-b border-zinc-800 font-bold tracking-wide uppercase text-sm flex items-center justify-between ${tab === 'ida' ? 'bg-blue-500/10 text-blue-400' : 'bg-[#34c759]/10 text-[#34c759]'}`}>
+                    <span>{empresa}</span>
+                    <span className="text-xs font-semibold opacity-70 bg-black/20 px-2 py-0.5 rounded-full">{horarios.length} viajes</span>
                   </div>
-                  <ul className="divide-y divide-zinc-800/50">
-                    {horarios.map((h, idx) => (
-                      <li key={idx} className="p-4 flex items-center justify-between hover:bg-zinc-800/20 transition-colors">
-                        <span className="text-2xl font-semibold text-zinc-100">{h.horaSalida}</span>
-                        {h.notas && (
-                          <div className="bg-zinc-800/50 text-zinc-400 text-[11px] px-2 py-1 rounded-md flex items-center gap-1 max-w-[150px] text-right">
-                            <MapPin size={10} className="shrink-0" />
-                            <span className="leading-tight text-left">{h.notas}</span>
-                          </div>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                  <div className="p-4">
+                    <div className="grid grid-cols-4 gap-2.5">
+                      {horarios.map((h, idx) => (
+                        <div 
+                          key={idx} 
+                          className="flex flex-col items-center justify-center py-2.5 rounded-xl bg-zinc-900 border border-zinc-800/80 hover:border-zinc-600 transition-all cursor-default"
+                        >
+                          <span className="text-lg font-bold text-zinc-100 tracking-tight">{h.horaSalida}</span>
+                          {h.notas && (
+                            <div className="flex items-center gap-0.5 mt-1 text-blue-400">
+                              <MapPin size={9} />
+                              <span className="text-[9px] uppercase font-bold tracking-widest leading-none">Info</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </NativeCard>
               ))}
             </div>
