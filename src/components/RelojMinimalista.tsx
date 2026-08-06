@@ -1,12 +1,10 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 
 export default function RelojMinimalista() {
   const [hora, setHora] = useState<string>('');
   const [clics, setClics] = useState(0);
-  const router = useRouter();
 
   useEffect(() => {
     // Función para actualizar la hora
@@ -37,13 +35,13 @@ export default function RelojMinimalista() {
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
           navigator.vibrate(50);
         }
-        router.push('/horarios');
+        window.location.reload();
         setClics(0);
       }
 
       return () => clearTimeout(timer);
     }
-  }, [clics, router]);
+  }, [clics]);
 
   // Para evitar destellos de hidratación en SSR, no mostramos nada hasta que esté montado
   if (!hora) {
