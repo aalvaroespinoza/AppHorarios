@@ -11,6 +11,7 @@ import RelojMinimalista from '@/components/RelojMinimalista';
 import AntiSleepButton from '@/components/AntiSleepButton';
 import EntertainmentSelector from '@/components/EntertainmentSelector';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
+import { calcularHoraLlegada } from '@/utils/time';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
 import { ChevronDown, ChevronUp, Bus, Clock, MapPin, Moon, CheckCircle2, Ticket } from 'lucide-react';
@@ -186,6 +187,9 @@ function HorarioCard({
               {currentRecomendado.horaSalida}
             </div>
           )}
+          <div className="text-zinc-400 text-sm font-medium mt-3">
+            Hora estimada de Llegada: {calcularHoraLlegada(currentRecomendado.horaSalida, direction)}
+          </div>
         </div>
         {minutosFaltantes !== null && (
           <div className={`font-medium px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm ${
@@ -257,10 +261,15 @@ function HorarioCard({
                   <button 
                     key={idx} 
                     onClick={() => handleSwap(alt, idx)}
-                    className="flex justify-between items-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl hover:bg-zinc-800/80 transition-colors text-left"
+                    className="flex flex-col justify-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl hover:bg-zinc-800/80 transition-colors text-left"
                   >
-                    <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
-                    <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
+                    <div className="flex justify-between items-center w-full">
+                      <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
+                      <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
+                    </div>
+                    <span className="text-zinc-400 text-sm font-medium mt-1">
+                      Hora estimada de Llegada: {calcularHoraLlegada(alt.horaSalida, direction)}
+                    </span>
                   </button>
                 ))}
               </motion.div>
