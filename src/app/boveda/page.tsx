@@ -12,11 +12,11 @@ interface DatoBoveda {
 }
 
 const DATOS_DEFAULT: DatoBoveda[] = [
-  { id: '1', titulo: 'Alias Bancario', valor: 'alvaro.esp.mp' },
-  { id: '2', titulo: 'CUIL', valor: '20-12345678-9' },
-  { id: '3', titulo: 'Dirección Envío', valor: 'Calle Falsa 123, Despeñaderos' },
-  { id: '4', titulo: 'WiFi Casa (Clave)', valor: 'claveSegura123' },
-  { id: '5', titulo: 'Mail Personal', valor: 'alvaro@example.com' },
+  { id: '1', titulo: 'Alias Bancario', valor: 'newdata' },
+  { id: '2', titulo: 'CUIL', valor: '20472531388' },
+  { id: '3', titulo: 'Dirección Envío', valor: 'San Luis 831, Despeñaderos' },
+  { id: '4', titulo: 'WiFi Casa (Clave)', valor: 'lorenzojulian' },
+  { id: '5', titulo: 'Mail Personal', valor: 'alvaroespinoza512@gmail.com' },
 ];
 
 export default function BovedaPage() {
@@ -36,7 +36,7 @@ export default function BovedaPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    const stored = localStorage.getItem('apphorarios_boveda');
+    const stored = localStorage.getItem('apphorarios_boveda_v2');
     if (stored) {
       try {
         setDatos(JSON.parse(stored));
@@ -50,7 +50,7 @@ export default function BovedaPage() {
 
   useEffect(() => {
     if (isMounted) {
-      localStorage.setItem('apphorarios_boveda', JSON.stringify(datos));
+      localStorage.setItem('apphorarios_boveda_v2', JSON.stringify(datos));
     }
   }, [datos, isMounted]);
 
@@ -168,7 +168,7 @@ export default function BovedaPage() {
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-8 pt-20"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowAdd(false)} />
             <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4">
