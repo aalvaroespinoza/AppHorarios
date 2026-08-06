@@ -122,11 +122,20 @@ export function useBec() {
     };
   };
 
+  /**
+   * Borra todo el historial de BEC localmente.
+   */
+  const reiniciarHistorial = () => {
+    setHistorialBec([]);
+    localStorage.removeItem('historialBec');
+  };
+
   return {
     historialBec,
     isMounted,
     marcarViaje,
     obtenerResumenMensual,
-    getRegistroHoy
+    getRegistroHoy,
+    reiniciarHistorial
   };
 }

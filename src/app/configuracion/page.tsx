@@ -74,6 +74,18 @@ export default function Configuracion() {
                 </div>
               </div>
             </div>
+            <div className="mt-2">
+              <button
+                onClick={() => {
+                  if (window.confirm('¿Estás seguro de que querés reiniciar todo el conteo de pasajes BEC? Esta acción no se puede deshacer.')) {
+                    bec.reiniciarHistorial();
+                  }
+                }}
+                className="w-full py-2.5 rounded-xl border border-red-500/20 text-red-400 bg-red-500/10 font-medium text-[15px] hover:bg-red-500/20 active:scale-[0.98] transition-all"
+              >
+                Reiniciar historial BEC
+              </button>
+            </div>
           </NativeCard>
         </section>
 

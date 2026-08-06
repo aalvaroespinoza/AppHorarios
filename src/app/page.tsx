@@ -108,6 +108,17 @@ function HorarioCard({
     }
   };
   
+  const handleBecClick = () => {
+    bec.marcarViaje(direction);
+    if (!becUsado && !yaTomado) {
+      setYaTomado(true);
+      localStorage.setItem(storageKey, 'true');
+    } else if (becUsado && yaTomado) {
+      setYaTomado(false);
+      localStorage.removeItem(storageKey);
+    }
+  };
+  
   const esVuelta = titulo.toLowerCase().includes('vuelta');
   const horaReal = esVuelta && currentRecomendado ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado?.horaSalida;
   
@@ -203,8 +214,7 @@ function HorarioCard({
       {/* Botón BEC */}
       <div className="mb-4">
         <button
-          onClick={() => !becUsado && bec.marcarViaje(direction)}
-          disabled={becUsado}
+          onClick={handleBecClick}
           className={`flex items-center justify-center gap-2 w-full py-3 rounded-xl font-medium transition-all ${
             becUsado 
               ? 'bg-green-500/10 text-green-400 border border-green-500/20' 
@@ -212,7 +222,7 @@ function HorarioCard({
           }`}
         >
           {becUsado ? <CheckCircle2 size={18} /> : <Ticket size={18} />}
-          {becUsado ? 'BEC Usado ✓' : 'Usar BEC'}
+          {becUsado ? 'BEC Usado ✓ (Tocar para deshacer)' : 'Usar BEC'}
         </button>
       </div>
 
