@@ -237,7 +237,7 @@ export default function FinanzasPage() {
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className="fixed inset-0 z-50 flex items-end justify-center px-4 pb-8 pt-20"
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSplit(false)} />
             <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-5 max-h-[80vh] overflow-hidden">
