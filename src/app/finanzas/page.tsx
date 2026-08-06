@@ -69,24 +69,24 @@ export default function FinanzasPage() {
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
-      <header className="flex items-center gap-3 mt-2">
-        <Link 
-          href="/academia"
-          className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-        >
-          <ChevronLeft size={20} />
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2 select-none">
+      <header className="flex items-center justify-between gap-3 mt-2">
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/academia"
+            className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+          >
+            <ChevronLeft size={20} />
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
             Finanzas <Wallet size={20} className="text-emerald-400" />
-            <span 
-              onDoubleClick={() => setShowSplit(true)}
-              className="text-[10px] text-zinc-900 ml-1 cursor-default opacity-50 hover:opacity-100"
-            >
-              •
-            </span>
           </h1>
         </div>
+        <button 
+          onClick={() => setShowSplit(true)}
+          className="px-3 py-1.5 rounded-full bg-zinc-900/40 border border-zinc-800/80 text-[10px] font-bold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors tracking-widest uppercase"
+        >
+          Split
+        </button>
       </header>
 
       {/* Dashboard Superior */}
