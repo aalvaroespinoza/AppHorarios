@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, CheckCircle, ExternalLink, Clock, BookOpen, ChevronDown, ChevronUp, WalletCards } from 'lucide-react';
+import { motion, AnimatePresence, PanInfo } from 'framer-motion';
+import { Plus, CheckCircle, ExternalLink, Clock, BookOpen, ChevronDown, ChevronUp, WalletCards, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { useAgenda } from '@/hooks/useAgenda';
 import { useTracker } from '@/hooks/useTracker';
 import { useEscenario } from '@/hooks/useEscenario';
 import type { DayOfWeek } from '@/types/common';
+import PomodoroWidget from '@/components/PomodoroWidget';
 
 const DIAS: DayOfWeek[] = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
 
@@ -44,8 +45,6 @@ export default function AcademiaPage() {
     tracker.marcarModulo(nuevoModulo, true);
     setNuevoModulo('');
   };
-
-  const diaCapitalizado = diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1);
 
   return (
     <motion.div 
@@ -87,6 +86,9 @@ export default function AcademiaPage() {
         </Link>
       </div>
 
+      {/* Pomodoro Widget */}
+      <PomodoroWidget />
+
       {/* Day Selector */}
       <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
         {DIAS.map((dia) => (
@@ -119,9 +121,25 @@ export default function AcademiaPage() {
           ) : (
             agendaDelDia.map((item, idx) => (
               <div key={item.id + idx} className="relative">
-                <span className="absolute -left-[1.6rem] top-2 h-3.5 w-3.5 rounded-full border-[3px] border-zinc-900 bg-emerald-500" />
+                <span className="absolute -left-[1.6rem] top-2 h-3.5 w-3.5 rounded-full border-[3px] border-zinc-900 bg-emerald-500 z-20" />
                 
-                <div className={`p-3.5 rounded-2xl shadow-sm ${item.color || 'bg-zinc-800 border border-zinc-700/50 text-zinc-100'}`}>
+                {item.tipo === 'custom' && (
+                  <div className="absolute inset-y-0 right-0 w-16 bg-red-500 rounded-2xl flex items-center justify-center z-0">
+                    <Trash2 size={20} className="text-white" />
+                  </div>
+                )}
+
+                <motion.div 
+                  className={`relative z-10 p-3.5 rounded-2xl shadow-sm ${item.color || 'bg-zinc-800 border border-zinc-700/50 text-zinc-100'}`}
+                  drag={item.tipo === 'custom' ? "x" : false}
+                  dragConstraints={{ left: 0, right: 0 }}
+                  dragElastic={{ left: 0.8, right: 0 }}
+                  onDragEnd={(e, info: PanInfo) => {
+                    if (item.tipo === 'custom' && info.offset.x < -80) {
+                      agenda.eliminarEvento(item.id);
+                    }
+                  }}
+                >
                   <h3 className="font-bold text-[15px] leading-tight mb-1">{item.titulo}</h3>
                   <div className="flex items-center gap-2 text-xs opacity-80 font-medium">
                     <span className="bg-black/20 px-2 py-0.5 rounded-md">
@@ -133,7 +151,7 @@ export default function AcademiaPage() {
                       </span>
                     )}
                   </div>
-                </div>
+                </motion.div>
               </div>
             ))
           )}
