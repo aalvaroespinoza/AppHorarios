@@ -6,6 +6,7 @@ export interface ParsedAction {
   amount?: number;
   date?: string;
   category?: string;
+  reply?: string;
   rawText: string;
 }
 

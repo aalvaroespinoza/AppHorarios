@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, Sparkles, TerminalSquare } from 'lucide-react';
+import { Send, Loader2, Sparkles, TerminalSquare, Mic } from 'lucide-react';
 
 interface CommandHistory {
   id: string;
@@ -14,7 +14,52 @@ interface CommandHistory {
 export default function LifeOSConsole() {
   const [inputText, setInputText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [history, setHistory] = useState<CommandHistory[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [history]);
+
+  useEffect(() => {
+    // Inicializar SpeechRecognition
+    if (typeof window !== 'undefined') {
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.lang = 'es-AR';
+        recognitionRef.current.interimResults = false;
+
+        recognitionRef.current.onresult = (event: any) => {
+          const transcript = event.results[0][0].transcript;
+          setInputText((prev) => prev ? prev + ' ' + transcript : transcript);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error);
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    }
+  }, []);
+
+  const toggleListening = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current?.start();
+      setIsListening(true);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +76,12 @@ export default function LifeOSConsole() {
     
     setInputText('');
     setIsSubmitting(true);
+    
+    // Parar el mic si estaba escuchando y enviamos
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    }
 
     try {
       const response = await fetch('/api/brain', {
@@ -50,7 +101,7 @@ export default function LifeOSConsole() {
       setHistory((prev) => 
         prev.map((cmd) => 
           cmd.id === commandId 
-            ? { ...cmd, status: 'success', result: `Procesado: ${data.data?.type || 'Acción completada'}` } 
+            ? { ...cmd, status: 'success', result: data.data?.reply || `Procesado: ${data.data?.type || 'Completado'}` } 
             : cmd
         )
       );
@@ -74,67 +125,85 @@ export default function LifeOSConsole() {
     <div className="flex flex-col min-h-screen bg-black text-neutral-200">
       
       {/* Header Minimalista */}
-      <div className="pt-safe px-4 py-4 border-b border-neutral-900/50 flex items-center gap-2">
-        <TerminalSquare size={18} className="text-indigo-400" />
-        <h1 className="text-sm font-medium tracking-wide">Consola LifeOS</h1>
+      <div className="pt-safe px-4 py-4 border-b border-neutral-900/50 flex items-center justify-center relative">
+        <h1 className="text-sm font-medium tracking-wide flex items-center gap-2">
+          <Sparkles size={16} className="text-indigo-400" />
+          LifeOS
+        </h1>
       </div>
 
       {/* Historial de Comandos */}
-      <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 pb-32">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 pb-32">
         {history.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-neutral-600 gap-3 opacity-50">
-            <Sparkles size={24} />
-            <p className="text-xs">Esperando input cerebral...</p>
+          <div className="flex flex-col items-center justify-center h-[70vh] text-neutral-600 gap-3 opacity-50">
+            <TerminalSquare size={32} className="opacity-50" />
+            <p className="text-sm">En qué te ayudo hoy?</p>
           </div>
         ) : (
           <AnimatePresence>
             {history.map((cmd) => (
-              <motion.div 
-                key={cmd.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col gap-1"
-              >
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-indigo-500 font-mono">{'>'}</span>
-                  <span className="text-neutral-300">{cmd.text}</span>
-                </div>
-                <div className="pl-4 flex items-center gap-2">
+              <div key={cmd.id} className="flex flex-col gap-3">
+                {/* User Bubble */}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="self-end max-w-[85%] bg-indigo-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm text-sm shadow-sm"
+                >
+                  {cmd.text}
+                </motion.div>
+                
+                {/* System Bubble */}
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  className="self-start max-w-[85%] bg-neutral-800 text-neutral-200 px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm"
+                >
                   {cmd.status === 'loading' ? (
-                    <Loader2 size={12} className="animate-spin text-neutral-500" />
+                    <div className="flex items-center gap-2 text-neutral-400 py-1">
+                      <Loader2 size={14} className="animate-spin" />
+                      <span className="text-xs">Pensando...</span>
+                    </div>
                   ) : cmd.status === 'error' ? (
-                    <span className="text-xs text-red-400">{cmd.result}</span>
+                    <span className="text-red-400">{cmd.result}</span>
                   ) : (
-                    <span className="text-xs text-emerald-400">{cmd.result}</span>
+                    <span>{cmd.result}</span>
                   )}
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
             ))}
           </AnimatePresence>
         )}
+        <div ref={messagesEndRef} />
       </div>
 
-      {/* Input de Comando (Bottom Fixed) */}
-      <div className="fixed bottom-0 left-0 w-full p-4 pb-safe bg-gradient-to-t from-black via-black to-transparent">
-        <div className="max-w-md mx-auto mb-16 relative">
-          <form onSubmit={handleSubmit} className="relative flex items-center shadow-2xl shadow-indigo-900/10">
+      {/* Input de Comando (Bottom Fixed) - pb-24 evita que choque con BottomTabBar */}
+      <div className="fixed bottom-0 left-0 w-full px-4 pb-24 pt-4 bg-gradient-to-t from-black via-black to-transparent">
+        <div className="max-w-md mx-auto relative">
+          <form onSubmit={handleSubmit} className="relative flex items-center shadow-2xl shadow-indigo-900/20 bg-neutral-900 rounded-2xl p-1 border border-neutral-800">
+            <button
+              type="button"
+              onClick={toggleListening}
+              className={`p-3 rounded-xl transition-colors ${isListening ? 'text-red-500 bg-red-500/10' : 'text-neutral-400 hover:text-neutral-200'}`}
+            >
+              <Mic size={18} className={isListening ? 'animate-pulse' : ''} />
+            </button>
             <input 
               type="text" 
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               disabled={isSubmitting}
-              placeholder="Registrar gasto, recordar algo, o pensar en voz alta..."
-              className="w-full bg-neutral-900 border border-neutral-800 text-sm text-neutral-100 placeholder-neutral-500 rounded-2xl py-4 pl-4 pr-12 focus:outline-none focus:ring-1 focus:ring-indigo-500/50 transition-all disabled:opacity-50"
+              placeholder="Escribe o dicta algo..."
+              className="flex-1 bg-transparent border-none text-sm text-neutral-100 placeholder-neutral-500 py-3 px-2 focus:outline-none focus:ring-0 disabled:opacity-50"
             />
             <button 
               type="submit" 
               disabled={isSubmitting || !inputText.trim()}
-              className="absolute right-2 p-2 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-colors disabled:opacity-30 disabled:hover:bg-indigo-600 flex items-center justify-center"
+              className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-colors disabled:opacity-30 disabled:hover:bg-indigo-600 flex items-center justify-center mr-1"
             >
               {isSubmitting ? (
                 <Loader2 size={16} className="animate-spin" />
               ) : (
-                <Send size={16} className="ml-[1px]" />
+                <Send size={16} />
               )}
             </button>
           </form>

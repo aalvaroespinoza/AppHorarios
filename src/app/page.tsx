@@ -7,7 +7,7 @@ import { useEscenario } from '@/hooks/useEscenario';
 import { useBec } from '@/hooks/useBec';
 import { useTodaySchedule } from '@/hooks/useTodaySchedule';
 import ContextualControls from '@/features/schedule/ContextualControls';
-import { DashboardInsights } from '@/features/insights/DashboardInsights';
+
 import EntertainmentSelector from '@/components/EntertainmentSelector';
 import { HorarioCard } from '@/features/schedule/HorarioCard';
 import { ClassTimeline } from '@/features/schedule/ClassTimeline';
@@ -44,7 +44,7 @@ export default function Hoy() {
       />
 
       <ContextualControls />
-      <DashboardInsights />
+
 
       <div className="flex flex-col gap-6 mt-2">
         <HorarioCard 

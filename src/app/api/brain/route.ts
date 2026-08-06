@@ -10,7 +10,8 @@ Esquema de respuesta esperado:
   "title": string,
   "amount": number (opcional),
   "date": string (ISO) (opcional),
-  "category": string (opcional)
+  "category": string (opcional),
+  "reply": string (un mensaje conversacional breve y amigable confirmando la acción, en español)
 }`;
 
 export async function POST(request: Request) {
