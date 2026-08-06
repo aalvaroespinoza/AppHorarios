@@ -1,4 +1,5 @@
 import type { ResolvedBusService } from '@/lib/services/schedule.service';
+import { useMicroClima } from '@/hooks/useMicroClima';
 
 interface BusServiceCardProps {
   service: ResolvedBusService;
@@ -33,6 +34,8 @@ const DIRECTION_CONFIG = {
  */
 export function BusServiceCard({ service }: BusServiceCardProps) {
   const config = DIRECTION_CONFIG[service.direction];
+  const destino = service.direction === 'ida' ? 'cordoba' : 'despeñaderos';
+  const climaEmoji = useMicroClima(destino, service.arrivalTime);
 
   return (
     <li className="flex items-start gap-3.5 py-3">
@@ -53,9 +56,9 @@ export function BusServiceCard({ service }: BusServiceCardProps) {
             <span className="text-[18px] font-semibold tabular-nums text-[var(--color-text-primary)] leading-none">
               {service.departureTime}
             </span>
-            {/* Flecha + hora de llegada */}
-            <span className="text-[13px] text-[var(--color-text-secondary)]">
-              → {service.arrivalTime}
+            {/* Flecha + hora de llegada + Clima */}
+            <span className="text-[13px] text-[var(--color-text-secondary)] flex items-center gap-1">
+              → {service.arrivalTime} {climaEmoji && <span>{climaEmoji}</span>}
             </span>
           </div>
 
