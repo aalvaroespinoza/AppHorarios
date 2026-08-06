@@ -350,14 +350,9 @@ export default function Hoy() {
       {/* Header */}
       <header className="flex justify-between items-end mt-2 mb-2">
         <div>
-          <Image 
-            src="/logo.png" 
-            alt="MoviTempo Logo" 
-            width={120} 
-            height={24} 
-            className="h-5 w-auto object-contain mb-1 opacity-90"
-            priority
-          />
+          <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 text-[11px] font-black tracking-[0.25em] uppercase mb-1 drop-shadow-sm">
+            APP HORARIO
+          </h2>
           <h1 className="text-3xl font-bold tracking-tight text-white">
             {diaCapitalizado}
           </h1>
