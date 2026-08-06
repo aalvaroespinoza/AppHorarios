@@ -43,7 +43,7 @@ export function useMicroClima(destino: Destino, horaLlegada: string) {
         // Necesitamos fetch nuevo
         try {
           const { lat, lng } = COORDS[destino];
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability&timezone=America%2FArgentina%2FBuenos_Aires&forecast_days=2`;
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability&timezone=America%2FArgentina%2FCordoba&forecast_days=2`;
           
           const res = await fetch(url);
           if (res.ok) {
@@ -62,9 +62,11 @@ export function useMicroClima(destino: Destino, horaLlegada: string) {
         }
       }
 
-      if (dataToUse && isMounted) {
+      if (dataToUse && isMounted && horaLlegada) {
         const horaExacta = horaLlegada.split(':')[0].padStart(2, '0');
         const targetSuffix = `T${horaExacta}:00`;
+        
+        console.log(`[MicroClima] Destino: ${destino}, Hora Llegada Recibida: ${horaLlegada}, Buscando sufijo: ${targetSuffix}`);
         
         const index = dataToUse.hourly.time.findIndex((t: string) => t.endsWith(targetSuffix));
         
@@ -72,14 +74,17 @@ export function useMicroClima(destino: Destino, horaLlegada: string) {
           const probLluvia = dataToUse.hourly.precipitation_probability[index];
           const temp = dataToUse.hourly.temperature_2m[index];
           
+          console.log(`[MicroClima] Encontrado! Temp: ${temp}°C, Lluvia: ${probLluvia}%`);
+          
           let result = '';
-          if (probLluvia > 40) result += '☔ ';
-          if (temp < 12) result += '🧥';
+          if (probLluvia > 30) result += '☔ ';
+          if (temp < 18) result += '🧥';
           
           result = result.trim();
-          setClimaState(result || null);
+          setClimaState(result || '🌤️');
         } else {
-          setClimaState(null);
+          console.log(`[MicroClima] No se encontró la hora exacta en la respuesta de la API`);
+          setClimaState('🌤️');
         }
       }
     };
