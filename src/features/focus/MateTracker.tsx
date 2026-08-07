@@ -52,7 +52,7 @@ export function MateTracker() {
         <motion.div 
           initial={false}
           animate={{ height: `${fillPercentage}%` }}
-          transition={{ type: "spring", stiffness: 200, damping: 10, mass: 1.2 }}
+          transition={{ type: "spring", stiffness: 200, damping: 20, mass: 1 }}
           className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#8EAC50] to-[#A3C065] opacity-90 rounded-b-full"
           style={{ transformOrigin: 'bottom' }}
         />

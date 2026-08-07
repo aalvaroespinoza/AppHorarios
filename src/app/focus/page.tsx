@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, Zap, Timer, PenLine, Droplets, Bike, Dumbbell, Plus, Minus } from 'lucide-react';
+import { ChevronLeft, Zap, Timer, PenLine, Droplets, Bike, Dumbbell, Plus, Minus, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import { BateriaMentalSection } from '@/features/academia/BateriaMentalSection';
 import PomodoroWidget from '@/components/PomodoroWidget';
@@ -14,17 +14,46 @@ import { MateTracker } from '@/features/focus/MateTracker';
 
 function StravaWidget() {
   const [data, setData] = useState<{ authenticated: boolean; activities?: any[] } | null>(null);
+  const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/strava/activities')
-      .then(res => res.json())
+      .then(async (res) => {
+        if (!res.ok) {
+          throw new Error("Failed to fetch");
+        }
+        const text = await res.text();
+        if (!text) {
+           throw new Error("Empty response");
+        }
+        return JSON.parse(text);
+      })
       .then(d => {
-        setData(d);
+        if (d.error) {
+          setError(true);
+        } else {
+          setData(d);
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((err) => {
+        console.error(err);
+        setError(true);
+        setLoading(false);
+      });
   }, []);
+
+  if (error) {
+    return (
+      <div className="bg-zinc-900/60 border border-red-500/20 rounded-2xl p-4 flex items-start gap-3">
+        <AlertTriangle size={20} className="text-red-400 shrink-0 mt-0.5" />
+        <p className="text-sm text-zinc-400 font-medium">
+          Faltan configurar las credenciales de Strava en el entorno.
+        </p>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
