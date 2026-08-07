@@ -3,12 +3,36 @@
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
-  Settings, Info, LayoutGrid 
+  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare 
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HubPage() {
   const apps = [
+    {
+      id: 'resumen',
+      title: 'Resumen Diario',
+      href: '/resumen',
+      icon: <Sun size={28} className="text-yellow-400" />,
+      color: 'from-yellow-500/20 to-yellow-600/5 border-yellow-500/20',
+      description: 'Día a día'
+    },
+    {
+      id: 'focus',
+      title: 'Focus & Energía',
+      href: '/focus',
+      icon: <Zap size={28} className="text-orange-400" />,
+      color: 'from-orange-500/20 to-orange-600/5 border-orange-500/20',
+      description: 'Rendimiento'
+    },
+    {
+      id: 'tareas',
+      title: 'Tareas',
+      href: '/tareas',
+      icon: <CheckSquare size={28} className="text-indigo-400" />,
+      color: 'from-indigo-500/20 to-indigo-600/5 border-indigo-500/20',
+      description: 'Pendientes'
+    },
     {
       id: 'viajes',
       title: 'Viajes',
