@@ -8,6 +8,7 @@ import {
   ChevronRight, Bot
 } from 'lucide-react';
 import { useLocalStorageState } from '@/core/hooks/useLocalStorageState';
+import { useActionDispatcher } from '@/core/engine/useActionDispatcher';
 
 interface ChatMessage {
   id: string;
@@ -60,6 +61,7 @@ export default function LifeOSConsole() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isListening, setIsListening] = useState(false);
   
+  const { dispatch } = useActionDispatcher();
   const [history, setHistory, isMounted] = useLocalStorageState<ChatMessage[]>('lifeos_history', []);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -207,16 +209,18 @@ export default function LifeOSConsole() {
         throw new Error(errorData.error || 'Error en el servidor');
       }
 
-      const data = await response.json();
+      const { data: intent } = await response.json();
+      
+      const result = await dispatch(intent);
       
       setHistory((prev) => 
         prev.map((msg) => 
           msg.id === asstMsgId 
             ? { 
                 ...msg, 
-                status: 'success', 
-                text: data.data?.reply || `Procesado: ${data.data?.type || 'Completado'}`,
-                metadata: data.data
+                status: result.success || result.needs_input ? 'success' : 'error', 
+                text: result.userMessage,
+                metadata: { intent, result }
               } 
             : msg
         )
@@ -256,10 +260,10 @@ export default function LifeOSConsole() {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#0a0a0c] text-neutral-200">
+    <div className="flex flex-col h-[100dvh] bg-[#0a0a0c] text-neutral-200 pt-[env(safe-area-inset-top)]">
       
       {/* Header Nativo y Discreto */}
-      <div className="pt-safe px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0a0a0c]/80 backdrop-blur-md sticky top-0 z-10 flex-shrink-0">
+      <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0a0a0c] sticky top-0 z-10 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
             <Sparkles size={16} className="text-indigo-400" />

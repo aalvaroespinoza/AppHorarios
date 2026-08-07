@@ -33,25 +33,14 @@ export class GeminiService {
 
       const result = await model.generateContent(payload.prompt);
       const response = await result.response;
-      const text = response.text();
-      
-      let cleanText = text;
-      // Remover bloques de markdown si los hubiera (gemini a veces ignora responseMimeType)
-      cleanText = cleanText.replace(/```json/gi, '').replace(/```/g, '').trim();
-      
-      // Intentar extraer el primer objeto JSON o array si hay basura extra
-      const firstBrace = cleanText.indexOf('{');
-      const lastBrace = cleanText.lastIndexOf('}');
-      
-      if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
-        cleanText = cleanText.substring(firstBrace, lastBrace + 1);
-      }
+      const rawText = response.text();
+      const cleanedText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
       
       let parsedData: T;
       try {
-        parsedData = JSON.parse(cleanText) as T;
+        parsedData = JSON.parse(cleanedText) as T;
       } catch (parseError) {
-        console.error('[GeminiService] Error parseando JSON. Texto limpio:', cleanText, 'Texto original:', text);
+        console.error('[GeminiService] Error parseando JSON. Texto limpio:', cleanedText, 'Texto original:', rawText);
         throw parseError;
       }
 
