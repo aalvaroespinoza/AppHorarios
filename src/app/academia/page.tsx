@@ -9,8 +9,6 @@ import { useFinanzas } from '@/hooks/useFinanzas';
 import type { DayOfWeek } from '@/core/types/common';
 import { MiniCalendar } from '@/features/academia/MiniCalendar';
 import { AgendaView } from '@/features/academia/AgendaView';
-import { FloatingActions } from '@/features/academia/FloatingActions';
-import { BateriaMentalSection } from '@/features/academia/BateriaMentalSection';
 
 // Helper to get monday of current or offset week
 const getMondayOfOffset = (offset: number) => {
@@ -88,7 +86,7 @@ export default function AcademiaPage() {
       className="p-4 max-w-md mx-auto flex flex-col gap-6 relative min-h-[100dvh]"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
-      <FloatingActions finanzas={finanzas} agenda={agenda} />
+
 
       {/* Header */}
       <header className="flex flex-col gap-2 mt-2">
@@ -157,9 +155,6 @@ export default function AcademiaPage() {
 
       {/* Mini Calendar Section */}
       <MiniCalendar />
-
-      {/* Batería Mental */}
-      <BateriaMentalSection />
 
     </motion.div>
   );

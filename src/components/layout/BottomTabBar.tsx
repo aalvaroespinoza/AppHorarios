@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Home, BookOpen, Sparkles, LucideIcon } from 'lucide-react';
+import { Home, BookOpen, Sparkles, LayoutGrid, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -16,6 +16,7 @@ export const defaultTabs: NavigationTab[] = [
   { id: '/', label: 'Viaje', icon: Home },
   { id: '/academia', label: 'Agenda', icon: BookOpen },
   { id: '/lifeos', label: 'LifeOS', icon: Sparkles },
+  { id: '/boveda', label: 'Menú', icon: LayoutGrid },
 ];
 
 export interface BottomTabBarProps {
