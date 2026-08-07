@@ -118,8 +118,8 @@ export default function TareasPage() {
             
             {pendingTasks.length > 0 ? (
               pendingTasks.map((t) => {
-                const payload = t.parsed_data?.payload;
-                const title = payload?.title || 'Sin título';
+                const payload = t.parsed_data?.payload as any;
+                const title = payload?.title || payload?.titulo || 'Sin título';
                 const date = payload?.datetimeISO || payload?.date;
 
                 return (
@@ -155,8 +155,8 @@ export default function TareasPage() {
               </h2>
               
               {completedTasks.map((t) => {
-                const payload = t.parsed_data?.payload;
-                const title = payload?.title || 'Sin título';
+                const payload = t.parsed_data?.payload as any;
+                const title = payload?.title || payload?.titulo || 'Sin título';
                 const date = payload?.datetimeISO || payload?.date;
 
                 return (
