@@ -1,17 +1,26 @@
 import { NextResponse } from 'next/server';
 import { GeminiService } from '@/core/ai/service';
 import { supabaseServerAdmin } from '@/lib/server/supabase';
-import { ParsedAction } from '@/types/brain';
+import { ActionPayload } from '@/core/engine/types';
 
-const SYSTEM_PROMPT = `Eres el cerebro de LifeOS. Analiza el siguiente texto y devuelve un objeto JSON estricto clasificando la acción como EXPENSE, TASK o REMINDER, extrayendo los datos clave (monto, fecha, título, etc.). No devuelvas markdown, solo el JSON. 
-Esquema de respuesta esperado:
+const SYSTEM_PROMPT = `Eres el Action Dispatcher de LifeOS. Analiza la petición del usuario y devuelve una intención estructurada en JSON.
+NUNCA inventes datos. Si faltan datos cruciales (ej: título, fecha de un recordatorio, o monto de un gasto), indica "needs_input": true y pregunta qué falta en "reply".
+Para fechas, asume la zona horaria de Argentina. No inventes fechas ambiguas.
+
+Tipos de acciones soportadas:
+- create_expense (payload: amount (numero entero), description (string), category (string))
+- create_reminder (payload: title, date (YYYY-MM-DD), time (opcional HH:mm), priority (opcional "baja"|"media"|"alta"))
+- create_event (payload: title, date (YYYY-MM-DD), startTime (HH:mm), endTime (HH:mm))
+- create_task (payload: title, date (YYYY-MM-DD))
+- query_schedule (payload: date (YYYY-MM-DD))
+
+Esquema de respuesta esperado (devuelve solo el JSON):
 {
-  "type": "EXPENSE" | "TASK" | "REMINDER",
-  "title": string,
-  "amount": number (opcional),
-  "date": string (ISO) (opcional),
-  "category": string (opcional),
-  "reply": string (un mensaje conversacional breve y amigable confirmando la acción, en español)
+  "type": "create_expense" | "create_reminder" | "create_event" | "create_task" | "query_schedule" | "unknown",
+  "payload": { ... },
+  "needs_input": boolean (true si falta información clave como el monto, fecha o título),
+  "missing_fields": ["campo1"],
+  "reply": "Respuesta MUY concisa. Si creas algo da confirmación breve (Ej: 'Recordatorio guardado: Estudiar el 20/08'). Si faltan datos, pregunta."
 }`;
 
 export async function POST(request: Request) {
@@ -25,8 +34,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta el texto a analizar' }, { status: 400 });
     }
 
-    // Usar la abstracción de Gemini construida en la Fase 1
-    const aiResponse = await GeminiService.askJson<ParsedAction>(
+    const aiResponse = await GeminiService.askJson<ActionPayload>(
       'gemini-3.5-flash',
       {
         systemInstruction: SYSTEM_PROMPT,
@@ -38,11 +46,7 @@ export async function POST(request: Request) {
       throw new Error(aiResponse.error || 'Error procesando texto en Gemini');
     }
 
-    // Enriquecer con raw text
-    const parsedData = {
-      ...aiResponse.data,
-      rawText: text
-    };
+    const actionData = aiResponse.data;
 
     // Guardar en Supabase (raw_events)
     const { error: dbError } = await supabaseServerAdmin
@@ -50,17 +54,16 @@ export async function POST(request: Request) {
       .insert([
         {
           raw_text: text,
-          parsed_data: parsedData,
+          parsed_data: actionData,
           status: 'processed'
         }
       ]);
 
     if (dbError) {
       console.error('Error insertando en Supabase:', dbError);
-      throw new Error(`Error en Supabase: ${dbError.message}`);
     }
 
-    return NextResponse.json({ success: true, data: parsedData }, { status: 200 });
+    return NextResponse.json({ success: true, data: actionData }, { status: 200 });
   } catch (error: any) {
     console.error('Error en API Brain:', error);
     return NextResponse.json(

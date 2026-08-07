@@ -7,6 +7,8 @@ export interface Deadline {
   fecha: string; // Formato YYYY-MM-DD
   titulo: string;
   colorIcono: string;
+  hora?: string;
+  prioridad?: 'baja' | 'media' | 'alta';
 }
 
 export function useDeadlines() {
