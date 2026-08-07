@@ -1,12 +1,14 @@
 import { useFinanzas, Transaccion } from '@/hooks/useFinanzas';
 import { useDeadlines, Deadline } from '@/hooks/useDeadlines';
 import { useAgenda, CustomEvent } from '@/hooks/useAgenda';
+import { useBateriaMental } from '@/hooks/useBateriaMental';
 import { ActionPayload, ActionResult } from './types';
 
 export function useActionDispatcher() {
   const finanzas = useFinanzas();
   const deadlines = useDeadlines();
   const agenda = useAgenda();
+  const bateria = useBateriaMental();
 
   const dispatch = async (action: ActionPayload): Promise<ActionResult> => {
     if (action.needs_input) {
@@ -92,7 +94,20 @@ export function useActionDispatcher() {
           };
         }
 
-        case 'LOG_ENERGY':
+        case 'LOG_ENERGY': {
+          const { level, notes } = action.payload;
+          if (level) {
+             bateria.agregarTarea(notes || `Registro de energía: ${level}`, level as any);
+             if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('bateria_mental_updated'));
+             }
+          }
+          return {
+            success: true,
+            userMessage: action.reply || "Energía registrada."
+          };
+        }
+
         case 'TRACK_HARDWARE':
           // Por ahora solo respondemos al usuario, ya que el backend lo registra
           return {

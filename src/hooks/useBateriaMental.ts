@@ -17,15 +17,29 @@ export function useBateriaMental() {
 
   useEffect(() => {
     setIsMounted(true);
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('academia_bateria_mental');
-      if (stored) {
-        try {
-          setTareas(JSON.parse(stored));
-        } catch (e) {
-          console.error("Error parsing bateria mental:", e);
+    const loadState = () => {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('academia_bateria_mental');
+        if (stored) {
+          try {
+            setTareas(JSON.parse(stored));
+          } catch (e) {
+            console.error("Error parsing bateria mental:", e);
+          }
         }
       }
+    };
+
+    loadState();
+    
+    // Escuchar el evento disparado desde LifeOS o el ActionDispatcher
+    const handleUpdate = () => {
+      loadState();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('bateria_mental_updated', handleUpdate);
+      return () => window.removeEventListener('bateria_mental_updated', handleUpdate);
     }
   }, []);
 
