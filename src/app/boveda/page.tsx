@@ -3,12 +3,20 @@
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
-  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare 
+  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock 
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function HubPage() {
   const apps = [
+    {
+      id: 'datos',
+      title: 'Datos Secretos',
+      href: '/datos-personales',
+      icon: <Lock size={28} className="text-rose-400" />,
+      color: 'from-rose-500/20 to-rose-600/5 border-rose-500/20',
+      description: 'Claves e Info'
+    },
     {
       id: 'resumen',
       title: 'Resumen Diario',
