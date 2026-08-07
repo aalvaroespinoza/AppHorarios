@@ -107,13 +107,13 @@ export default function PomodoroWidget() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+            className="fixed inset-0 z-[9999] bg-black flex flex-col items-center justify-center p-6"
           >
             <button 
               onClick={exitImmersive}
-              className="absolute top-12 right-6 w-12 h-12 rounded-full bg-zinc-800/50 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+              className="absolute top-10 right-6 flex items-center gap-2 text-white/30 hover:text-white/60 transition-colors text-sm font-medium tracking-wide uppercase"
             >
-              <X size={24} />
+              Salir <X size={16} />
             </button>
 
             <motion.div 
