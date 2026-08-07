@@ -2,21 +2,28 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, CloudSun, Newspaper, CalendarClock, Music, BookOpen, Clock, Zap } from 'lucide-react';
+import { ChevronLeft, CloudSun, Newspaper, CalendarClock, Clock, Headphones, Guitar, Radio, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
 import NativeCard from '@/core/components/ui/NativeCard';
 import { useAgenda } from '@/hooks/useAgenda';
 
-interface WeatherData {
-  temp: number;
-  description: string;
+interface NewsItem {
+  title: string;
+  summary: string;
+  url: string;
+}
+
+interface BriefingData {
+  greeting: string;
+  weather: string;
+  news: NewsItem[];
 }
 
 export default function ResumenDiarioPage() {
   const agenda = useAgenda();
   const [isMounted, setIsMounted] = useState(false);
-  const [greeting, setGreeting] = useState("Hola");
-  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [briefing, setBriefing] = useState<BriefingData | null>(null);
+  const [loading, setLoading] = useState(true);
   
   // Obtener fecha de hoy en ISO
   const today = new Date();
@@ -25,30 +32,21 @@ export default function ResumenDiarioPage() {
   useEffect(() => {
     setIsMounted(true);
     
-    // Dynamic greeting
-    const hour = today.getHours();
-    if (hour < 12) setGreeting("Buenos días");
-    else if (hour < 20) setGreeting("Buenas tardes");
-    else setGreeting("Buenas noches");
-    
-    // Fetch Weather (Open-Meteo for Cordoba: -31.42, -64.18)
-    const fetchWeather = async () => {
+    const fetchBriefing = async () => {
       try {
-        const res = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-31.42&longitude=-64.18&current_weather=true');
-        const data = await res.json();
-        const current = data.current_weather;
-        if (current) {
-          let desc = "Despejado";
-          if (current.weathercode > 0) desc = "Nublado";
-          if (current.weathercode > 50) desc = "Lluvioso";
-          setWeather({ temp: Math.round(current.temperature), description: desc });
+        const res = await fetch('/api/briefing');
+        if (res.ok) {
+          const data = await res.json();
+          setBriefing(data);
         }
       } catch (e) {
-        console.error("Error fetching weather", e);
+        console.error("Error fetching briefing", e);
+      } finally {
+        setLoading(false);
       }
     };
     
-    fetchWeather();
+    fetchBriefing();
   }, []);
 
   if (!isMounted || !agenda.isMounted) return <div className="min-h-[100dvh] bg-[#0a0a0c]" />;
@@ -72,9 +70,13 @@ export default function ResumenDiarioPage() {
         >
           <ChevronLeft size={20} />
         </Link>
-        <h1 className="text-3xl font-black tracking-tight text-white leading-tight">
-          {greeting}, Álvaro.
-        </h1>
+        {loading ? (
+          <div className="h-10 w-3/4 bg-zinc-800/50 animate-pulse rounded-lg" />
+        ) : (
+          <h1 className="text-3xl font-black tracking-tight text-white leading-tight">
+            {briefing?.greeting || 'Buenos días, Álvaro.'}
+          </h1>
+        )}
         <p className="text-sm text-zinc-400 font-medium">
           Este es tu resumen para hoy.
         </p>
@@ -83,38 +85,24 @@ export default function ResumenDiarioPage() {
       {/* Clima */}
       <section className="flex flex-col gap-3">
         <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
-          <CloudSun size={16} /> Clima (Córdoba)
+          <CloudSun size={16} /> Clima
         </h2>
         <NativeCard className="bg-gradient-to-br from-blue-500/10 to-cyan-500/5 border border-blue-500/20 p-5 flex items-center justify-between">
           <div>
-            {weather ? (
-              <>
-                <p className="text-3xl font-black text-white">{weather.temp}°C</p>
-                <p className="text-sm font-semibold text-blue-400 mt-1">{weather.description}</p>
-              </>
+            {loading ? (
+              <div className="flex flex-col gap-2">
+                <div className="h-8 w-20 bg-blue-500/20 animate-pulse rounded-md" />
+                <div className="h-4 w-32 bg-blue-500/10 animate-pulse rounded-md" />
+              </div>
             ) : (
-              <p className="text-sm text-zinc-400">Cargando clima...</p>
+              <>
+                <p className="text-3xl font-black text-white">{briefing?.weather?.split(',')[0] || '24°C'}</p>
+                <p className="text-sm font-semibold text-blue-400 mt-1">{briefing?.weather?.split(',')[1]?.trim() || 'Despejado'}</p>
+              </>
             )}
           </div>
           <CloudSun size={48} className="text-blue-400 opacity-80" />
         </NativeCard>
-      </section>
-
-      {/* Atajos Rápidos */}
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
-          <Zap size={16} /> Atajos
-        </h2>
-        <div className="grid grid-cols-2 gap-3">
-          <a href="https://open.spotify.com" target="_blank" rel="noopener noreferrer" className="flex flex-col gap-2 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 active:scale-95 transition-all">
-            <Music size={24} className="text-emerald-400" />
-            <span className="font-bold text-sm text-zinc-200">Música</span>
-          </a>
-          <a href="https://medium.com" target="_blank" rel="noopener noreferrer" className="flex flex-col gap-2 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-indigo-500/50 active:scale-95 transition-all">
-            <BookOpen size={24} className="text-indigo-400" />
-            <span className="font-bold text-sm text-zinc-200">Lectura</span>
-          </a>
-        </div>
       </section>
 
       {/* Agenda del Día */}
@@ -144,6 +132,58 @@ export default function ResumenDiarioPage() {
             <p className="text-zinc-400 font-medium">Tienes el día libre. No hay eventos programados.</p>
           </NativeCard>
         )}
+      </section>
+
+      {/* Carrete de Noticias */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
+          <Newspaper size={16} /> Para Leer Hoy
+        </h2>
+        <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-4">
+          {loading ? (
+            // Skeletons
+            [1, 2, 3].map(i => (
+              <NativeCard key={i} className="min-w-[80vw] sm:min-w-72 bg-zinc-900/40 border border-zinc-800 p-5 snap-center flex flex-col gap-3">
+                <div className="h-5 w-3/4 bg-zinc-800 animate-pulse rounded" />
+                <div className="h-16 w-full bg-zinc-800/50 animate-pulse rounded" />
+              </NativeCard>
+            ))
+          ) : (
+            briefing?.news?.map((item, idx) => (
+              <NativeCard key={idx} className="min-w-[80vw] sm:min-w-72 bg-zinc-900/80 border border-zinc-800 p-5 snap-center flex flex-col justify-between gap-4">
+                <div className="flex flex-col gap-2">
+                  <h3 className="font-bold text-white leading-tight">{item.title}</h3>
+                  <p className="text-sm text-zinc-400 line-clamp-3">{item.summary}</p>
+                </div>
+                <a 
+                  href={item.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 w-max bg-indigo-500/10 px-3 py-1.5 rounded-full"
+                >
+                  Leer artículo <ExternalLink size={12} />
+                </a>
+              </NativeCard>
+            ))
+          )}
+        </div>
+      </section>
+
+      {/* Modo Viaje */}
+      <section className="flex flex-col gap-3">
+        <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
+          <Headphones size={16} /> Modo Viaje
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          <a href="https://open.spotify.com/genre/trap" target="_blank" rel="noopener noreferrer" className="flex flex-col gap-2 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 active:scale-95 transition-all">
+            <Radio size={24} className="text-emerald-400" />
+            <span className="font-bold text-sm text-zinc-200">Trap & Rap</span>
+          </a>
+          <a href="https://open.spotify.com/genre/rock" target="_blank" rel="noopener noreferrer" className="flex flex-col gap-2 p-4 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-indigo-500/50 active:scale-95 transition-all">
+            <Guitar size={24} className="text-indigo-400" />
+            <span className="font-bold text-sm text-zinc-200">Rock Nacional</span>
+          </a>
+        </div>
       </section>
 
     </motion.div>
