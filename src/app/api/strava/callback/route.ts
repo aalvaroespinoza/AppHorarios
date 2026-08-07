@@ -36,6 +36,10 @@ export async function GET(request: Request) {
 
     const data = await res.json();
     
+    // Imprimir el token en consola según solicitado
+    console.log('--- STRAVA ACCESS TOKEN OBTENIDO ---');
+    console.log(data.access_token);
+    
     // Guardar tokens en cookies seguras
     const cookieStore = await cookies();
     cookieStore.set('strava_access_token', data.access_token, {
