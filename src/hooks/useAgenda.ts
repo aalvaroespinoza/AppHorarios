@@ -6,9 +6,13 @@ import { subjectData } from '@/data/subjects';
 export interface CustomEvent {
   id: string;
   titulo: string;
+  fecha: string; // YYYY-MM-DD
   horaInicio: string;
   horaFin: string;
-  dia: string;
+  tipo: 'materia' | 'custom';
+  descripcion?: string;
+  ubicacion?: string;
+  color?: string;
 }
 
 export interface AgendaItem {
@@ -25,13 +29,46 @@ export function useAgenda() {
   const [eventos, setEventos] = useState<CustomEvent[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
+  const getDateForCurrentWeekDay = (dayName: string): string => {
+    const map: Record<string, number> = {
+      'lunes': 1, 'martes': 2, 'miercoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'domingo': 0
+    };
+    const target = map[dayName.toLowerCase()] ?? 1;
+    const now = new Date();
+    const current = now.getDay();
+    const currentDist = current === 0 ? 6 : current - 1;
+    const targetDist = target === 0 ? 6 : target - 1;
+    const diff = targetDist - currentDist;
+    const targetDate = new Date(now);
+    targetDate.setDate(now.getDate() + diff);
+    // Para zona local
+    const yyyy = targetDate.getFullYear();
+    const mm = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(targetDate.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
   useEffect(() => {
     setIsMounted(true);
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('academia_agenda_eventos');
       if (stored) {
         try {
-          setEventos(JSON.parse(stored));
+          const parsed = JSON.parse(stored);
+          const migrated = parsed.map((e: any) => {
+            return {
+              id: e.id || crypto.randomUUID(),
+              titulo: e.titulo || 'Evento',
+              fecha: e.fecha || (e.dia ? getDateForCurrentWeekDay(e.dia) : getDateForCurrentWeekDay('lunes')),
+              horaInicio: e.horaInicio || '00:00',
+              horaFin: e.horaFin || '23:59',
+              tipo: e.tipo || 'custom',
+              descripcion: e.descripcion,
+              ubicacion: e.ubicacion,
+              color: e.color
+            } as CustomEvent;
+          });
+          setEventos(migrated);
         } catch (e) {
           console.error("Error parsing academia_agenda_eventos:", e);
         }
@@ -45,7 +82,22 @@ export function useAgenda() {
     }
   }, [eventos, isMounted]);
 
-  const agregarEvento = (nuevoEvento: CustomEvent, skipICS: boolean = false) => {
+  // Permitimos pasar 'dia' en Omit para mantener retrocompatibilidad con AgendaView
+  const agregarEvento = (eventoInput: Omit<CustomEvent, 'fecha' | 'tipo'> & { dia?: string, fecha?: string }, skipICS: boolean = false) => {
+    const nuevaFecha = eventoInput.fecha || (eventoInput.dia ? getDateForCurrentWeekDay(eventoInput.dia) : getDateForCurrentWeekDay('lunes'));
+    
+    const nuevoEvento: CustomEvent = {
+      id: eventoInput.id || crypto.randomUUID(),
+      titulo: eventoInput.titulo,
+      fecha: nuevaFecha,
+      horaInicio: eventoInput.horaInicio,
+      horaFin: eventoInput.horaFin,
+      tipo: 'custom',
+      descripcion: eventoInput.descripcion,
+      ubicacion: eventoInput.ubicacion,
+      color: eventoInput.color
+    };
+
     setEventos(prev => [...prev, nuevoEvento]);
     if (!skipICS) {
       descargarICS(nuevoEvento);
@@ -53,36 +105,20 @@ export function useAgenda() {
   };
 
   const descargarICS = (evento: CustomEvent) => {
-    const getNextDateForDay = (dayName: string) => {
-      const map: Record<string, number> = {
-        'lunes': 1, 'martes': 2, 'miercoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'domingo': 0
-      };
-      const target = map[dayName.toLowerCase()] ?? 1;
-      const now = new Date();
-      const current = now.getDay();
-      let daysToAdd = target - current;
-      if (daysToAdd < 0) {
-        daysToAdd += 7;
-      }
-      return new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
-    };
-
-    const formatICSDate = (date: Date, timeStr: string) => {
+    const formatICSDate = (dateStr: string, timeStr: string) => {
+      const [year, month, day] = dateStr.split('-').map(Number);
       const [hours, minutes] = timeStr.split(':').map(Number);
-      const d = new Date(date);
-      d.setHours(hours, minutes, 0, 0);
-      
+      const d = new Date(year, month - 1, day, hours, minutes);
       const pad = (n: number) => String(n).padStart(2, '0');
       return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
     };
 
-    const date = getNextDateForDay(evento.dia);
-    const dtstart = formatICSDate(date, evento.horaInicio);
-    const dtend = formatICSDate(date, evento.horaFin);
+    const dtstart = formatICSDate(evento.fecha, evento.horaInicio);
+    const dtend = formatICSDate(evento.fecha, evento.horaFin);
     
-    // Para DTSTAMP (momento de creación)
     const now = new Date();
-    const dtstamp = formatICSDate(now, `${now.getHours()}:${now.getMinutes()}`);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const dtstamp = `${now.getUTCFullYear()}${pad(now.getUTCMonth()+1)}${pad(now.getUTCDate())}T${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}Z`;
 
     const icsString = [
       'BEGIN:VCALENDAR',
@@ -117,13 +153,27 @@ export function useAgenda() {
     setEventos(prev => prev.filter(e => e.id !== id));
   };
 
-  const obtenerAgendaDelDia = (dia: string): AgendaItem[] => {
+  // Recibe 'lunes', 'martes', etc o una fecha YYYY-MM-DD
+  const obtenerAgendaDelDia = (diaOFecha: string): AgendaItem[] => {
     const agenda: AgendaItem[] = [];
+    
+    const esFechaISO = /^\d{4}-\d{2}-\d{2}$/.test(diaOFecha);
+    let targetDateISO = diaOFecha;
+    let targetDayName = diaOFecha.toLowerCase();
 
-    // 1. Agregar materias estáticas
+    if (esFechaISO) {
+      const [year, month, day] = diaOFecha.split('-').map(Number);
+      const d = new Date(year, month - 1, day);
+      const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
+      targetDayName = dias[d.getDay()];
+    } else {
+      targetDateISO = getDateForCurrentWeekDay(diaOFecha);
+    }
+
+    // 1. Agregar materias estáticas (recurrentes) según el nombre del día
     subjectData.subjects.forEach(subject => {
       subject.classBlocks.forEach(block => {
-        if (block.day.toLowerCase() === dia.toLowerCase()) {
+        if (block.day.toLowerCase() === targetDayName) {
           agenda.push({
             id: `${subject.id}-${block.day}`,
             titulo: subject.name,
@@ -137,8 +187,8 @@ export function useAgenda() {
       });
     });
 
-    // 2. Agregar eventos personalizados
-    const eventosDelDia = eventos.filter(e => e.dia.toLowerCase() === dia.toLowerCase());
+    // 2. Agregar eventos personalizados (solo para esa fecha exacta)
+    const eventosDelDia = eventos.filter(e => e.fecha === targetDateISO);
     eventosDelDia.forEach(e => {
       agenda.push({
         id: e.id,
@@ -146,7 +196,7 @@ export function useAgenda() {
         horaInicio: e.horaInicio,
         horaFin: e.horaFin,
         tipo: 'custom',
-        color: 'bg-zinc-700 text-zinc-100' // Default styling for custom events
+        color: e.color || 'bg-zinc-700 text-zinc-100'
       });
     });
 

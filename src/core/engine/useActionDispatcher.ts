@@ -77,19 +77,20 @@ export function useActionDispatcher() {
             return dias[d.getDay()];
           };
 
-          const nuevoEvento: CustomEvent = {
+          const nuevoEvento = {
             id: crypto.randomUUID(),
             titulo: title,
+            fecha: date,
             horaInicio: startTime,
             horaFin: endTime || startTime,
-            dia: getDayName(date)
+            tipo: 'custom' as const
           };
           
           agenda.agregarEvento(nuevoEvento, true);
           return {
             success: true,
             data: nuevoEvento,
-            userMessage: action.reply || `Evento "${title}" agendado para el ${nuevoEvento.dia} a las ${startTime}.`
+            userMessage: action.reply || `Evento "${title}" agendado para el ${getDayName(date)} a las ${startTime}.`
           };
         }
 
