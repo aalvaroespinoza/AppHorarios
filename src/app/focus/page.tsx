@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, Zap, Timer, PenLine, Droplets, Bike, Dumbbell, Plus, Minus } from 'lucide-react';
 import Link from 'next/link';
@@ -70,7 +70,51 @@ function MateTracker() {
   );
 }
 
-function StravaCard() {
+function StravaWidget() {
+  const [data, setData] = useState<{ authenticated: boolean; activities?: any[] } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/strava/activities')
+      .then(res => res.json())
+      .then(d => {
+        setData(d);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="bg-zinc-900/40 border border-zinc-800 rounded-2xl p-5 flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[#fc4c02] border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!data?.authenticated) {
+    return (
+      <motion.div
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        className="bg-gradient-to-br from-[#fc4c02]/10 to-[#fc4c02]/5 border border-[#fc4c02]/20 rounded-2xl p-5 flex items-center justify-between cursor-pointer shadow-sm"
+        onClick={() => window.location.href = '/api/strava/auth'}
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-[#fc4c02]/20 flex items-center justify-center shrink-0 border border-[#fc4c02]/30">
+            <Bike size={24} className="text-[#fc4c02]" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-bold uppercase tracking-widest text-[#fc4c02]/80 mb-0.5">Strava</span>
+            <h3 className="font-bold text-white text-base">Conectar con Strava</h3>
+          </div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  const act = data?.activities?.[0];
+
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
@@ -81,9 +125,11 @@ function StravaCard() {
         <Bike size={24} className="text-[#fc4c02]" />
       </div>
       <div className="flex flex-col">
-        <span className="text-xs font-bold uppercase tracking-widest text-[#fc4c02]/80 mb-0.5">Actividad Strava</span>
-        <h3 className="font-bold text-white text-base">Ciclismo Matutino</h3>
-        <p className="text-sm text-zinc-400 font-medium">15.2 km • 45m 12s</p>
+        <span className="text-xs font-bold uppercase tracking-widest text-[#fc4c02]/80 mb-0.5">Última Actividad</span>
+        <h3 className="font-bold text-white text-base">{act?.name || 'Ciclismo'}</h3>
+        <p className="text-sm text-zinc-400 font-medium">
+          {act ? `${(act.distance / 1000).toFixed(1)} km • ${Math.floor(act.moving_time / 60)}m` : '0 km • 0m'}
+        </p>
       </div>
     </motion.div>
   );
@@ -191,7 +237,7 @@ export default function FocusPage() {
         <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
           <Bike size={16} /> Entrenamiento
         </h2>
-        <StravaCard />
+        <StravaWidget />
         <GymCard />
       </section>
 
