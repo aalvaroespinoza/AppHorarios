@@ -44,6 +44,10 @@ Tipos de acciones soportadas (type):
 - create_event (payload: title, date (YYYY-MM-DD), startTime (HH:mm), endTime (HH:mm))
 - create_task (payload: title, date (YYYY-MM-DD))
 - query_schedule (payload: date (YYYY-MM-DD))
+- LOG_ENERGY (payload: level ("alta"|"media"|"baja"), notes (opcional string))
+- TRACK_HARDWARE (payload: product (string), details (opcional string))
+- EVENT (payload: title, date (YYYY-MM-DD), location (opcional string))
+- TASK (payload: title, datetimeISO (formato ISO 8601 estricto con hora))
 - unknown (Usa este tipo para charlar, saludar, o si la intención no encaja en las acciones anteriores).
 
 Tu respuesta (reply) debe ser MUY concisa y conversacional.`;
@@ -75,6 +79,8 @@ async function invokeWithRetry(text: string, attempt: number = 1): Promise<Actio
   return data;
 }
 
+import { createGoogleTask } from '@/lib/server/googleTasks';
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -93,6 +99,12 @@ export async function POST(request: Request) {
       .then(({ error }) => {
         if (error) console.error('Error insertando en Supabase:', error);
       });
+
+    // Integración asíncrona con Google Tasks
+    if (actionData.type === 'TASK' && actionData.payload) {
+      createGoogleTask(actionData.payload.title, actionData.payload.datetimeISO)
+        .catch(err => console.error('Error al intentar crear la tarea en Google Tasks:', err));
+    }
 
     return NextResponse.json({ success: true, data: actionData }, { status: 200 });
   } catch (error: any) {

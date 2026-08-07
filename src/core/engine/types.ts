@@ -4,6 +4,10 @@ export type ActionType =
   | 'create_event' 
   | 'create_task' 
   | 'query_schedule'
+  | 'LOG_ENERGY'
+  | 'TRACK_HARDWARE'
+  | 'EVENT'
+  | 'TASK'
   | 'unknown';
 
 export interface ActionPayload {

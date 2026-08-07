@@ -41,20 +41,24 @@ export function useActionDispatcher() {
         }
 
         case 'create_reminder':
-        case 'create_task': {
-          const { title, date, time, priority } = action.payload;
+        case 'create_task':
+        case 'TASK': {
+          const { title, date, time, priority, datetimeISO } = action.payload;
           if (!title) throw new Error("Falta el título del recordatorio");
           
           let color = 'text-indigo-500';
           if (priority === 'alta') color = 'text-red-500';
           else if (priority === 'media') color = 'text-amber-500';
 
+          const finalDate = datetimeISO ? datetimeISO.split('T')[0] : (date || new Date().toISOString().split('T')[0]);
+          const finalTime = datetimeISO && datetimeISO.includes('T') ? datetimeISO.split('T')[1].substring(0, 5) : time;
+
           const nuevoDeadline: Deadline = {
             id: crypto.randomUUID(),
             titulo: title,
-            fecha: date || new Date().toISOString().split('T')[0],
+            fecha: finalDate,
             colorIcono: color,
-            hora: time,
+            hora: finalTime,
             prioridad: priority
           };
           
@@ -66,23 +70,17 @@ export function useActionDispatcher() {
           };
         }
 
-        case 'create_event': {
-          const { title, date, startTime, endTime } = action.payload;
-          if (!title || !date || !startTime) throw new Error("Faltan datos del evento");
+        case 'create_event':
+        case 'EVENT': {
+          const { title, date, startTime, endTime, location } = action.payload;
+          if (!title || !date) throw new Error("Faltan datos del evento");
           
-          const getDayName = (dateStr: string) => {
-            const [year, month, day] = dateStr.split('-').map(Number);
-            const d = new Date(year, month - 1, day);
-            const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-            return dias[d.getDay()];
-          };
-
           const nuevoEvento = {
             id: crypto.randomUUID(),
-            titulo: title,
+            titulo: title + (location ? ` (${location})` : ''),
             fecha: date,
-            horaInicio: startTime,
-            horaFin: endTime || startTime,
+            horaInicio: startTime || '12:00',
+            horaFin: endTime || startTime || '13:00',
             tipo: 'custom' as const
           };
           
@@ -90,9 +88,17 @@ export function useActionDispatcher() {
           return {
             success: true,
             data: nuevoEvento,
-            userMessage: action.reply || `Evento "${title}" agendado para el ${getDayName(date)} a las ${startTime}.`
+            userMessage: action.reply || `Evento "${title}" agendado para el ${date}.`
           };
         }
+
+        case 'LOG_ENERGY':
+        case 'TRACK_HARDWARE':
+          // Por ahora solo respondemos al usuario, ya que el backend lo registra
+          return {
+            success: true,
+            userMessage: action.reply || "Anotado."
+          };
 
         case 'query_schedule': {
           const { date } = action.payload;
@@ -103,13 +109,13 @@ export function useActionDispatcher() {
           const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
           const nombreDia = dias[d.getDay()];
           
-          const eventosDelDia = agenda.obtenerAgendaDelDia(nombreDia);
+          const eventosDelDia = agenda.obtenerAgendaDelDia(date);
           
           if (eventosDelDia.length === 0) {
             return {
               success: true,
               data: eventosDelDia,
-              userMessage: action.reply || `No tienes nada programado para el ${nombreDia}.`
+              userMessage: action.reply || `No tienes nada programado para el ${date}.`
             };
           }
           
@@ -117,7 +123,7 @@ export function useActionDispatcher() {
           return {
             success: true,
             data: eventosDelDia,
-            userMessage: action.reply ? `${action.reply}\\n\\n${resumen}` : `Para el ${nombreDia} tienes:\\n${resumen}`
+            userMessage: action.reply ? `${action.reply}\\n\\n${resumen}` : `Para el ${date} tienes:\\n${resumen}`
           };
         }
 
