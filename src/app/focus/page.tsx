@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { BateriaMentalSection } from '@/features/academia/BateriaMentalSection';
 import PomodoroWidget from '@/components/PomodoroWidget';
 import NativeCard from '@/core/components/ui/NativeCard';
+import { GymTracker } from '@/features/focus/GymTracker';
 
 function MateTracker() {
   const [level, setLevel] = useState(0); // 0 to 4 (max 4 termos/vasos)
@@ -135,59 +136,7 @@ function StravaWidget() {
   );
 }
 
-function GymCard() {
-  const [sets, setSets] = useState([false, false, false, false, false, false, false, false, false]);
 
-  const toggleSet = (index: number) => {
-    const newSets = [...sets];
-    newSets[index] = !newSets[index];
-    setSets(newSets);
-  };
-
-  return (
-    <NativeCard className="bg-zinc-900/60 border border-zinc-800 p-5 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Dumbbell size={18} className="text-indigo-400" />
-          <h3 className="font-bold text-white">Gimnasio (Push Day)</h3>
-        </div>
-        <span className="text-xs font-bold text-zinc-500 bg-zinc-800/50 px-2 py-1 rounded-full">
-          {sets.filter(Boolean).length}/9 Series
-        </span>
-      </div>
-      
-      <div className="grid grid-cols-3 gap-3">
-        {sets.map((isDone, idx) => (
-          <motion.button
-            key={idx}
-            whileTap={{ scale: 0.8 }}
-            onClick={() => toggleSet(idx)}
-            initial={false}
-            animate={{ 
-              scale: isDone ? [1, 1.2, 1] : 1,
-              backgroundColor: isDone ? 'rgba(74, 222, 128, 0.2)' : 'rgba(39, 39, 42, 1)',
-              borderColor: isDone ? 'rgba(74, 222, 128, 0.4)' : 'rgba(63, 63, 70, 1)'
-            }}
-            transition={{ duration: 0.3 }}
-            className={`h-12 rounded-xl flex items-center justify-center border-2 transition-colors relative overflow-hidden`}
-          >
-            {isDone ? (
-              <motion.span 
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="text-emerald-400 font-bold text-sm"
-              >
-                ✓
-              </motion.span>
-            ) : (
-              <span className="text-zinc-600 font-bold text-xs">S{idx + 1}</span>
-            )}
-          </motion.button>
-        ))}
-      </div>
-    </NativeCard>
-  );
-}
 
 export default function FocusPage() {
   return (
@@ -238,7 +187,7 @@ export default function FocusPage() {
           <Bike size={16} /> Entrenamiento
         </h2>
         <StravaWidget />
-        <GymCard />
+        <GymTracker />
       </section>
 
       {/* Pomodoro */}
