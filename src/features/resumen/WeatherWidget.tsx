@@ -24,20 +24,18 @@ export function WeatherWidget() {
   return (
     <>
       <AnimatePresence>
-        {!isExpanded && (
+        {!isExpanded ? (
           <motion.div
+            key="collapsed"
             layoutId="weather-card"
             onClick={() => setIsExpanded(true)}
+            style={{ borderRadius: 24 }}
             className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-2 flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-transform w-max border border-blue-200 dark:border-blue-800/50"
           >
             <CloudSun size={18} className="text-blue-500 dark:text-blue-400" />
             <span className="text-sm font-bold text-blue-900 dark:text-blue-100">14°C - Despeñaderos</span>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isExpanded && (
+        ) : (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
             <motion.div
               initial={{ opacity: 0 }}
@@ -48,8 +46,10 @@ export function WeatherWidget() {
             />
             
             <motion.div
+              key="expanded"
               layoutId="weather-card"
-              className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-[2.5rem] p-6 sm:p-8 shadow-2xl flex flex-col gap-6 overflow-hidden"
+              style={{ borderRadius: 40 }}
+              className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 p-6 sm:p-8 shadow-2xl flex flex-col gap-6 overflow-hidden"
             >
               {/* Header Expandido */}
               <div className="flex justify-between items-start">

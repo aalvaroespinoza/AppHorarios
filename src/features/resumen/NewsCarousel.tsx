@@ -15,7 +15,26 @@ interface NewsCarouselProps {
   loading?: boolean;
 }
 
+const FALLBACK_NEWS: NewsItem[] = [
+  {
+    title: "Escalada de privilegios en SMB",
+    summary: "Nuevas técnicas para explotar vulnerabilidades de red en entornos corporativos de Windows y Active Directory.",
+    url: "https://medium.com/cybersecurity"
+  },
+  {
+    title: "Guía rápida eJPT",
+    summary: "Cheat sheet completo para pasar tu certificación eJPT a la primera, cubriendo pivoting y web exploits.",
+    url: "https://medium.com/pentesting"
+  },
+  {
+    title: "Últimas evasiones de AMSI",
+    summary: "Cómo el malware moderno utiliza ofuscación y llamadas directas al sistema para burlar los antivirus EDR.",
+    url: "https://medium.com/red-team"
+  }
+];
+
 export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
+  const displayNews = !loading && news.length === 0 ? FALLBACK_NEWS : news;
   return (
     <section className="flex flex-col gap-3">
       <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
@@ -33,7 +52,7 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
             </NativeCard>
           ))
         ) : (
-          news.map((item, idx) => (
+          displayNews.map((item, idx) => (
             <motion.div 
               key={idx}
               className="min-w-[80vw] sm:min-w-[300px] snap-center bg-white dark:bg-neutral-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700 flex flex-col justify-between gap-4 shrink-0"
@@ -59,13 +78,7 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
           ))
         )}
 
-        {/* Empty State Fallback */}
-        {!loading && news.length === 0 && (
-          <NativeCard className="min-w-[80vw] sm:min-w-[300px] snap-center bg-zinc-900/40 border border-zinc-800/60 border-dashed p-6 flex flex-col items-center justify-center text-center gap-2">
-            <Newspaper size={32} className="text-zinc-600 mb-1" />
-            <p className="text-zinc-400 font-medium">No hay noticias generadas aún.</p>
-          </NativeCard>
-        )}
+
       </div>
     </section>
   );
