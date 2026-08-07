@@ -101,9 +101,16 @@ export async function POST(request: Request) {
       });
 
     // Integración asíncrona con Google Tasks
-    if (actionData.type === 'TASK' && actionData.payload) {
-      createGoogleTask(actionData.payload.title, actionData.payload.datetimeISO)
-        .catch(err => console.error('Error al intentar crear la tarea en Google Tasks:', err));
+    if ((actionData.type === 'TASK' || actionData.type === 'create_reminder') && actionData.payload) {
+      try {
+        const title = actionData.payload.title;
+        const date = actionData.payload.datetimeISO || actionData.payload.date;
+        createGoogleTask(title, date).catch(err => {
+          console.error('Error no bloqueante de Google Tasks:', err);
+        });
+      } catch (err) {
+        console.error('Error al instanciar Google Tasks:', err);
+      }
     }
 
     return NextResponse.json({ success: true, data: actionData }, { status: 200 });
