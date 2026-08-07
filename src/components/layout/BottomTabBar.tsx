@@ -80,7 +80,7 @@ export default function BottomTabBar({ tabs = defaultTabs }: BottomTabBarProps) 
       initial={{ y: "100%" }} 
       animate={{ y: 0 }} 
       transition={{ type: "spring", bounce: 0, duration: 0.6 }}
-      className="fixed bottom-0 w-full z-50 backdrop-blur-xl bg-black/80 border-t border-zinc-800/80 pb-safe pt-2 px-4 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]"
+      className="fixed bottom-0 w-full z-50 backdrop-blur-xl bg-black/80 border-t border-zinc-800/80 pt-2 px-4 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]"
     >
       <div className="flex justify-around items-center max-w-md mx-auto">
         {tabs.map((tab) => (
@@ -95,8 +95,6 @@ export default function BottomTabBar({ tabs = defaultTabs }: BottomTabBarProps) 
           />
         ))}
       </div>
-      {/* Spacer para dispositivos con Home Indicator (notch inferior) en iOS */}
-      <div className="h-6 w-full sm:hidden"></div>
     </motion.nav>
   );
 }

@@ -121,10 +121,11 @@ export function useActionDispatcher() {
           };
         }
 
+        case 'unknown':
         default:
           return {
-            success: false,
-            userMessage: action.reply || "No estoy seguro de cómo hacer eso."
+            success: true,
+            userMessage: action.reply || "No estoy seguro de cómo hacer eso, pero aquí estoy para ayudarte."
           };
       }
     } catch (e: any) {

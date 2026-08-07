@@ -221,24 +221,24 @@ export function MiniCalendar() {
                 <input 
                   type="text" placeholder="Título"
                   value={newEntity.titulo} onChange={(e) => setNewEntity({...newEntity, titulo: e.target.value})}
-                  className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+                  className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-blue-500 transition-colors"
                 />
                 
                 <div className="flex flex-col gap-2">
                   <input 
                     type="date"
                     value={newEntity.fecha} onChange={(e) => setNewEntity({...newEntity, fecha: e.target.value})}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
                   />
                   {addType === 'evento' && (
                     <div className="flex gap-2">
                       <input 
                         type="time" value={newEntity.horaInicio} onChange={(e) => setNewEntity({...newEntity, horaInicio: e.target.value})}
-                        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
+                        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
                       />
                       <input 
                         type="time" value={newEntity.horaFin} onChange={(e) => setNewEntity({...newEntity, horaFin: e.target.value})}
-                        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
+                        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-base text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
                       />
                     </div>
                   )}

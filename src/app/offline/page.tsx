@@ -13,7 +13,7 @@ export const metadata: Metadata = {
  */
 export default function OfflinePage() {
   return (
-    <div className="flex flex-col min-h-screen items-center justify-center bg-[var(--color-bg)] px-4">
+    <div className="flex flex-col min-h-[100dvh] items-center justify-center bg-[var(--color-bg)] px-4">
       <div
         className="
           w-full max-w-sm

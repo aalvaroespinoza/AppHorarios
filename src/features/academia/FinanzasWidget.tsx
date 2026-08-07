@@ -50,7 +50,7 @@ export default function FinanzasRapidasWidget({ finanzas, onClose }: { finanzas:
             placeholder="0.00" 
             value={montoR} 
             onChange={(e) => setMontoR(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-7 pr-3 py-2 text-white font-bold focus:outline-none focus:border-blue-500"
+            className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-7 pr-3 py-2 text-base text-white font-bold focus:outline-none focus:border-blue-500"
           />
         </div>
         <div className="flex gap-2 mt-1">

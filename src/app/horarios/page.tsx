@@ -13,7 +13,7 @@ export default function HorariosPage() {
   const escenario = useEscenario();
   const [tab, setTab] = useState<'ida' | 'vuelta'>('ida');
 
-  if (!escenario.isMounted) return <div className="min-h-screen bg-black" />;
+  if (!escenario.isMounted) return <div className="min-h-[100dvh] bg-black" />;
 
   const { diaSeleccionado } = escenario;
   
@@ -36,7 +36,7 @@ export default function HorariosPage() {
   });
 
   return (
-    <main className="min-h-screen bg-black text-white font-sans max-w-md mx-auto pb-24">
+    <main className="min-h-[100dvh] bg-black text-white font-sans max-w-md mx-auto ">
       <header className="pt-10 pb-2 px-4 flex flex-col gap-4">
         <div className="flex justify-between items-start">
           <div>

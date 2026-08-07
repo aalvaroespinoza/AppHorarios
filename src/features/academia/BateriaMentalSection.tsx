@@ -63,7 +63,7 @@ export function BateriaMentalSection() {
                 placeholder="¿Qué hay que hacer?"
                 value={nuevaTarea}
                 onChange={e => setNuevaTarea(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-base text-white focus:outline-none focus:border-blue-500"
               />
               <div className="flex gap-2 items-center justify-between mt-1">
                 <div className="flex gap-1.5">

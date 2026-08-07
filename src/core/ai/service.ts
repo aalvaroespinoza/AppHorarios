@@ -4,6 +4,76 @@ import { GeminiAPIError } from './errors';
 import { GeminiRequestPayload, GeminiResponse } from './types';
 
 /**
+ * Extrae de forma robusta el primer objeto o array JSON de un texto, 
+ * ignorando basura antes y después, garantizando llaves balanceadas.
+ */
+function extractRobustJson(text: string): string {
+  // 1. Limpiar bloques markdown (común en Gemini)
+  let cleanText = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
+
+  // 2. Buscar el inicio del JSON (objeto o array)
+  const firstBrace = cleanText.indexOf('{');
+  const firstBracket = cleanText.indexOf('[');
+  
+  if (firstBrace === -1 && firstBracket === -1) {
+    throw new Error('No JSON object or array found in text');
+  }
+
+  const isObject = firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket);
+  const startChar = isObject ? '{' : '[';
+  const endChar = isObject ? '}' : ']';
+  const startIndex = isObject ? firstBrace : firstBracket;
+
+  // 3. Recorrer caracteres balanceando llaves e ignorando las que estén dentro de strings
+  let depth = 0;
+  let endIndex = -1;
+  let inString = false;
+  let escapeNext = false;
+
+  for (let i = startIndex; i < cleanText.length; i++) {
+    const char = cleanText[i];
+
+    if (escapeNext) {
+      escapeNext = false;
+      continue;
+    }
+
+    if (char === '\\') {
+      escapeNext = true;
+      continue;
+    }
+
+    if (char === '"') {
+      inString = !inString;
+      continue;
+    }
+
+    if (!inString) {
+      if (char === startChar) {
+        depth++;
+      } else if (char === endChar) {
+        depth--;
+        if (depth === 0) {
+          endIndex = i;
+          break;
+        }
+      }
+    }
+  }
+
+  if (endIndex === -1) {
+    // Fallback: tratar de buscar el último cierre si falló la estructura estricta
+    const lastEnd = cleanText.lastIndexOf(endChar);
+    if (lastEnd > startIndex) {
+      return cleanText.substring(startIndex, lastEnd + 1);
+    }
+    throw new Error('Incomplete JSON structure');
+  }
+
+  return cleanText.substring(startIndex, endIndex + 1);
+}
+
+/**
  * Capa de servicio centralizada para IA.
  * REGLA DE ARQUITECTURA: ESTO SOLO DEBE EJECUTARSE EN EL SERVIDOR (API Routes / Server Actions).
  */
@@ -28,19 +98,23 @@ export class GeminiService {
         systemInstruction: payload.systemInstruction,
         generationConfig: {
           responseMimeType: 'application/json',
+          ...(payload.responseSchema ? { responseSchema: payload.responseSchema } : {})
         }
       });
 
       const result = await model.generateContent(payload.prompt);
       const response = await result.response;
       const rawText = response.text();
-      const cleanedText = rawText.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
       
       let parsedData: T;
+      let finalJsonStr = '';
       try {
-        parsedData = JSON.parse(cleanedText) as T;
+        finalJsonStr = extractRobustJson(rawText);
+        parsedData = JSON.parse(finalJsonStr) as T;
       } catch (parseError) {
-        console.error('[GeminiService] Error parseando JSON. Texto limpio:', cleanedText, 'Texto original:', rawText);
+        console.error('[GeminiService] Error parseando JSON.');
+        console.error('Texto original:', rawText);
+        console.error('Extraido (fallido):', finalJsonStr);
         throw parseError;
       }
 

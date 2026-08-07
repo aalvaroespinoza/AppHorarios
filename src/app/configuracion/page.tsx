@@ -29,7 +29,7 @@ export default function Configuracion() {
     }
   };
 
-  if (!isMounted) return <div className="min-h-screen bg-black" />;
+  if (!isMounted) return <div className="min-h-[100dvh] bg-black" />;
 
   const currentDate = new Date();
   const mesNum = currentDate.getMonth() + 1;
@@ -38,7 +38,7 @@ export default function Configuracion() {
   const resumenBec = bec.obtenerResumenMensual(mesNum, year);
 
   return (
-    <main className="min-h-screen bg-zinc-950 text-white font-sans max-w-md mx-auto pb-10">
+    <main className="min-h-[100dvh] bg-zinc-950 text-white font-sans max-w-md mx-auto pb-10">
       <header className="bg-zinc-950/90 backdrop-blur-md pt-12 pb-4 px-2 sticky top-0 z-10 flex items-center gap-2">
         <button 
           onClick={() => router.back()}

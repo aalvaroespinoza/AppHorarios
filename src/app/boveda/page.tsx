@@ -96,7 +96,7 @@ export default function BovedaPage() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 pb-28 min-h-screen relative"
+      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
@@ -180,13 +180,13 @@ export default function BovedaPage() {
                 placeholder="Título (Ej: CBU)"
                 value={nuevoTitulo}
                 onChange={e => setNuevoTitulo(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white focus:outline-none focus:border-amber-500"
               />
               <input 
                 placeholder="Valor"
                 value={nuevoValor}
                 onChange={e => setNuevoValor(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white focus:outline-none focus:border-amber-500"
               />
               <button 
                 onClick={handleAdd}

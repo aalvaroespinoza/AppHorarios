@@ -4,7 +4,7 @@ import { Header } from '@/core/components/ui/Header';
 
 export default function AcercaPage() {
   return (
-    <div className="flex flex-col min-h-screen bg-[var(--color-bg)]">
+    <div className="flex flex-col min-h-[100dvh] bg-[var(--color-bg)]">
       <Header />
       
       <main className="flex-1 px-4 py-6 max-w-md w-full mx-auto space-y-6">

@@ -209,8 +209,13 @@ export default function LifeOSConsole() {
         throw new Error(errorData.error || 'Error en el servidor');
       }
 
-      const { data: intent } = await response.json();
+      const responseData = await response.json();
       
+      if (!responseData.success) {
+        throw new Error(responseData.error || 'Error procesando tu petición');
+      }
+
+      const intent = responseData.data;
       const result = await dispatch(intent);
       
       setHistory((prev) => 
@@ -260,7 +265,7 @@ export default function LifeOSConsole() {
   }
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-[#0a0a0c] text-neutral-200 pt-[env(safe-area-inset-top)]">
+    <div className="fixed inset-0 z-40 flex flex-col bg-[#0a0a0c] text-neutral-200 pt-[env(safe-area-inset-top)] pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
       
       {/* Header Nativo y Discreto */}
       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0a0a0c] sticky top-0 z-10 flex-shrink-0">
@@ -385,7 +390,7 @@ export default function LifeOSConsole() {
       </div>
 
       {/* Footer: Acciones Rápidas & Input */}
-      <div className="w-full bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/5 flex-shrink-0 pb-24 pt-3">
+      <div className="w-full bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/5 flex-shrink-0 pb-4 pt-3">
         <div className="max-w-md mx-auto w-full px-3 flex flex-col gap-3">
           
           {/* Acciones Rápidas (Chips) */}
@@ -434,7 +439,7 @@ export default function LifeOSConsole() {
               disabled={isSubmitting}
               placeholder="Escribe o dicta algo..."
               rows={1}
-              className="flex-1 max-h-32 min-h-[44px] bg-transparent border-none text-[15px] text-white placeholder-neutral-500 py-2.5 px-2 focus:outline-none focus:ring-0 disabled:opacity-50 resize-none overflow-y-auto leading-relaxed"
+              className="flex-1 max-h-32 min-h-[44px] bg-transparent border-none text-[16px] text-white placeholder-neutral-500 py-2.5 px-2 focus:outline-none focus:ring-0 disabled:opacity-50 resize-none overflow-y-auto leading-relaxed"
               style={{
                 height: inputText ? `${Math.min(120, Math.max(44, inputText.split('\\n').length * 24 + 20))}px` : '44px'
               }}

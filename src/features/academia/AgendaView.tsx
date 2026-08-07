@@ -117,7 +117,7 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
                 placeholder="Título del evento"
                 value={nuevoEvento.titulo}
                 onChange={(e) => setNuevoEvento({...nuevoEvento, titulo: e.target.value})}
-                className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white focus:outline-none focus:border-emerald-500 transition-colors"
               />
               
               <div className="flex gap-2">
@@ -125,13 +125,13 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
                   type="date"
                   value={nuevoEvento.fecha}
                   onChange={(e) => setNuevoEvento({...nuevoEvento, fecha: e.target.value})}
-                  className="flex-[2] bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
+                  className="flex-[2] bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-3 text-base text-white focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
                 />
                 <input 
                   type="time"
                   value={nuevoEvento.horaInicio}
                   onChange={(e) => setNuevoEvento({...nuevoEvento, horaInicio: e.target.value})}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-3 text-base text-white focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
                 />
               </div>
 
@@ -140,7 +140,7 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
                 <select
                   value={nuevoEvento.duracion}
                   onChange={(e) => setNuevoEvento({...nuevoEvento, duracion: e.target.value})}
-                  className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                  className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-base text-white focus:outline-none focus:border-emerald-500"
                 >
                   <option value="15">15 minutos</option>
                   <option value="30">30 minutos</option>

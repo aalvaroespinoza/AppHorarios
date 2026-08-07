@@ -65,7 +65,7 @@ export default function FinanzasPage() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 pb-28 min-h-screen"
+      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh]"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
@@ -165,7 +165,7 @@ export default function FinanzasPage() {
             placeholder={tipo === 'gasto' ? 'Descripción (Ej: Hamburguesa)' : 'Descripción (Ej: Sueldo)'}
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-base text-white focus:outline-none focus:border-blue-500 transition-colors"
           />
 
           <button 
@@ -263,7 +263,7 @@ export default function FinanzasPage() {
                     placeholder="Persona (Ej: Juan)" 
                     value={splitPersona}
                     onChange={e => setSplitPersona(e.target.value)}
-                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" 
+                    className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-base text-white focus:outline-none focus:border-blue-500" 
                   />
                   <div className="relative w-28">
                     <span className="absolute left-2.5 top-2 text-zinc-500 font-bold text-sm">$</span>
@@ -273,7 +273,7 @@ export default function FinanzasPage() {
                       pattern="[0-9]*"
                       value={splitMonto}
                       onChange={e => setSplitMonto(e.target.value)}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-6 pr-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-bold tabular-nums" 
+                      className="w-full bg-zinc-950 border border-zinc-800 rounded-xl pl-6 pr-3 py-2 text-base text-white focus:outline-none focus:border-blue-500 font-bold tabular-nums" 
                     />
                   </div>
                 </div>
@@ -281,7 +281,7 @@ export default function FinanzasPage() {
                   placeholder="Descripción (Ej: Pizza)" 
                   value={splitDesc}
                   onChange={e => setSplitDesc(e.target.value)}
-                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500" 
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-base text-white focus:outline-none focus:border-blue-500" 
                 />
                 <div className="flex gap-2 mt-1">
                   <button 

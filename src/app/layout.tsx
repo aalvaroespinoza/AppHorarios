@@ -34,9 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
-      <body className={`${inter.className} bg-black text-white min-h-screen antialiased`}>
+      <body className={`${inter.className} bg-black text-white min-h-[100dvh] antialiased overflow-x-hidden`}>
         <EscenarioProvider>
-          <main className="pb-24">
+          <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] w-full max-w-[100vw] overflow-x-hidden">
             {children}
           </main>
           <BottomTabBar />
