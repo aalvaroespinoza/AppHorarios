@@ -34,7 +34,9 @@ const ACTION_SCHEMA = {
   required: ["type", "needs_input", "reply"]
 };
 
-const SYSTEM_PROMPT = `Eres LifeOS, el asistente personal y Action Dispatcher de AppHorarios. Analiza la petición del usuario y devuelve SIEMPRE una intención estructurada en JSON.
+const getSystemPrompt = () => {
+  const now = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Cordoba' });
+  return `Eres el cerebro de LifeOS. La fecha y hora actual exacta es: ${now}. NUNCA preguntes la fecha al usuario, usa esta información como ancla absoluta. Analiza la petición del usuario y devuelve SIEMPRE una intención estructurada en JSON.
 NUNCA inventes datos. Si faltan datos cruciales (ej: título o monto), indica "needs_input": true y pregunta qué falta en "reply".
 Para fechas, asume la zona horaria de Argentina. No inventes fechas ambiguas.
 
@@ -51,12 +53,13 @@ Tipos de acciones soportadas (type):
 - unknown (Usa este tipo para charlar, saludar, o si la intención no encaja en las acciones anteriores).
 
 Tu respuesta (reply) debe ser MUY concisa y conversacional.`;
+};
 
 async function invokeWithRetry(text: string, attempt: number = 1): Promise<ActionPayload> {
   const aiResponse = await GeminiService.askJson<ActionPayload>(
     'gemini-3.5-flash',
     {
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: getSystemPrompt(),
       prompt: attempt === 1 ? text : `${text}\n\n[SISTEMA]: Tu respuesta anterior fue inválida o incompleta. Asegúrate de responder estrictamente con el JSON solicitado y llaves correctas.`,
       responseSchema: ACTION_SCHEMA
     }
