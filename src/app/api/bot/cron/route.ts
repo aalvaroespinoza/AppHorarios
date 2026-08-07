@@ -95,3 +95,84 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ status: 'error', sent: false }, { status: 500 });
   }
 }
+
+import { supabaseServerAdmin } from '@/lib/server/supabase';
+import { GeminiService } from '@/core/ai/service';
+
+export async function POST(req: NextRequest) {
+  const authHeader = req.headers.get('authorization');
+  if (authHeader !== `Bearer ${CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized. Invalid Bearer token.' }, { status: 401 });
+  }
+
+  if (!botToken || !chatId) {
+    return NextResponse.json(
+      { error: 'Server Misconfiguration: Faltan credenciales de Telegram' },
+      { status: 500 }
+    );
+  }
+
+  // Ejecutamos el briefing en background para que devuelva 200 rápido y no dé timeout en Vercel
+  ejecutarBriefingDiario(botToken, chatId).catch(console.error);
+
+  return NextResponse.json({ status: 'ok', msg: 'Daily Briefing scheduled' }, { status: 200 });
+}
+
+async function ejecutarBriefingDiario(token: string, chat: string) {
+  try {
+    const ayer = new Date();
+    ayer.setDate(ayer.getDate() - 1);
+    const hoy = new Date();
+
+    const ayerStr = ayer.toISOString().split('T')[0];
+    const hoyStr = hoy.toISOString().split('T')[0];
+
+    // Fetch asíncrono en paralelo de las 3 tablas que se nos solicitan
+    const [gastosRes, eventosRes, bateriaRes] = await Promise.all([
+      supabaseServerAdmin.from('transacciones').select('*').eq('tipo', 'gasto').gte('fecha', ayerStr).lte('fecha', hoyStr),
+      supabaseServerAdmin.from('agenda').select('*').eq('fecha', hoyStr),
+      supabaseServerAdmin.from('bateria_mental').select('*').order('created_at', { ascending: false }).limit(1)
+    ]);
+
+    const promptData = `
+Gastos de ayer: ${JSON.stringify(gastosRes.data || [])}
+Eventos de hoy: ${JSON.stringify(eventosRes.data || [])}
+Última Batería Mental: ${JSON.stringify(bateriaRes.data || [])}
+`;
+
+    // Redacción vía Gemini
+    const geminiText = await GeminiService.askText(
+      'gemini-3.5-flash',
+      'Eres LifeOS. Redacta un saludo de buenos días ultra corto (2 líneas) resumiendo hoy según estos datos crudos. Sé directo.',
+      promptData
+    );
+
+    // Enviar a Telegram
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    const tgBody = {
+      chat_id: chat,
+      text: geminiText,
+      reply_markup: {
+        inline_keyboard: [
+          [{ text: "☀️ Ver LifeOS", url: "https://apphorarios.vercel.app/lifeos" }]
+        ]
+      }
+    };
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tgBody)
+    });
+
+    if (!res.ok) {
+      console.error('Error de API Telegram en Daily Briefing:', await res.text());
+    } else {
+      console.log('Daily Briefing enviado con éxito');
+    }
+
+  } catch (error) {
+    console.error('Error en ejecutarBriefingDiario:', error);
+  }
+}
+

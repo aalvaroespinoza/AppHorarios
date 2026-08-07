@@ -133,4 +133,31 @@ export class GeminiService {
       };
     }
   }
+
+  /**
+   * Ejecuta un prompt y devuelve texto puro sin forzar JSON.
+   */
+  static async askText(
+    modelName: 'gemini-3.5-flash',
+    systemInstruction: string,
+    prompt: string
+  ): Promise<string> {
+    if (typeof window !== 'undefined') {
+      throw new GeminiAPIError('Las llamadas a Gemini no están permitidas desde el cliente. Use una API Route o Server Action.');
+    }
+
+    try {
+      const model = geminiClient.getGenerativeModel({
+        model: modelName,
+        systemInstruction,
+      });
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      return response.text();
+    } catch (error: any) {
+      console.error('[GeminiService] Error en askText:', error);
+      return "Hubo un error generando el mensaje. Intenta nuevamente más tarde.";
+    }
+  }
 }
