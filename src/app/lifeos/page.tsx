@@ -2,91 +2,198 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Loader2, Sparkles, TerminalSquare, Mic } from 'lucide-react';
+import { 
+  Send, Loader2, Sparkles, Mic, 
+  Bell, DollarSign, Calendar, StickyNote, 
+  ChevronRight, Bot
+} from 'lucide-react';
+import { useLocalStorageState } from '@/core/hooks/useLocalStorageState';
 
-interface CommandHistory {
+interface ChatMessage {
   id: string;
+  role: 'user' | 'assistant';
   text: string;
+  timestamp: string;
   status: 'loading' | 'success' | 'error';
-  result?: string;
+  metadata?: unknown;
 }
+
+interface ISpeechRecognitionEvent {
+  resultIndex: number;
+  results: {
+    [index: number]: {
+      [index: number]: {
+        transcript: string;
+      };
+      isFinal: boolean;
+    };
+    length: number;
+  };
+}
+
+interface ISpeechRecognitionErrorEvent {
+  error: string;
+  message: string;
+}
+
+interface ISpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((this: ISpeechRecognition, ev: ISpeechRecognitionEvent) => unknown) | null;
+  onerror: ((this: ISpeechRecognition, ev: ISpeechRecognitionErrorEvent) => unknown) | null;
+  onend: ((this: ISpeechRecognition, ev: Event) => unknown) | null;
+}
+
+const SUGGESTIONS = [
+  "Gasté $3500 en nafta",
+  "Recordame mañana estudiar",
+  "Agendame una reunión el viernes a las 18",
+  "¿Qué tengo mañana?"
+];
 
 export default function LifeOSConsole() {
   const [inputText, setInputText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [history, setHistory] = useState<CommandHistory[]>([]);
+  
+  const [history, setHistory, isMounted] = useLocalStorageState<ChatMessage[]>('lifeos_history', []);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
-  const initialTextRef = useRef('');
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
+  const textBeforeDictationRef = useRef('');
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [history, inputText]);
+    if (isMounted) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [history, inputText, isMounted]);
 
   useEffect(() => {
-    // Inicializar SpeechRecognition
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      const SpeechRecognition = (window as unknown as { SpeechRecognition: new () => ISpeechRecognition }).SpeechRecognition || 
+                              (window as unknown as { webkitSpeechRecognition: new () => ISpeechRecognition }).webkitSpeechRecognition;
+      
       if (SpeechRecognition) {
-        recognitionRef.current = new SpeechRecognition();
-        recognitionRef.current.continuous = false;
-        recognitionRef.current.lang = 'es-AR';
-        recognitionRef.current.interimResults = true;
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'es-AR';
 
-        recognitionRef.current.onresult = (event: any) => {
-          let transcript = '';
+        recognition.onresult = (event: ISpeechRecognitionEvent) => {
+          if (isSubmittingRef.current) return; // Evitar modificar input si se está enviando
+
+          let finalTranscript = '';
+          let interimTranscript = '';
+
           for (let i = event.resultIndex; i < event.results.length; ++i) {
-            transcript += event.results[i][0].transcript;
+            const transcriptChunk = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+              finalTranscript += transcriptChunk;
+            } else {
+              interimTranscript += transcriptChunk;
+            }
           }
-          setInputText((initialTextRef.current ? initialTextRef.current + ' ' : '') + transcript);
+
+          if (finalTranscript) {
+            textBeforeDictationRef.current = textBeforeDictationRef.current 
+              ? `${textBeforeDictationRef.current} ${finalTranscript}`.trim()
+              : finalTranscript.trim();
+          }
+
+          const currentText = textBeforeDictationRef.current 
+            ? `${textBeforeDictationRef.current} ${interimTranscript}`.trim()
+            : interimTranscript.trim();
+
+          setInputText(currentText);
         };
 
-        recognitionRef.current.onerror = (event: any) => {
-          console.error('Speech recognition error', event.error);
+        recognition.onerror = (event: ISpeechRecognitionErrorEvent) => {
+          console.error('Error en reconocimiento de voz:', event.error);
           setIsListening(false);
+          if (event.error === 'not-allowed') {
+            alert('Permiso de micrófono denegado. Por favor, habilítalo en tu navegador.');
+          }
         };
 
-        recognitionRef.current.onend = () => {
+        recognition.onend = () => {
           setIsListening(false);
         };
+        
+        recognitionRef.current = recognition;
+      }
+    }
+    
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
       }
     }
   }, []);
 
   const toggleListening = () => {
+    if (!recognitionRef.current) {
+      alert("Tu navegador no soporta el dictado por voz nativo.");
+      return;
+    }
+    
     if (isListening) {
-      recognitionRef.current?.stop();
+      recognitionRef.current.stop();
       setIsListening(false);
     } else {
-      initialTextRef.current = inputText;
-      recognitionRef.current?.start();
-      setIsListening(true);
+      textBeforeDictationRef.current = inputText.trim();
+      isSubmittingRef.current = false;
+      try {
+        recognitionRef.current.start();
+        setIsListening(true);
+      } catch (e) {
+        console.error("El micrófono ya estaba ocupado o hubo un error al iniciar:", e);
+        setIsListening(false);
+      }
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!inputText.trim() || isSubmitting) return;
 
-    const commandText = inputText.trim();
-    const commandId = crypto.randomUUID();
+    isSubmittingRef.current = true;
 
-    // Agregar al historial de manera optimista
-    setHistory((prev) => [
-      ...prev,
-      { id: commandId, text: commandText, status: 'loading' }
-    ]);
-    
-    setInputText('');
-    initialTextRef.current = '';
-    setIsSubmitting(true);
-    
-    // Parar el mic si estaba escuchando y enviamos
-    if (isListening) {
-      recognitionRef.current?.stop();
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.abort(); // Cancelar incondicionalmente para evitar onresult póstumos
       setIsListening(false);
     }
+
+    const commandText = inputText.trim();
+    const timestamp = new Date().toISOString();
+    const userMsgId = crypto.randomUUID();
+    const asstMsgId = crypto.randomUUID();
+
+    const userMsg: ChatMessage = {
+      id: userMsgId,
+      role: 'user',
+      text: commandText,
+      timestamp,
+      status: 'success'
+    };
+
+    const asstMsg: ChatMessage = {
+      id: asstMsgId,
+      role: 'assistant',
+      text: '',
+      timestamp: new Date().toISOString(),
+      status: 'loading'
+    };
+
+    setHistory((prev) => [...prev, userMsg, asstMsg]);
+    
+    setInputText('');
+    textBeforeDictationRef.current = '';
+    setIsSubmitting(true);
 
     try {
       const response = await fetch('/api/brain', {
@@ -102,113 +209,242 @@ export default function LifeOSConsole() {
 
       const data = await response.json();
       
-      // Actualizar estado a éxito
       setHistory((prev) => 
-        prev.map((cmd) => 
-          cmd.id === commandId 
-            ? { ...cmd, status: 'success', result: data.data?.reply || `Procesado: ${data.data?.type || 'Completado'}` } 
-            : cmd
+        prev.map((msg) => 
+          msg.id === asstMsgId 
+            ? { 
+                ...msg, 
+                status: 'success', 
+                text: data.data?.reply || `Procesado: ${data.data?.type || 'Completado'}`,
+                metadata: data.data
+              } 
+            : msg
         )
       );
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error enviando al cerebro:', error);
-      // Actualizar estado a error con el mensaje real devuelto por la API
       setHistory((prev) => 
-        prev.map((cmd) => 
-          cmd.id === commandId 
-            ? { ...cmd, status: 'error', result: error instanceof Error ? error.message : 'Error procesando el comando' } 
-            : cmd
+        prev.map((msg) => 
+          msg.id === asstMsgId 
+            ? { 
+                ...msg, 
+                status: 'error', 
+                text: error instanceof Error ? error.message : 'Error procesando el comando' 
+              } 
+            : msg
         )
       );
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   };
 
+  const handleQuickAction = (prefix: string) => {
+    setInputText(prefix);
+  };
+
+  const isAIThinking = history.some(h => h.role === 'assistant' && h.status === 'loading');
+
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col h-[100dvh] bg-[#0a0a0c] items-center justify-center">
+        <Loader2 size={32} className="animate-spin text-indigo-500" />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col h-[100dvh] bg-black text-neutral-200">
+    <div className="flex flex-col h-[100dvh] bg-[#0a0a0c] text-neutral-200">
       
-      {/* Header Minimalista */}
-      <div className="pt-safe px-4 py-4 border-b border-neutral-900/50 flex items-center justify-center relative flex-shrink-0">
-        <h1 className="text-sm font-medium tracking-wide flex items-center gap-2">
-          <Sparkles size={16} className="text-indigo-400" />
-          LifeOS
-        </h1>
+      {/* Header Nativo y Discreto */}
+      <div className="pt-safe px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0a0a0c]/80 backdrop-blur-md sticky top-0 z-10 flex-shrink-0">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
+            <Sparkles size={16} className="text-indigo-400" />
+          </div>
+          <h1 className="text-base font-semibold tracking-tight text-white">LifeOS</h1>
+        </div>
+        
+        {/* Indicador de estado de IA */}
+        <div className="flex items-center gap-2">
+          {isAIThinking ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20">
+              <Loader2 size={12} className="animate-spin text-indigo-400" />
+              <span className="text-[10px] font-medium text-indigo-400 uppercase tracking-wider">Procesando</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-800/50 border border-white/5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
+              <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">En línea</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Historial de Comandos */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 pt-safe pb-4">
+      {/* Área principal de conversación */}
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 pt-safe pb-4 scroll-smooth">
         {history.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-neutral-600 gap-3 opacity-50">
-            <TerminalSquare size={32} className="opacity-50" />
-            <p className="text-sm">En qué te ayudo hoy?</p>
+          <div className="flex flex-col h-full items-center justify-center max-w-sm mx-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="w-16 h-16 rounded-3xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-white/5 flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/10"
+            >
+              <Sparkles size={28} className="text-indigo-400" />
+            </motion.div>
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-xl font-semibold text-white mb-2 text-center tracking-tight"
+            >
+              ¿Cómo te ayudo hoy?
+            </motion.h2>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-sm text-neutral-400 text-center mb-8"
+            >
+              Usa lenguaje natural para gestionar tu vida, finanzas y horarios.
+            </motion.p>
+            
+            <div className="w-full space-y-2.5">
+              {SUGGESTIONS.map((suggestion, idx) => (
+                <motion.button
+                  key={idx}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: 0.3 + (idx * 0.1) }}
+                  onClick={() => setInputText(suggestion)}
+                  className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] active:scale-[0.98] transition-all text-left group"
+                >
+                  <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">{suggestion}</span>
+                  <ChevronRight size={16} className="text-neutral-500 group-hover:text-neutral-300 transition-colors" />
+                </motion.button>
+              ))}
+            </div>
           </div>
         ) : (
           <AnimatePresence>
-            {history.map((cmd) => (
-              <div key={cmd.id} className="flex flex-col gap-3">
-                {/* User Bubble */}
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="self-end max-w-[85%] bg-indigo-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm text-sm shadow-sm"
-                >
-                  {cmd.text}
-                </motion.div>
-                
-                {/* System Bubble */}
-                <motion.div 
-                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  className="self-start max-w-[85%] bg-neutral-800 text-neutral-200 px-4 py-2.5 rounded-2xl rounded-tl-sm text-sm shadow-sm"
-                >
-                  {cmd.status === 'loading' ? (
-                    <div className="flex items-center gap-2 text-neutral-400 py-1">
-                      <Loader2 size={14} className="animate-spin" />
-                      <span className="text-xs">Pensando...</span>
+            {history.map((msg) => (
+              <div key={msg.id} className="flex flex-col gap-4">
+                {msg.role === 'user' ? (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95, transformOrigin: "bottom right" }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className="self-end max-w-[85%]"
+                  >
+                    <div className="bg-indigo-600 text-white px-4 py-3 rounded-[20px] rounded-tr-[4px] text-[15px] shadow-sm leading-relaxed">
+                      {msg.text}
                     </div>
-                  ) : cmd.status === 'error' ? (
-                    <span className="text-red-400">{cmd.result}</span>
-                  ) : (
-                    <span>{cmd.result}</span>
-                  )}
-                </motion.div>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10, scale: 0.95, transformOrigin: "bottom left" }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    className="self-start max-w-[90%] flex gap-3"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-white/10 flex items-center justify-center flex-shrink-0 mt-1">
+                      <Bot size={14} className="text-indigo-400" />
+                    </div>
+                    
+                    <div className="flex flex-col gap-2 w-full">
+                      {msg.status === 'loading' ? (
+                        <div className="bg-white/[0.03] border border-white/5 px-4 py-3.5 rounded-[20px] rounded-tl-[4px] flex items-center gap-3 w-fit">
+                          <div className="flex gap-1.5">
+                            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
+                            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
+                            <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
+                          </div>
+                        </div>
+                      ) : msg.status === 'error' ? (
+                        <div className="bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-[20px] rounded-tl-[4px] text-[15px] shadow-sm leading-relaxed">
+                          {msg.text}
+                        </div>
+                      ) : (
+                        <div className="bg-white/[0.04] border border-white/5 text-neutral-100 px-4 py-3 rounded-[20px] rounded-tl-[4px] text-[15px] shadow-sm leading-relaxed">
+                          {msg.text}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
             ))}
           </AnimatePresence>
         )}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-2" />
       </div>
 
-      {/* Input de Comando (Flujo Normal Flex) */}
-      <div className="w-full px-4 pb-24 pt-4 bg-gradient-to-t from-black via-black to-transparent flex-shrink-0">
-        <div className="max-w-md mx-auto relative">
-          <form onSubmit={handleSubmit} className="relative flex items-center shadow-2xl shadow-indigo-900/20 bg-neutral-900 rounded-2xl p-1 border border-neutral-800">
+      {/* Footer: Acciones Rápidas & Input */}
+      <div className="w-full bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/5 flex-shrink-0 pb-24 pt-3">
+        <div className="max-w-md mx-auto w-full px-3 flex flex-col gap-3">
+          
+          {/* Acciones Rápidas (Chips) */}
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 px-1 -mx-1 snap-x">
+            <button onClick={() => handleQuickAction('Recordatorio: ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+              <Bell size={12} className="text-amber-400" />
+              <span>Recordatorio</span>
+            </button>
+            <button onClick={() => handleQuickAction('Gasté ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+              <DollarSign size={12} className="text-emerald-400" />
+              <span>Gasto</span>
+            </button>
+            <button onClick={() => handleQuickAction('Agendame ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+              <Calendar size={12} className="text-blue-400" />
+              <span>Evento</span>
+            </button>
+            <button onClick={() => handleQuickAction('Nota: ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+              <StickyNote size={12} className="text-purple-400" />
+              <span>Nota</span>
+            </button>
+          </div>
+
+          {/* Formulario de Input */}
+          <form onSubmit={handleSubmit} className="relative flex items-end bg-white/[0.03] rounded-[24px] p-1.5 border border-white/10 focus-within:border-indigo-500/50 focus-within:bg-white/[0.05] transition-all">
             <button
               type="button"
               onClick={toggleListening}
-              className={`p-3 rounded-xl transition-colors ${isListening ? 'text-red-500 bg-red-500/10' : 'text-neutral-400 hover:text-neutral-200'}`}
+              className={`p-2.5 rounded-full transition-colors flex-shrink-0 mb-0.5 ${
+                isListening 
+                  ? 'text-red-500 bg-red-500/10' 
+                  : 'text-neutral-400 hover:text-neutral-200 hover:bg-white/5'
+              }`}
             >
-              <Mic size={18} className={isListening ? 'animate-pulse' : ''} />
+              <Mic size={20} className={isListening ? 'animate-pulse' : ''} />
             </button>
-            <input 
-              type="text" 
+            
+            <textarea 
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
               disabled={isSubmitting}
               placeholder="Escribe o dicta algo..."
-              className="flex-1 bg-transparent border-none text-sm text-neutral-100 placeholder-neutral-500 py-3 px-2 focus:outline-none focus:ring-0 disabled:opacity-50"
+              rows={1}
+              className="flex-1 max-h-32 min-h-[44px] bg-transparent border-none text-[15px] text-white placeholder-neutral-500 py-2.5 px-2 focus:outline-none focus:ring-0 disabled:opacity-50 resize-none overflow-y-auto leading-relaxed"
+              style={{
+                height: inputText ? `${Math.min(120, Math.max(44, inputText.split('\\n').length * 24 + 20))}px` : '44px'
+              }}
             />
+            
             <button 
               type="submit" 
               disabled={isSubmitting || !inputText.trim()}
-              className="p-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-500 transition-colors disabled:opacity-30 disabled:hover:bg-indigo-600 flex items-center justify-center mr-1"
+              className="p-2.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-500 transition-all disabled:opacity-30 disabled:hover:bg-indigo-600 flex items-center justify-center flex-shrink-0 mb-0.5 ml-1 disabled:scale-95 active:scale-95"
             >
               {isSubmitting ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={18} className="animate-spin" />
               ) : (
-                <Send size={16} />
+                <Send size={18} className="ml-0.5" />
               )}
             </button>
           </form>
