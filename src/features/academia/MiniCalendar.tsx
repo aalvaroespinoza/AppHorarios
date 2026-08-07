@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2 } from 'lucide-react';
+import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { useDeadlines } from '@/hooks/useDeadlines';
 import { useAgenda } from '@/hooks/useAgenda';
 import { useEscenario } from '@/hooks/useEscenario';
@@ -12,9 +12,11 @@ import { subjectData } from '@/data/subjects';
 import type { DayOfWeek } from '@/core/types/common';
 
 export function MiniCalendar() {
-  const [currentDate] = useState(new Date());
-  const monthName = currentDate.toLocaleString('es-AR', { month: 'long' });
-  const year = currentDate.getFullYear();
+  const [viewDate, setViewDate] = useState(new Date());
+  
+  const monthName = viewDate.toLocaleString('es-AR', { month: 'long' });
+  const year = viewDate.getFullYear();
+  const month = viewDate.getMonth();
   
   const { deadlines, agregarDeadline, calcularDiasFaltantes, isMounted: isDeadMounted } = useDeadlines();
   const agenda = useAgenda();
@@ -23,17 +25,31 @@ export function MiniCalendar() {
   const isMounted = isDeadMounted && agenda.isMounted && isEscMounted;
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [newDead, setNewDead] = useState({ titulo: '', fecha: '' });
   
-  const daysInMonth = new Date(year, currentDate.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(year, currentDate.getMonth(), 1).getDay();
+  // Agregar formulario
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [addType, setAddType] = useState<'evento' | 'deadline'>('deadline');
+  const [newEntity, setNewEntity] = useState({ titulo: '', fecha: '', horaInicio: '10:00', horaFin: '11:00' });
+  
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
   const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1; // monday first
-  const daysArray = Array.from({ length: 42 }, (_, i) => {
+  const totalCells = Math.ceil((daysInMonth + startOffset) / 7) * 7;
+  const daysArray = Array.from({ length: totalCells }, (_, i) => {
     const dayNum = i - startOffset + 1;
     if (dayNum > 0 && dayNum <= daysInMonth) return dayNum;
     return null;
   });
+
+  const goToPreviousMonth = () => setViewDate(new Date(year, month - 1, 1));
+  const goToNextMonth = () => setViewDate(new Date(year, month + 1, 1));
+  const goToToday = () => {
+    const today = new Date();
+    setViewDate(today);
+    setSelectedDate(`${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`);
+  };
+
+  const isCurrentMonth = year === new Date().getFullYear() && month === new Date().getMonth();
 
   // Helpers para combinar fuentes
   const getEventsForDate = (dateStr: string) => {
@@ -80,7 +96,7 @@ export function MiniCalendar() {
         titulo: e.titulo,
         horaInicio: e.horaInicio,
         horaFin: e.horaFin,
-        color: 'bg-zinc-500'
+        color: e.color || 'bg-zinc-500'
       });
     });
     
@@ -91,9 +107,9 @@ export function MiniCalendar() {
         id: `deadline-${dl.id}`,
         tipo: 'deadline',
         titulo: dl.titulo,
-        horaInicio: '23:59',
-        horaFin: '23:59',
-        color: dl.colorIcono || 'bg-emerald-500',
+        horaInicio: dl.hora || '23:59',
+        horaFin: dl.hora || '23:59',
+        color: dl.colorIcono || 'text-emerald-500',
         dlFaltan: calcularDiasFaltantes(dl.fecha)
       });
     });
@@ -103,37 +119,78 @@ export function MiniCalendar() {
     return combined;
   };
 
-  const handleSaveDeadline = () => {
-    if (newDead.titulo && newDead.fecha) {
+  const handleSaveEntity = () => {
+    if (!newEntity.titulo || !newEntity.fecha) return;
+    
+    if (addType === 'deadline') {
       agregarDeadline({
         id: Date.now().toString(),
-        titulo: newDead.titulo,
-        fecha: newDead.fecha,
-        colorIcono: 'bg-emerald-500' // default color
+        titulo: newEntity.titulo,
+        fecha: newEntity.fecha,
+        colorIcono: 'text-emerald-500'
       });
-      setNewDead({ titulo: '', fecha: '' });
-      setShowAddForm(false);
+    } else {
+      agenda.agregarEvento({
+        id: Date.now().toString(),
+        titulo: newEntity.titulo,
+        fecha: newEntity.fecha,
+        horaInicio: newEntity.horaInicio,
+        horaFin: newEntity.horaFin
+      });
     }
+    
+    setNewEntity({ titulo: '', fecha: '', horaInicio: '10:00', horaFin: '11:00' });
+    setShowAddForm(false);
   };
 
   if (!isMounted) return null;
 
   const combinedEvents = selectedDate ? getEventsForDate(selectedDate) : [];
+  const today = new Date();
 
   return (
     <div className="flex flex-col gap-4">
       <section className="bg-zinc-900/50 border border-zinc-800/80 rounded-3xl p-5 shadow-xl backdrop-blur-md relative overflow-hidden">
-        <div className="flex items-center justify-between mb-4 text-zinc-400">
-          <div className="flex items-center gap-2">
-            <CalendarIcon size={18} />
-            <h2 className="font-semibold text-sm uppercase tracking-wider capitalize">{monthName} {year}</h2>
+        
+        {/* Navegación del Calendario */}
+        <div className="flex items-center justify-between mb-5 text-zinc-400">
+          <div className="flex items-center gap-1">
+            <button onClick={goToPreviousMonth} className="p-1.5 hover:bg-zinc-800 rounded-xl transition-colors">
+              <ChevronLeft size={20} />
+            </button>
+            <div className="relative">
+              <input 
+                type="month" 
+                value={`${year}-${String(month+1).padStart(2, '0')}`}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    const [y, m] = e.target.value.split('-');
+                    setViewDate(new Date(Number(y), Number(m)-1, 1));
+                  }
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              <h2 className="font-semibold text-[15px] uppercase tracking-wider capitalize px-2 flex items-center gap-1.5 text-zinc-200">
+                {monthName} {year} <ChevronDown size={14} className="text-zinc-500" />
+              </h2>
+            </div>
+            <button onClick={goToNextMonth} className="p-1.5 hover:bg-zinc-800 rounded-xl transition-colors">
+              <ChevronRight size={20} />
+            </button>
           </div>
-          <button 
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="w-7 h-7 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-300 hover:text-white hover:bg-blue-600 transition-colors"
-          >
-            <Plus size={16} />
-          </button>
+          <div className="flex items-center gap-3">
+            {!isCurrentMonth && (
+              <button onClick={goToToday} className="text-[11px] font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 px-2 py-1 rounded-lg">
+                HOY
+              </button>
+            )}
+            <button 
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="w-8 h-8 bg-zinc-800 border border-zinc-700/50 rounded-full flex items-center justify-center text-zinc-300 hover:text-white hover:bg-blue-600 hover:border-blue-500 transition-all shadow-sm"
+            >
+              <Plus size={16} />
+            </button>
+          </div>
         </div>
         
         <AnimatePresence>
@@ -142,21 +199,56 @@ export function MiniCalendar() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              className="mb-4 overflow-hidden"
+              className="mb-5 overflow-hidden"
             >
-              <div className="flex flex-col gap-2 p-3 bg-zinc-950/50 rounded-2xl border border-zinc-800">
+              <div className="flex flex-col gap-3 p-4 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 shadow-inner">
+                {/* Tipo Selector */}
+                <div className="flex bg-zinc-900 rounded-xl p-1 border border-zinc-800">
+                  <button 
+                    onClick={() => setAddType('deadline')}
+                    className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${addType === 'deadline' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  >
+                    Recordatorio
+                  </button>
+                  <button 
+                    onClick={() => setAddType('evento')}
+                    className={`flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors ${addType === 'evento' ? 'bg-zinc-800 text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-300'}`}
+                  >
+                    Evento
+                  </button>
+                </div>
+
                 <input 
-                  type="text" placeholder="Título del deadline"
-                  value={newDead.titulo} onChange={(e) => setNewDead({...newDead, titulo: e.target.value})}
-                  className="bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500"
+                  type="text" placeholder="Título"
+                  value={newEntity.titulo} onChange={(e) => setNewEntity({...newEntity, titulo: e.target.value})}
+                  className="bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 transition-colors"
                 />
-                <div className="flex gap-2">
+                
+                <div className="flex flex-col gap-2">
                   <input 
                     type="date"
-                    value={newDead.fecha} onChange={(e) => setNewDead({...newDead, fecha: e.target.value})}
-                    className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
+                    value={newEntity.fecha} onChange={(e) => setNewEntity({...newEntity, fecha: e.target.value})}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
                   />
-                  <button onClick={handleSaveDeadline} className="bg-blue-600 text-white font-bold px-4 py-2 rounded-lg text-sm">
+                  {addType === 'evento' && (
+                    <div className="flex gap-2">
+                      <input 
+                        type="time" value={newEntity.horaInicio} onChange={(e) => setNewEntity({...newEntity, horaInicio: e.target.value})}
+                        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
+                      />
+                      <input 
+                        type="time" value={newEntity.horaFin} onChange={(e) => setNewEntity({...newEntity, horaFin: e.target.value})}
+                        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-blue-500 [color-scheme:dark]"
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-2 mt-1">
+                  <button onClick={() => setShowAddForm(false)} className="flex-1 text-sm font-semibold text-zinc-400 py-2.5 rounded-xl hover:bg-zinc-800/50">
+                    Cancelar
+                  </button>
+                  <button onClick={handleSaveEntity} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-sm shadow-md shadow-blue-900/20 active:scale-95 transition-all">
                     Guardar
                   </button>
                 </div>
@@ -165,26 +257,27 @@ export function MiniCalendar() {
           )}
         </AnimatePresence>
 
-        <div className="grid grid-cols-7 gap-1 text-center mb-2">
+        {/* Grilla del Calendario */}
+        <div className="grid grid-cols-7 gap-1 text-center mb-3">
           {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => (
-            <div key={i} className="text-[10px] font-bold text-zinc-500">{d}</div>
+            <div key={i} className="text-[11px] font-bold text-zinc-500">{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-1 text-center">
           {daysArray.map((day, idx) => {
-            const isToday = day === currentDate.getDate();
-            const dateStr = day ? `${year}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
+            const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+            const dateStr = day ? `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}` : null;
             const isSelected = selectedDate === dateStr;
             
             let dots: string[] = [];
             if (dateStr) {
               const evs = getEventsForDate(dateStr);
-              // Para no llenar de puntos si hay 5 clases, agrupamos por tipo o mostramos máx 3
+              // Para no saturar, obtenemos tipos unicos o recortamos
               const uniqueTypes = Array.from(new Set(evs.map(e => e.tipo)));
               dots = uniqueTypes.map(t => {
                 if (t === 'clase') return 'bg-blue-400';
                 if (t === 'deadline') return 'bg-emerald-500';
-                return 'bg-zinc-400';
+                return 'bg-amber-400';
               });
             }
 
@@ -193,11 +286,11 @@ export function MiniCalendar() {
                 key={idx} 
                 onClick={() => dateStr && setSelectedDate(isSelected ? null : dateStr)}
                 disabled={!day}
-                className={`h-9 w-full flex flex-col items-center justify-center text-xs rounded-lg transition-colors relative ${
+                className={`h-10 w-full flex flex-col items-center justify-center text-[13px] rounded-xl transition-all relative ${
                   isToday 
-                    ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-900/20' 
+                    ? 'bg-blue-600 text-white font-bold shadow-md shadow-blue-900/30' 
                     : isSelected
-                      ? 'bg-zinc-700 text-white font-bold'
+                      ? 'bg-zinc-700 text-white font-bold ring-2 ring-zinc-500 ring-offset-2 ring-offset-zinc-900'
                       : day 
                         ? 'text-zinc-300 hover:bg-zinc-800' 
                         : 'text-transparent cursor-default'
@@ -205,10 +298,11 @@ export function MiniCalendar() {
               >
                 <span>{day}</span>
                 {dots.length > 0 && (
-                  <div className="flex gap-0.5 mt-0.5">
-                    {dots.map((color, i) => (
+                  <div className="flex flex-wrap justify-center gap-[3px] mt-0.5 max-w-[20px]">
+                    {dots.slice(0, 3).map((color, i) => (
                       <span key={i} className={`w-1.5 h-1.5 rounded-full ${color}`} />
                     ))}
+                    {dots.length > 3 && <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />}
                   </div>
                 )}
               </button>
@@ -217,55 +311,73 @@ export function MiniCalendar() {
         </div>
       </section>
 
+      {/* Vista de Agenda del Día Seleccionado */}
       <AnimatePresence mode="popLayout">
-        {combinedEvents.length > 0 && (
+        {selectedDate && (
           <motion.div
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
             transition={{ type: "spring", bounce: 0.4 }}
           >
-            <NativeCard className="flex flex-col gap-3 py-4 border-zinc-800/80 bg-gradient-to-br from-zinc-900/90 to-zinc-950/90">
-              <div className="flex flex-col gap-0 relative">
-                {/* Línea vertical continua */}
-                <div className="absolute left-[9px] top-3 bottom-3 w-0.5 bg-zinc-800 rounded-full" />
+            <NativeCard className="flex flex-col gap-3 py-4 border-zinc-800/80 bg-gradient-to-br from-zinc-900/90 to-zinc-950/90 shadow-2xl">
+              <div className="flex items-center justify-between mb-2 px-1">
+                <h3 className="text-zinc-200 font-bold text-sm tracking-wide">
+                  Agenda del {selectedDate.split('-').reverse().join('/')}
+                </h3>
+                <span className="text-xs font-medium text-zinc-500 bg-zinc-800/50 px-2 py-1 rounded-md">
+                  {combinedEvents.length} elementos
+                </span>
+              </div>
+              
+              {combinedEvents.length === 0 ? (
+                <p className="text-sm text-zinc-500 italic px-2 py-4 text-center">No hay actividades programadas.</p>
+              ) : (
+                <div className="flex flex-col gap-0 relative">
+                  <div className="absolute left-[9px] top-3 bottom-3 w-0.5 bg-zinc-800 rounded-full" />
 
-                {combinedEvents.map((ev, idx) => {
-                  const isDeadline = ev.tipo === 'deadline';
-                  const isClase = ev.tipo === 'clase';
-                  
-                  return (
-                    <div key={ev.id} className="relative pl-8 py-3">
-                      {/* Punto en la línea */}
-                      <div className={`absolute left-[3px] top-[22px] w-3.5 h-3.5 bg-zinc-900 border-[2.5px] rounded-full z-10 ${
-                        isDeadline ? 'border-emerald-500' : isClase ? 'border-blue-500' : 'border-zinc-500'
-                      }`} />
-                      
-                      <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-4">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <p className="text-zinc-400 text-xs font-semibold mb-1 tracking-wider uppercase flex items-center gap-1">
-                              {isDeadline ? '⏳ Entrega' : isClase ? '📘 Clase' : '📅 Evento'}
-                            </p>
-                            <h3 className="text-white font-bold text-base leading-tight">{ev.titulo}</h3>
-                            <p className="text-zinc-400 text-sm mt-1.5 font-medium">
-                              {isDeadline ? 'Todo el día' : `${ev.horaInicio} - ${ev.horaFin}`}
-                            </p>
-                          </div>
-                          
-                          {isDeadline && (
-                            <div className="bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 rounded-xl flex flex-col items-center justify-center min-w-[70px]">
-                              <span className="text-emerald-400 font-black text-xs leading-none text-center">
-                                {ev.dlFaltan === 0 ? '¡Hoy!' : ev.dlFaltan < 0 ? 'Pasó' : `${ev.dlFaltan}d`}
-                              </span>
+                  {combinedEvents.map((ev) => {
+                    const isDeadline = ev.tipo === 'deadline';
+                    const isClase = ev.tipo === 'clase';
+                    
+                    return (
+                      <div key={ev.id} className="relative pl-8 py-3">
+                        <div className={`absolute left-[3px] top-[22px] w-3.5 h-3.5 bg-zinc-900 border-[2.5px] rounded-full z-10 ${
+                          isDeadline ? 'border-emerald-500' : isClase ? 'border-blue-500' : 'border-amber-500'
+                        }`} />
+                        
+                        <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-4 transition-colors hover:bg-zinc-800/50">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <p className="text-zinc-400 text-[10px] font-bold mb-1 tracking-wider uppercase flex items-center gap-1.5">
+                                {isDeadline ? '⏳ Recordatorio / Entrega' : isClase ? '📘 Clase Regular' : '📅 Evento Personal'}
+                              </p>
+                              <h3 className="text-white font-bold text-base leading-tight mb-1">{ev.titulo}</h3>
+                              <div className="flex items-center gap-2">
+                                <span className="bg-black/20 text-zinc-300 text-xs font-medium px-2 py-0.5 rounded-md">
+                                  {isDeadline ? (ev.horaInicio !== '23:59' ? ev.horaInicio : 'Todo el día') : `${ev.horaInicio} - ${ev.horaFin}`}
+                                </span>
+                              </div>
                             </div>
-                          )}
+                            
+                            {isDeadline && ev.dlFaltan !== undefined && (
+                              <div className={`border px-3 py-2 rounded-xl flex flex-col items-center justify-center min-w-[70px] ${
+                                ev.dlFaltan === 0 ? 'bg-amber-500/10 border-amber-500/30 text-amber-400' :
+                                ev.dlFaltan < 0 ? 'bg-red-500/10 border-red-500/30 text-red-400' : 
+                                'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                              }`}>
+                                <span className="font-black text-xs leading-none text-center">
+                                  {ev.dlFaltan === 0 ? '¡Hoy!' : ev.dlFaltan < 0 ? 'Pasó' : `${ev.dlFaltan}d`}
+                                </span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </NativeCard>
           </motion.div>
         )}
