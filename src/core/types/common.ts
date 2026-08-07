@@ -8,7 +8,8 @@ export type DayOfWeek =
   | 'miercoles'
   | 'jueves'
   | 'viernes'
-  | 'sabado';
+  | 'sabado'
+  | 'domingo';
 
 /**
  * Turno académico en el que se dicta una materia.

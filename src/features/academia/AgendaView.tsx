@@ -3,30 +3,50 @@
 import { useState } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { Clock, Plus, Trash2 } from 'lucide-react';
-import type { DayOfWeek } from '@/core/types/common';
 import type { useAgenda } from '@/hooks/useAgenda';
 
 interface AgendaViewProps {
-  diaSeleccionado: DayOfWeek;
+  fechaSeleccionada: string;
+  diaNombre: string;
   esHoy: boolean;
   agenda: ReturnType<typeof useAgenda>;
   agendaDelDia: ReturnType<ReturnType<typeof useAgenda>['obtenerAgendaDelDia']>;
 }
 
-export function AgendaView({ diaSeleccionado, esHoy, agenda, agendaDelDia }: AgendaViewProps) {
+export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agendaDelDia }: AgendaViewProps) {
   const [mostrarFormEvento, setMostrarFormEvento] = useState(false);
-  const [nuevoEvento, setNuevoEvento] = useState({ titulo: '', horaInicio: '10:00', horaFin: '11:00' });
+  const [nuevoEvento, setNuevoEvento] = useState({ 
+    titulo: '', 
+    fecha: fechaSeleccionada,
+    horaInicio: '10:00', 
+    duracion: '60' // minutos
+  });
+
+  // Cuando cambia la fecha seleccionada externamente, actualizamos el form si está cerrado
+  // o lo forzamos.
+  if (nuevoEvento.fecha !== fechaSeleccionada && !mostrarFormEvento) {
+    setNuevoEvento(prev => ({ ...prev, fecha: fechaSeleccionada }));
+  }
 
   const handleAgregarEvento = () => {
-    if (!nuevoEvento.titulo) return;
+    if (!nuevoEvento.titulo || !nuevoEvento.fecha) return;
+    
+    // Calcular horaFin basado en duracion
+    const [h, m] = nuevoEvento.horaInicio.split(':').map(Number);
+    const startDate = new Date();
+    startDate.setHours(h, m, 0, 0);
+    startDate.setMinutes(startDate.getMinutes() + parseInt(nuevoEvento.duracion));
+    
+    const horaFin = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
+
     agenda.agregarEvento({
       id: Date.now().toString(),
       titulo: nuevoEvento.titulo,
+      fecha: nuevoEvento.fecha,
       horaInicio: nuevoEvento.horaInicio,
-      horaFin: nuevoEvento.horaFin,
-      dia: diaSeleccionado
+      horaFin: horaFin
     });
-    setNuevoEvento({ titulo: '', horaInicio: '10:00', horaFin: '11:00' });
+    setNuevoEvento({ titulo: '', fecha: fechaSeleccionada, horaInicio: '10:00', duracion: '60' });
     setMostrarFormEvento(false);
   };
 
@@ -36,14 +56,14 @@ export function AgendaView({ diaSeleccionado, esHoy, agenda, agendaDelDia }: Age
         <div className="flex items-center gap-2">
           <Clock size={18} />
           <h2 className="font-semibold text-sm uppercase tracking-wider">
-            {esHoy ? "Agenda de Hoy" : `Agenda del ${diaSeleccionado}`}
+            {esHoy ? "Agenda de Hoy" : `Agenda del ${fechaSeleccionada.split('-').reverse().join('/')}`}
           </h2>
         </div>
       </div>
 
       <div className="relative border-l-2 border-zinc-800 ml-3 pl-5 flex flex-col gap-5 py-2">
         {agendaDelDia.length === 0 ? (
-          <p className="text-zinc-500 text-sm italic">Sin eventos programados para {diaSeleccionado}.</p>
+          <p className="text-zinc-500 text-sm italic">Sin eventos programados para esta fecha.</p>
         ) : (
           agendaDelDia.map((item, idx) => (
             <div key={item.id + idx} className="relative">
@@ -99,21 +119,40 @@ export function AgendaView({ diaSeleccionado, esHoy, agenda, agendaDelDia }: Age
                 onChange={(e) => setNuevoEvento({...nuevoEvento, titulo: e.target.value})}
                 className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
               />
+              
               <div className="flex gap-2">
+                <input 
+                  type="date"
+                  value={nuevoEvento.fecha}
+                  onChange={(e) => setNuevoEvento({...nuevoEvento, fecha: e.target.value})}
+                  className="flex-[2] bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
+                />
                 <input 
                   type="time"
                   value={nuevoEvento.horaInicio}
                   onChange={(e) => setNuevoEvento({...nuevoEvento, horaInicio: e.target.value})}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
-                />
-                <input 
-                  type="time"
-                  value={nuevoEvento.horaFin}
-                  onChange={(e) => setNuevoEvento({...nuevoEvento, horaFin: e.target.value})}
-                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors"
+                  className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-3 text-sm text-white focus:outline-none focus:border-emerald-500 [color-scheme:dark]"
                 />
               </div>
-              <div className="flex gap-2 mt-1">
+
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs text-zinc-500 font-semibold px-1">Duración</label>
+                <select
+                  value={nuevoEvento.duracion}
+                  onChange={(e) => setNuevoEvento({...nuevoEvento, duracion: e.target.value})}
+                  className="bg-zinc-950 border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500"
+                >
+                  <option value="15">15 minutos</option>
+                  <option value="30">30 minutos</option>
+                  <option value="45">45 minutos</option>
+                  <option value="60">1 hora</option>
+                  <option value="90">1 hora y media</option>
+                  <option value="120">2 horas</option>
+                  <option value="180">3 horas</option>
+                </select>
+              </div>
+
+              <div className="flex gap-2 mt-2">
                 <button 
                   onClick={() => setMostrarFormEvento(false)}
                   className="flex-1 py-3 text-sm font-semibold text-zinc-400 hover:text-white bg-zinc-800/50 rounded-xl transition-colors"
@@ -130,7 +169,10 @@ export function AgendaView({ diaSeleccionado, esHoy, agenda, agendaDelDia }: Age
             </motion.div>
           ) : (
             <button 
-              onClick={() => setMostrarFormEvento(true)}
+              onClick={() => {
+                setNuevoEvento(prev => ({ ...prev, fecha: fechaSeleccionada }));
+                setMostrarFormEvento(true);
+              }}
               className="w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-dashed border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 transition-all text-sm font-semibold hover:bg-zinc-800/30 active:scale-[0.98]"
             >
               <Plus size={18} />
