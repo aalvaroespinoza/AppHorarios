@@ -72,7 +72,7 @@ export function MiniCalendar() {
     }
     
     // 2. Eventos Manuales
-    const agendaEventos = agenda.eventos.filter(e => e.dia === dayOfWeek);
+    const agendaEventos = agenda.eventos.filter(e => e.fecha === dateStr);
     agendaEventos.forEach(e => {
       combined.push({
         id: `evento-${e.id}`,
