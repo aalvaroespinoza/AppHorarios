@@ -24,14 +24,46 @@ export function WeatherWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
 
-  const [temp, setTemp] = useState<number | null>(null);
+  interface WeatherData {
+    current: { temp: number; wind: number; humidity: number; code: number };
+    hourly: { time: string; temp: number; code: number }[];
+    daily: { date: string; max: number; min: number; code: number }[];
+  }
+
+  const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedDay, setSelectedDay] = useState<any | null>(null);
 
   useEffect(() => {
-    fetch("https://api.open-meteo.com/v1/forecast?latitude=-31.8167&longitude=-64.2833&current=temperature_2m&timezone=America/Argentina/Cordoba")
+    const url = "https://api.open-meteo.com/v1/forecast?latitude=-31.8167&longitude=-64.2833&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=America/Argentina/Cordoba&forecast_days=5";
+    
+    fetch(url)
       .then(res => res.json())
       .then(data => {
-        setTemp(data.current.temperature_2m);
+        const currentHourIndex = data.hourly.time.findIndex((t: string) => new Date(t) >= new Date());
+        const nextHours = data.hourly.time.slice(currentHourIndex, currentHourIndex + 12).map((t: string, i: number) => ({
+          time: new Date(t).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+          temp: Math.round(data.hourly.temperature_2m[currentHourIndex + i]),
+          code: data.hourly.weather_code[currentHourIndex + i]
+        }));
+
+        const nextDays = data.daily.time.slice(1, 5).map((t: string, i: number) => ({
+          date: new Intl.DateTimeFormat('es-AR', { weekday: 'long' }).format(new Date(t + 'T00:00:00')),
+          max: Math.round(data.daily.temperature_2m_max[i + 1]),
+          min: Math.round(data.daily.temperature_2m_min[i + 1]),
+          code: data.daily.weather_code[i + 1]
+        }));
+
+        setWeather({
+          current: {
+            temp: Math.round(data.current.temperature_2m),
+            wind: Math.round(data.current.wind_speed_10m),
+            humidity: Math.round(data.current.relative_humidity_2m),
+            code: data.current.weather_code
+          },
+          hourly: nextHours,
+          daily: nextDays
+        });
         setLoading(false);
       })
       .catch(err => {
@@ -71,7 +103,7 @@ export function WeatherWidget() {
             className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-2 flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-transform w-max border border-blue-200 dark:border-blue-800/50"
           >
             <CloudSun size={18} className="text-blue-500 dark:text-blue-400" />
-            <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{loading || temp === null ? '--' : Math.round(temp)}°C - Despeñaderos</span>
+            <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{loading || !weather ? '--' : weather.current.temp}°C - Despeñaderos</span>
           </motion.div>
         ) : (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -113,7 +145,7 @@ export function WeatherWidget() {
                 {/* Clima Actual */}
                 <motion.div variants={itemVariants} className="flex items-center justify-between mt-2">
                   <div className="flex flex-col">
-                    <span className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">{loading || temp === null ? '--' : Math.round(temp)}°</span>
+                    <span className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">{loading || !weather ? '--' : weather.current.temp}°</span>
                     <span className="text-lg font-bold text-blue-500">Parcialmente Nublado</span>
                   </div>
                   <CloudSun size={80} className="text-blue-400 opacity-90" />
@@ -123,11 +155,11 @@ export function WeatherWidget() {
                 <motion.div variants={itemVariants} className="flex items-center gap-4 py-4 border-y border-gray-100 dark:border-neutral-800">
                   <div className="flex items-center gap-2">
                     <Wind size={16} className="text-gray-400" />
-                    <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">12 km/h</span>
+                    <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">{loading || !weather ? '--' : weather.current.wind} km/h</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Droplets size={16} className="text-gray-400" />
-                    <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">45%</span>
+                    <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">{loading || !weather ? '--' : weather.current.humidity}%</span>
                   </div>
                 </motion.div>
 
