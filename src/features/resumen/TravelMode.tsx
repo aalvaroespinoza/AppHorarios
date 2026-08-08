@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from 'framer-motion';
-import { Headphones, Mic, Youtube } from 'lucide-react';
+import { Headphones, Mic, Play } from 'lucide-react';
 
 export function TravelMode() {
   return (
@@ -30,7 +30,7 @@ export function TravelMode() {
           className="flex flex-col items-center justify-center gap-3 bg-white dark:bg-neutral-800 border border-gray-100 dark:border-neutral-700 rounded-2xl aspect-[4/3] active:scale-95 transition-all shadow-sm hover:border-red-500/50 group p-2"
         >
           <div className="w-12 h-12 rounded-full bg-red-50 dark:bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
-            <Youtube size={24} />
+            <Play size={24} />
           </div>
           <span className="font-bold text-xs sm:text-sm text-gray-700 dark:text-neutral-300 text-center">Pingüino de Mario</span>
         </a>
