@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { CloudSun, X, Wind, Droplets } from 'lucide-react';
 
@@ -24,6 +24,22 @@ export function WeatherWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
 
+  const [temp, setTemp] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("https://api.open-meteo.com/v1/forecast?latitude=-31.8167&longitude=-64.2833&current=temperature_2m&timezone=America/Argentina/Cordoba")
+      .then(res => res.json())
+      .then(data => {
+        setTemp(data.current.temperature_2m);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error fetching weather:", err);
+        setLoading(false);
+      });
+  }, []);
+
   // Variantes para animar la entrada escalonada (stagger) del contenido interno
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -38,6 +54,10 @@ export function WeatherWidget() {
     visible: { opacity: 1, y: 0, transition: springConfig }
   };
 
+  const today = new Date();
+  const formattedDate = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(today);
+  const displayDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
+
   return (
     <>
       <AnimatePresence>
@@ -51,7 +71,7 @@ export function WeatherWidget() {
             className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-2 flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-transform w-max border border-blue-200 dark:border-blue-800/50"
           >
             <CloudSun size={18} className="text-blue-500 dark:text-blue-400" />
-            <span className="text-sm font-bold text-blue-900 dark:text-blue-100">14°C - Despeñaderos</span>
+            <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{loading || temp === null ? '--' : Math.round(temp)}°C - Despeñaderos</span>
           </motion.div>
         ) : (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
@@ -80,7 +100,7 @@ export function WeatherWidget() {
                 <motion.div variants={itemVariants} className="flex justify-between items-start">
                   <div className="flex flex-col">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white">Despeñaderos</h2>
-                    <p className="text-sm text-gray-500 dark:text-neutral-400">Jueves, 7 de Agosto</p>
+                    <p className="text-sm text-gray-500 dark:text-neutral-400">{displayDate}</p>
                   </div>
                   <button 
                     onClick={() => setIsExpanded(false)}
@@ -93,7 +113,7 @@ export function WeatherWidget() {
                 {/* Clima Actual */}
                 <motion.div variants={itemVariants} className="flex items-center justify-between mt-2">
                   <div className="flex flex-col">
-                    <span className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">14°</span>
+                    <span className="text-6xl font-black text-gray-900 dark:text-white tracking-tighter">{loading || temp === null ? '--' : Math.round(temp)}°</span>
                     <span className="text-lg font-bold text-blue-500">Parcialmente Nublado</span>
                   </div>
                   <CloudSun size={80} className="text-blue-400 opacity-90" />
