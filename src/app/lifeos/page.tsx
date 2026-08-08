@@ -10,8 +10,6 @@ import {
 import Link from 'next/link';
 import { useLocalStorageState } from '@/core/hooks/useLocalStorageState';
 import { useActionDispatcher } from '@/core/engine/useActionDispatcher';
-import { DashboardInsights } from '@/features/insights/DashboardInsights';
-import { BateriaMentalSection } from '@/features/academia/BateriaMentalSection';
 
 interface ChatMessage {
   id: string;
@@ -308,18 +306,9 @@ export default function LifeOSConsole() {
         </div>
       </div>
       
-      {/* Área Dividida: Top 40% Dashboard, Bottom 60% Chat */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        
-        {/* TOP 40%: Dashboard Insights & Bateria */}
-        <div className="h-[40%] flex-shrink-0 overflow-y-auto px-4 py-4 border-b border-white/5 scroll-smooth">
-          <DashboardInsights />
-          <BateriaMentalSection />
-        </div>
-
-        {/* BOTTOM 60%: Área principal de conversación */}
-        <div className="h-[60%] flex flex-col bg-[#0a0a0c]">
-          <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scroll-smooth">
+      {/* Área principal de conversación */}
+      <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0a0c]">
+        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scroll-smooth">
             {history.length === 0 ? (
               <div className="flex flex-col h-full items-center justify-center max-w-sm mx-auto">
                 <motion.div 
@@ -496,6 +485,5 @@ export default function LifeOSConsole() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
