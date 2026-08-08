@@ -45,7 +45,7 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
         {loading ? (
           // Skeletons
           [1, 2, 3].map(i => (
-            <NativeCard key={i} className="min-w-[80vw] sm:min-w-[300px] bg-zinc-900/40 border border-zinc-800 p-5 snap-center flex flex-col gap-3">
+            <NativeCard key={i} className="min-w-[68vw] sm:min-w-[260px] bg-zinc-900/40 border border-zinc-800 p-4 snap-center flex flex-col gap-3 shrink-0">
               <div className="h-5 w-3/4 bg-zinc-800 animate-pulse rounded" />
               <div className="h-10 w-full bg-zinc-800/50 animate-pulse rounded" />
               <div className="h-6 w-24 bg-zinc-800/30 animate-pulse rounded-full mt-2" />
@@ -55,7 +55,7 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
           displayNews.map((item, idx) => (
             <motion.div 
               key={idx}
-              className="min-w-[80vw] sm:min-w-[300px] snap-center bg-white dark:bg-neutral-800 rounded-2xl p-5 shadow-sm border border-gray-100 dark:border-neutral-700 flex flex-col justify-between gap-4 shrink-0"
+              className="min-w-[68vw] sm:min-w-[260px] snap-center bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-neutral-700 flex flex-col justify-between gap-3 shrink-0"
             >
               <div className="flex flex-col gap-2">
                 <h3 className="font-bold text-gray-900 dark:text-white leading-tight">{item.title}</h3>
