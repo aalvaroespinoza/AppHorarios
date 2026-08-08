@@ -6,6 +6,7 @@ import { ChevronLeft, Plus, Wallet, ArrowDownRight, ArrowUpRight, Trash2, X } fr
 import Link from 'next/link';
 import { useFinanzas } from '@/hooks/useFinanzas';
 import { useCuentasClaras, TipoDeuda } from '@/hooks/useCuentasClaras';
+import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 
 const CATEGORIAS = ['Comida', 'Facu', 'Suscripciones', 'Ocio', 'Transporte', 'Otros'];
 
@@ -62,9 +63,7 @@ export default function FinanzasPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+      {...PAGE_TRANSITION}
       className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh]"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
@@ -237,6 +236,7 @@ export default function FinanzasPage() {
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
+            transition={SPRING_CONFIG}
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSplit(false)} />

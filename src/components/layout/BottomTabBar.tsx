@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Home, BookOpen, Sparkles, LayoutGrid, LucideIcon } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { TAP_ANIMATION, SPRING_CONFIG } from '@/lib/animations';
 
 export interface NavigationTab {
   id: string;
@@ -44,7 +45,7 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onClick }) => {
       style={{ WebkitTapHighlightColor: 'transparent' }}
     >
       <motion.div
-        whileTap={{ scale: 0.85 }}
+        whileTap={TAP_ANIMATION}
         animate={isActive ? { scale: 1.1, y: -2 } : { scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 15 }}
         className="flex flex-col items-center"
@@ -80,7 +81,7 @@ export default function BottomTabBar({ tabs = defaultTabs }: BottomTabBarProps) 
     <motion.nav 
       initial={{ y: "100%" }} 
       animate={{ y: 0 }} 
-      transition={{ type: "spring", bounce: 0, duration: 0.6 }}
+      transition={SPRING_CONFIG}
       className="fixed bottom-0 w-full z-50 backdrop-blur-xl bg-black/80 border-t border-zinc-800/80 pt-2 px-4 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]"
     >
       <div className="flex justify-around items-center max-w-md mx-auto">

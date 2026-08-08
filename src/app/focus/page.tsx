@@ -10,6 +10,7 @@ import PomodoroWidget from '@/components/PomodoroWidget';
 import NativeCard from '@/core/components/ui/NativeCard';
 import { GymTracker } from '@/features/focus/GymTracker';
 import { MateTracker } from '@/features/focus/MateTracker';
+import { PAGE_TRANSITION, TAP_ANIMATION } from '@/lib/animations';
 
 
 
@@ -68,7 +69,7 @@ function StravaWidget() {
     return (
       <motion.div
         whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
+        whileTap={TAP_ANIMATION}
         className="bg-gradient-to-br from-[#fc4c02]/10 to-[#fc4c02]/5 border border-[#fc4c02]/20 rounded-2xl p-5 flex items-center justify-between cursor-pointer shadow-sm"
         onClick={() => window.location.href = '/api/strava/auth'}
       >
@@ -90,7 +91,7 @@ function StravaWidget() {
   return (
     <motion.div
       whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
+      whileTap={TAP_ANIMATION}
       className="bg-gradient-to-br from-[#fc4c02]/10 to-[#fc4c02]/5 border border-[#fc4c02]/20 rounded-2xl p-5 flex items-center gap-4 cursor-pointer shadow-sm"
     >
       <div className="w-12 h-12 rounded-full bg-[#fc4c02]/20 flex items-center justify-center shrink-0 border border-[#fc4c02]/30">
@@ -126,9 +127,7 @@ export default function FocusPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", bounce: 0, duration: 0.5 }}
+      {...PAGE_TRANSITION}
       className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-[#0a0a0c] text-white pb-24"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >

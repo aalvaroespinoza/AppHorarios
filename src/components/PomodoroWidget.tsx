@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Play, Pause, RotateCcw, X, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TAP_ANIMATION, SPRING_CONFIG } from '@/lib/animations';
 
 export default function PomodoroWidget() {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
@@ -71,7 +72,7 @@ export default function PomodoroWidget() {
 
           <div className="flex items-center gap-2 bg-zinc-950/50 p-1.5 rounded-full border border-zinc-800/50">
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={TAP_ANIMATION}
               onClick={resetTimer}
               className="w-10 h-10 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
             >
@@ -79,7 +80,7 @@ export default function PomodoroWidget() {
             </motion.button>
             
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={TAP_ANIMATION}
               onClick={toggleTimer}
               className={`w-12 h-12 flex items-center justify-center rounded-full shadow-md transition-colors ${
                 isActive 
@@ -119,7 +120,7 @@ export default function PomodoroWidget() {
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", bounce: 0.5 }}
+              transition={SPRING_CONFIG}
               className="flex flex-col items-center gap-12"
             >
               <div className="flex flex-col items-center gap-4">
@@ -132,14 +133,14 @@ export default function PomodoroWidget() {
               {timeLeft > 0 ? (
                 <div className="flex items-center gap-6">
                   <motion.button
-                    whileTap={{ scale: 0.9 }}
+                    whileTap={TAP_ANIMATION}
                     onClick={resetTimer}
                     className="w-16 h-16 flex items-center justify-center rounded-full bg-zinc-900 text-zinc-400 border border-zinc-800"
                   >
                     <RotateCcw size={24} />
                   </motion.button>
                   <motion.button
-                    whileTap={{ scale: 0.9 }}
+                    whileTap={TAP_ANIMATION}
                     onClick={toggleTimer}
                     className={`w-24 h-24 flex items-center justify-center rounded-full shadow-2xl ${
                       isActive 

@@ -9,7 +9,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useLocalStorageState } from '@/core/hooks/useLocalStorageState';
+import { useLocalStorageState } from '@/core/hooks/useLocalStorageState';
 import { useActionDispatcher } from '@/core/engine/useActionDispatcher';
+import { PAGE_TRANSITION } from '@/lib/animations';
 
 interface ChatMessage {
   id: string;
@@ -286,7 +288,10 @@ export default function LifeOSConsole() {
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-[#0a0a0c] text-neutral-200 pt-[env(safe-area-inset-top)] pb-[calc(3.5rem+env(safe-area-inset-bottom))]">
+    <motion.div 
+      {...PAGE_TRANSITION}
+      className="fixed inset-0 z-40 flex flex-col bg-[#0a0a0c] text-neutral-200 pt-[env(safe-area-inset-top)] pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
+    >
       
       {/* Header Nativo y Discreto */}
       <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0a0a0c] sticky top-0 z-10 flex-shrink-0">
@@ -491,6 +496,6 @@ export default function LifeOSConsole() {
             </div>
           </div>
         </div>
-      </div>
+    </motion.div>
   );
 }

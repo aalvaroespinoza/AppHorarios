@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { CloudSun, X, Wind, Droplets } from 'lucide-react';
+import { SPRING_CONFIG } from '@/lib/animations';
 
 const MOCK_HOURLY = [
   { time: '14:00', temp: '15°C', icon: <CloudSun size={20} />, feelsLike: '14°C', humidity: '45%', wind: '12 km/h' },
@@ -18,7 +19,7 @@ const MOCK_DAILY = [
   { day: 'Sábado', temp: '22°C / 12°C', desc: 'Despejado' },
 ];
 
-const springConfig = { type: 'spring' as const, stiffness: 300, damping: 25 };
+
 
 export function WeatherWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -83,7 +84,7 @@ export function WeatherWidget() {
 
   const itemVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
-    visible: { opacity: 1, y: 0, transition: springConfig }
+    visible: { opacity: 1, y: 0, transition: SPRING_CONFIG }
   };
 
   const today = new Date();
@@ -97,7 +98,7 @@ export function WeatherWidget() {
           <motion.div
             key="collapsed"
             layoutId="weather-card"
-            transition={springConfig}
+            transition={SPRING_CONFIG}
             onClick={() => setIsExpanded(true)}
             style={{ borderRadius: 24 }}
             className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-2 flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-transform w-max border border-blue-200 dark:border-blue-800/50"
@@ -118,7 +119,7 @@ export function WeatherWidget() {
             <motion.div
               key="expanded"
               layoutId="weather-card"
-              transition={springConfig}
+              transition={SPRING_CONFIG}
               style={{ borderRadius: 40 }}
               className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 p-6 sm:p-8 shadow-2xl flex flex-col overflow-hidden"
             >

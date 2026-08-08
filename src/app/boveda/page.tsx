@@ -6,6 +6,7 @@ import {
   Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock 
 } from 'lucide-react';
 import Link from 'next/link';
+import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 
 export default function HubPage() {
   const apps = [
@@ -93,9 +94,7 @@ export default function HubPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+      {...PAGE_TRANSITION}
       className="p-5 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] pb-24 relative bg-[#0a0a0c]"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >
@@ -119,7 +118,7 @@ export default function HubPage() {
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05, type: 'spring', bounce: 0 }}
+              transition={{ delay: i * 0.05, ...SPRING_CONFIG }}
               className={`flex flex-col p-4 rounded-3xl bg-gradient-to-br ${app.color} border backdrop-blur-xl shadow-sm hover:shadow-md active:scale-95 active:shadow-inner transition-all duration-200 aspect-square justify-center`}
             >
               <div className="mb-3">

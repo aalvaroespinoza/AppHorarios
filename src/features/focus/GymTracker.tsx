@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dumbbell, X, Timer, Check } from 'lucide-react';
 import NativeCard from '@/core/components/ui/NativeCard';
+import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
 
 const EXERCISES = [
   { id: 1, name: 'Press Banca', kg: '80', reps: '8' },
@@ -45,7 +46,7 @@ export function GymTracker() {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const springConfig = { type: "spring" as const, stiffness: 300, damping: 30 };
+
 
   return (
     <>
@@ -54,7 +55,7 @@ export function GymTracker() {
           <motion.div
             layoutId="gym-card"
             onClick={() => setSelectedRoutine("push-pull")}
-            transition={springConfig}
+            transition={SPRING_CONFIG}
             className="w-full cursor-pointer"
           >
             <NativeCard className="bg-zinc-900/60 border border-zinc-800 p-5 flex items-center justify-between active:scale-95 transition-transform shadow-sm">
@@ -85,7 +86,7 @@ export function GymTracker() {
             
             <motion.div
               layoutId="gym-card"
-              transition={springConfig}
+              transition={SPRING_CONFIG}
               className="relative w-full max-w-md h-[80dvh] bg-[#121214] border border-zinc-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-6 overflow-hidden"
             >
               {/* Header */}
@@ -111,6 +112,7 @@ export function GymTracker() {
                     initial={{ opacity: 0, y: -20, scale: 0.9 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                    transition={SPRING_CONFIG}
                     className="flex items-center justify-center gap-2 bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 py-3 rounded-2xl font-bold tracking-widest text-lg"
                   >
                     <Timer size={20} className={restTime % 2 === 0 ? "text-indigo-400" : "text-indigo-200"} />
@@ -138,7 +140,7 @@ export function GymTracker() {
                         <span className="text-sm text-zinc-300 font-medium w-6 text-center">{ex.kg}</span>
                         <span className="text-sm text-zinc-300 font-medium w-6 text-center">{ex.reps}</span>
                         <motion.button
-                          whileTap={{ scale: 0.8 }}
+                          whileTap={TAP_ANIMATION}
                           onClick={() => toggleSet(ex.id)}
                           initial={false}
                           animate={{ 

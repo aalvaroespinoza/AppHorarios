@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, Square, Check, X, Edit2 } from 'lucide-react';
 import type { useAgenda } from '@/hooks/useAgenda';
+import { TAP_ANIMATION } from '@/lib/animations';
 
 interface ParsedResult {
   titulo: string;
@@ -179,7 +180,7 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
           <Mic size={16} className={isRecording ? 'text-red-500 animate-pulse' : 'text-zinc-500'}/> 
           Dictado Inteligente
         </h3>
-        <button onClick={() => { stopRecording(); onClose(); }} className="text-zinc-500 hover:text-white p-1"><X size={16}/></button>
+        <motion.button whileTap={TAP_ANIMATION} onClick={() => { stopRecording(); onClose(); }} className="text-zinc-500 hover:text-white p-1"><X size={16}/></motion.button>
       </div>
 
       {!parsedData && (
@@ -196,12 +197,13 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
       )}
 
       {isRecording && !isProcessing && (
-        <button 
+        <motion.button 
+          whileTap={TAP_ANIMATION}
           onClick={stopRecording}
           className="bg-red-500/20 text-red-500 border border-red-500/30 rounded-xl py-2 flex items-center justify-center gap-2 font-bold text-sm hover:bg-red-500/30 transition-colors"
         >
           <Square size={14} className="fill-current"/> Detener
-        </button>
+        </motion.button>
       )}
 
       {parsedData && (
@@ -229,18 +231,20 @@ export default function VoiceRecorder({ agenda, onClose }: { agenda: ReturnType<
           </div>
 
           <div className="flex gap-2">
-            <button 
+            <motion.button 
+              whileTap={TAP_ANIMATION}
               onClick={() => { setParsedData(null); setTranscript(''); startRecording(); }}
               className="flex-1 py-2.5 bg-zinc-800 text-zinc-300 rounded-xl text-sm font-bold hover:bg-zinc-700 flex items-center justify-center gap-1.5"
             >
               Reintentar
-            </button>
-            <button 
+            </motion.button>
+            <motion.button 
+              whileTap={TAP_ANIMATION}
               onClick={confirmAndSave}
               className="flex-1 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-lg shadow-blue-900/20 hover:bg-blue-500 flex items-center justify-center gap-1.5"
             >
               <Check size={16}/> Guardar
-            </button>
+            </motion.button>
           </div>
         </div>
       )}

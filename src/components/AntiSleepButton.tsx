@@ -3,6 +3,7 @@
 import { useAntiSleepAlarm } from '@/hooks/useAntiSleepAlarm';
 import { MapPin, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TAP_ANIMATION } from '@/lib/animations';
 
 interface Props {
   targetLat: number;
@@ -16,7 +17,7 @@ export default function AntiSleepButton({ targetLat, targetLng, label = "Activar
   return (
     <div className="w-full mt-3">
       <motion.button
-        whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+        whileTap={TAP_ANIMATION}
         onClick={toggleAlarm}
         className={`relative w-full py-3.5 px-4 rounded-xl font-medium flex items-center justify-center gap-2 overflow-hidden transition-all duration-300 border ${
           isActive 

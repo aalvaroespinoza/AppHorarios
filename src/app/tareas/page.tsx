@@ -7,6 +7,7 @@ import Link from 'next/link';
 import NativeCard from '@/core/components/ui/NativeCard';
 import { createClient } from '@/lib/supabase/client';
 import dayjs from 'dayjs';
+import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 
 interface TaskEvent {
   id: string;
@@ -257,9 +258,7 @@ export default function TareasPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+      {...PAGE_TRANSITION}
       className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-[#0a0a0c] text-white pb-24"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >
@@ -329,6 +328,7 @@ export default function TareasPage() {
                     initial={{ opacity: 0, height: 0, y: -20 }}
                     animate={{ opacity: 1, height: 'auto', y: 0 }}
                     exit={{ opacity: 0, height: 0, scale: 0.95 }}
+                    transition={SPRING_CONFIG}
                     className="overflow-hidden"
                   >
                     <NativeCard className="bg-gradient-to-br from-indigo-900/40 to-indigo-900/10 border border-indigo-500/30 p-4 mb-6 relative flex flex-col gap-3">

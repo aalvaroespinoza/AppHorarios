@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
 import { DayOfWeek } from '@/core/types/common';
 import { Building2, Bed } from 'lucide-react';
+import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
 
 const DIAS_SEMANA: { id: DayOfWeek; label: string }[] = [
   { id: 'lunes', label: 'Lunes' },
@@ -96,8 +97,8 @@ export default function ContextualControls() {
             initial={{ opacity: 0, scale: 0.9, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+            transition={SPRING_CONFIG}
+            whileTap={TAP_ANIMATION}
             onClick={() => setCursaArquitectura(!cursaArquitectura)}
             className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
               cursaArquitectura 
@@ -147,8 +148,8 @@ export default function ContextualControls() {
             initial={{ opacity: 0, scale: 0.9, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: -10 }}
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+            transition={SPRING_CONFIG}
+            whileTap={TAP_ANIMATION}
             onClick={() => setDuermeEnCordoba(!duermeEnCordoba)}
             className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
               duermeEnCordoba 

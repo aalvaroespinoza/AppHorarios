@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { WeatherWidget } from '@/features/resumen/WeatherWidget';
 import { NewsCarousel } from '@/features/resumen/NewsCarousel';
 import { TravelMode } from '@/features/resumen/TravelMode';
+import { PAGE_TRANSITION } from '@/lib/animations';
 
 import { useFinanzas } from '@/hooks/useFinanzas';
 import { useDeadlines } from '@/hooks/useDeadlines';
@@ -105,9 +106,7 @@ export default function ResumenDiarioPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+      {...PAGE_TRANSITION}
       className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-gray-50 dark:bg-[#0a0a0c] text-neutral-900 dark:text-white pb-24 overflow-x-hidden"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >

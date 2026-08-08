@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Droplets, Plus, Minus } from 'lucide-react';
 import NativeCard from '@/core/components/ui/NativeCard';
+import { TAP_ANIMATION } from '@/lib/animations';
 
 export function MateTracker() {
   const [level, setLevel] = useState(0); // 0 to 4 (max 4 termos/vasos)
@@ -31,14 +32,14 @@ export function MateTracker() {
         </p>
         <div className="flex gap-2 mt-3">
           <motion.button 
-            whileTap={{ scale: 0.9 }}
+            whileTap={TAP_ANIMATION}
             onClick={removeLevel}
             className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-300 hover:bg-zinc-700 transition-colors"
           >
             <Minus size={18} />
           </motion.button>
           <motion.button 
-            whileTap={{ scale: 0.9 }}
+            whileTap={TAP_ANIMATION}
             onClick={addLevel}
             className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30 transition-colors"
           >

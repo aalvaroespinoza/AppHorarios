@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, Trash2, BatteryFull, BatteryMedium, BatteryLow, Plus } from 'lucide-react';
 import { useBateriaMental, EnergiaNivel } from '@/hooks/useBateriaMental';
+import { SPRING_CONFIG } from '@/lib/animations';
 
 const FILTROS = [
   { id: 'todas', label: 'Todas', icon: null },
@@ -56,6 +57,7 @@ export function BateriaMentalSection() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
+            transition={SPRING_CONFIG}
             className="overflow-hidden"
           >
             <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-3 flex flex-col gap-2 mb-2">
@@ -127,7 +129,8 @@ export function BateriaMentalSection() {
                 layout
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: t.completada ? 0.5 : 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={SPRING_CONFIG}
                 className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                   t.completada 
                     ? 'bg-zinc-900/40 border-zinc-800/50 grayscale' 

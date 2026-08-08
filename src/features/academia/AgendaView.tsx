@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
 import { Clock, Plus, Trash2 } from 'lucide-react';
 import type { useAgenda } from '@/hooks/useAgenda';
+import { SPRING_CONFIG } from '@/lib/animations';
 
 interface AgendaViewProps {
   fechaSeleccionada: string;
@@ -110,6 +111,7 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
+              transition={SPRING_CONFIG}
               className="flex flex-col gap-3 overflow-hidden"
             >
               <input 

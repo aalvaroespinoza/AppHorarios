@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Music } from 'lucide-react';
+import { TAP_ANIMATION, SPRING_CONFIG_QUICK } from '@/lib/animations';
 
 const options = [
   { label: 'Beyakooo🪩', url: 'spotify:playlist:0KSrhygf74dHRge1AmoAUt' },
@@ -23,11 +24,11 @@ export default function EntertainmentSelector() {
           <motion.a
             key={opt.label}
             href={opt.url}
-            whileTap={{ scale: 0.95 }}
+            whileTap={TAP_ANIMATION}
             className="snap-start shrink-0 flex items-center gap-2 bg-zinc-800/80 border border-zinc-700/50 rounded-full px-4 py-2.5 transition-colors hover:bg-zinc-700"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1, type: "spring", stiffness: 400, damping: 30 }}
+            transition={{ delay: index * 0.1, ...SPRING_CONFIG_QUICK }}
           >
             <Music size={16} className="text-emerald-400" />
             <span className="text-sm font-semibold text-zinc-100">{opt.label}</span>

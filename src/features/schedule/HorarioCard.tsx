@@ -8,8 +8,10 @@ import AntiSleepButton from '@/components/AntiSleepButton';
 import { calcularHoraLlegada } from '@/core/utils/time';
 import { addMinutes, OFFSET_PARADA_VUELTA_MIN } from '@/lib/engine/recommendation-engine';
 import { useCountdown } from '@/hooks/useCountdown';
+import { LOCATIONS } from '@/data/locations';
 import type { RawScheduleEntry } from '@/types/schedule';
 import type { useBec } from '@/hooks/useBec';
+import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
 
 export const formatMinutosFaltantes = (mins: number) => {
   if (mins < 60) return `${mins} min`;
@@ -48,8 +50,8 @@ export function HorarioCard({
     if (!currentRecomendado) return;
     
     // Si es ida salimos de Despeñaderos, si es vuelta salimos de Córdoba
-    const lat = direction === 'ida' ? -31.8153 : -31.4422;
-    const lng = direction === 'ida' ? -64.2894 : -64.1938;
+    const lat = direction === 'ida' ? LOCATIONS.despenaderosBusStop!.lat : LOCATIONS.cordobaBusStop!.lat;
+    const lng = direction === 'ida' ? LOCATIONS.despenaderosBusStop!.lng : LOCATIONS.cordobaBusStop!.lng;
     
     const fetchWeather = async () => {
       try {
@@ -105,8 +107,8 @@ export function HorarioCard({
   const esVuelta = titulo.toLowerCase().includes('vuelta');
   const horaReal = esVuelta && currentRecomendado ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado?.horaSalida;
   
-  const targetLat = direction === 'ida' ? -31.4422 : -31.8153;
-  const targetLng = direction === 'ida' ? -64.1938 : -64.2894;
+  const targetLat = direction === 'ida' ? LOCATIONS.cordobaBusStop!.lat : LOCATIONS.despenaderosBusStop!.lat;
+  const targetLng = direction === 'ida' ? LOCATIONS.cordobaBusStop!.lng : LOCATIONS.despenaderosBusStop!.lng;
 
   const minutosFaltantes = useCountdown(horaReal);
 
@@ -133,7 +135,8 @@ export function HorarioCard({
           <Icon size={18} />
           <h2 className="font-semibold text-sm uppercase tracking-wider">{titulo}</h2>
         </div>
-        <button 
+        <motion.button 
+          whileTap={TAP_ANIMATION}
           onClick={toggleTomado}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
             becUsado 
@@ -143,7 +146,7 @@ export function HorarioCard({
         >
           <CheckCircle2 size={16} />
           {becUsado ? 'BEC Usado ✓' : 'Ya lo tomé'}
-        </button>
+        </motion.button>
       </div>
 
       <div className="flex justify-between items-end mb-6">
@@ -217,24 +220,26 @@ export function HorarioCard({
 
       {currentAlternativas.length > 0 && (
         <div className="border-t border-zinc-800/80 pt-4 mt-2">
-          <button 
+          <motion.button 
+            whileTap={TAP_ANIMATION}
             onClick={() => setVerAlternativas(!verAlternativas)}
             className="flex items-center justify-between w-full text-sm text-zinc-400 hover:text-white transition-colors py-1"
           >
             <span>Ver siguientes {currentAlternativas.length} opciones</span>
             {verAlternativas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </button>
+          </motion.button>
           <AnimatePresence>
             {verAlternativas && (
               <motion.div 
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
-                transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                transition={SPRING_CONFIG}
                 className="mt-4 flex flex-col gap-2 overflow-hidden"
               >
                 {currentAlternativas.map((alt: RawScheduleEntry, idx: number) => (
-                  <button 
+                  <motion.button 
+                    whileTap={TAP_ANIMATION}
                     key={idx} 
                     onClick={() => handleSwap(alt, idx)}
                     className="flex flex-col justify-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl hover:bg-zinc-800/80 transition-colors text-left"
@@ -246,7 +251,7 @@ export function HorarioCard({
                     <span className="text-zinc-400 text-sm font-medium mt-1">
                       Hora estimada de Llegada: {calcularHoraLlegada(alt.horaSalida, direction)}
                     </span>
-                  </button>
+                  </motion.button>
                 ))}
               </motion.div>
             )}

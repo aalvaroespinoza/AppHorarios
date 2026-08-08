@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import type { Subject } from '@/types/subject';
 import { formatTimeRange } from '@/core/utils/date';
+import { SPRING_CONFIG } from '@/lib/animations';
 
 interface SubjectCardProps {
   subject: Subject;
@@ -23,7 +24,7 @@ export function SubjectCard({ subject }: SubjectCardProps) {
           opacity: 1, 
           scale: 1, 
           y: 0,
-          transition: { type: "spring", bounce: 0, duration: 0.4 }
+          transition: SPRING_CONFIG
         }
       }}
       className="flex items-start justify-between gap-4 py-3"

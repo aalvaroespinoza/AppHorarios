@@ -7,6 +7,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import type { useFinanzas } from '@/hooks/useFinanzas';
 import type { useAgenda } from '@/hooks/useAgenda';
+import { SPRING_CONFIG } from '@/lib/animations';
 
 // Importación perezosa de los widgets pesados
 const PomodoroWidget = dynamic(() => import('@/components/PomodoroWidget'), { ssr: false });
@@ -57,6 +58,7 @@ export function FloatingActions({ finanzas, agenda }: { finanzas: ReturnType<typ
             initial={{ opacity: 0, y: -20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={SPRING_CONFIG}
             className="absolute top-16 right-4 z-50 w-72 bg-zinc-900/90 backdrop-blur-xl border border-zinc-800 rounded-3xl p-4 shadow-2xl overflow-hidden"
           >
             {activeView === 'menu' && (

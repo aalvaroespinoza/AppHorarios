@@ -42,6 +42,12 @@ export interface RawScheduleEntry {
   dia: DayOfWeek;
   linea?: string;
   notas?: string;
+  // Campos opcionales para integración Mapbox
+  tiempoCaminataPrevioMin?: number;
+  tiempoCaminataPosteriorMin?: number;
+  horaSalidaCasa?: TimeString;
+  horaSalidaUTN?: TimeString;
+  llegadaDestinoEstimada?: TimeString;
 }
 
 /**

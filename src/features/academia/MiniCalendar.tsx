@@ -10,6 +10,7 @@ import NativeCard from '@/core/components/ui/NativeCard';
 import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
 import type { DayOfWeek } from '@/core/types/common';
+import { SPRING_CONFIG } from '@/lib/animations';
 
 export function MiniCalendar() {
   const [viewDate, setViewDate] = useState(new Date());
@@ -199,6 +200,7 @@ export function MiniCalendar() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={SPRING_CONFIG}
               className="mb-5 overflow-hidden"
             >
               <div className="flex flex-col gap-3 p-4 bg-zinc-950/60 rounded-2xl border border-zinc-800/80 shadow-inner">
@@ -318,7 +320,7 @@ export function MiniCalendar() {
             initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ type: "spring", bounce: 0.4 }}
+            transition={SPRING_CONFIG}
           >
             <NativeCard className="flex flex-col gap-3 py-4 border-zinc-800/80 bg-gradient-to-br from-zinc-900/90 to-zinc-950/90 shadow-2xl">
               <div className="flex items-center justify-between mb-2 px-1">

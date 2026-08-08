@@ -9,6 +9,7 @@ import { useFinanzas } from '@/hooks/useFinanzas';
 import type { DayOfWeek } from '@/core/types/common';
 import { MiniCalendar } from '@/features/academia/MiniCalendar';
 import { AgendaView } from '@/features/academia/AgendaView';
+import { PAGE_TRANSITION } from '@/lib/animations';
 
 // Helper to get monday of current or offset week
 const getMondayOfOffset = (offset: number) => {
@@ -80,9 +81,7 @@ export default function AcademiaPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, scale: 0.98, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+      {...PAGE_TRANSITION}
       className="p-4 max-w-md mx-auto flex flex-col gap-6 relative min-h-[100dvh]"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >

@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { ExternalLink, Newspaper } from 'lucide-react';
 import NativeCard from '@/core/components/ui/NativeCard';
+import { TAP_ANIMATION } from '@/lib/animations';
 
 interface NewsItem {
   title: string;
@@ -65,7 +66,8 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 dark:text-neutral-500">
                   Ciberseguridad
                 </span>
-                <a 
+                <motion.a 
+                  whileTap={TAP_ANIMATION}
                   href={item.url} 
                   target="_blank" 
                   rel="noopener noreferrer"
@@ -78,7 +80,7 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
                       return 'Enlace';
                     }
                   })()} <ExternalLink size={12} />
-                </a>
+                </motion.a>
               </div>
             </motion.div>
           ))

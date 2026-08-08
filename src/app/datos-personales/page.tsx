@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, KeyRound, Eye, EyeOff, Copy, Plus, X, Check, Trash2, Edit2 } from 'lucide-react';
 import Link from 'next/link';
+import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 
 interface VaultItem {
   id: string;
@@ -128,9 +129,7 @@ export default function DatosPersonalesPage() {
 
   return (
     <motion.div 
-      initial={{ opacity: 0, x: 20 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+      {...PAGE_TRANSITION}
       className="max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] pb-24 relative bg-gray-50 dark:bg-neutral-900 text-neutral-900 dark:text-white px-4"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >
@@ -237,6 +236,7 @@ export default function DatosPersonalesPage() {
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
+              transition={SPRING_CONFIG}
               className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4"
             >
               <div className="flex justify-between items-center">
