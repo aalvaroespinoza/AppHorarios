@@ -43,7 +43,7 @@ const MOCK_NEWS: NewsItem[] = [
 
 export default function ResumenDiarioPage() {
   const [isMounted, setIsMounted] = useState(false);
-  const [briefing, setBriefing] = useState<BriefingData | null>(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   // Hooks state
@@ -58,18 +58,11 @@ export default function ResumenDiarioPage() {
       try {
         const res = await fetch('/api/briefing');
         if (res.ok) {
-          const data = await res.json();
-          if (!data || !data.news || data.news.length === 0) {
-             setBriefing({ greeting: "¡Buen día, Alvaro!", news: MOCK_NEWS });
-          } else {
-             setBriefing(data);
-          }
-        } else {
-          setBriefing({ greeting: "¡Buen día, Alvaro!", news: MOCK_NEWS });
+          const result = await res.json();
+          setData(result);
         }
       } catch (e) {
         console.error("Error fetching briefing", e);
-        setBriefing({ greeting: "¡Buen día, Alvaro!", news: MOCK_NEWS });
       } finally {
         setLoading(false);
       }
@@ -80,7 +73,7 @@ export default function ResumenDiarioPage() {
 
   if (!isMounted) return <div className="min-h-[100dvh] bg-gray-50 dark:bg-[#0a0a0c]" />;
 
-  const displayNews = briefing?.news || MOCK_NEWS;
+  const displayNews = data?.news || MOCK_NEWS;
 
   // -- Cálculos "De un vistazo" --
   const hoyStr = new Date().toDateString();
@@ -129,24 +122,21 @@ export default function ResumenDiarioPage() {
         <div className="flex flex-col items-start gap-4">
           <div className="w-full">
             {loading ? (
-              <div className="h-8 w-3/4 bg-gray-200 dark:bg-zinc-800/50 animate-pulse rounded-lg" />
-            ) : (
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight">
-                {briefing?.greeting || '¡Buen día, Alvaro!'}
-              </h1>
-            )}
+              <div className="flex justify-center items-center h-20">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+              </div>
+            ) : data?.ai ? (
+              <>
+                <p className="text-gray-500 capitalize">{new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date())}</p>
+                <h1 className="text-3xl font-bold">{data.ai.greeting}</h1>
+                <p className="mt-2 text-sm text-gray-400 italic">{data.ai.mission}</p>
+              </>
+            ) : null}
           </div>
           
           {/* De un vistazo */}
           {(finanzasMounted && deadlinesMounted && bateriaMounted) && (
             <div className="flex overflow-x-auto snap-x hide-scrollbar gap-3 w-[calc(100vw-2rem)] sm:w-full pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 items-center">
-              
-              <Link href="/tareas" className="snap-start shrink-0 flex items-center gap-2 bg-white dark:bg-neutral-800/60 border border-gray-100 dark:border-neutral-700 rounded-full px-4 py-2 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors shadow-sm active:scale-95">
-                <Calendar size={15} className="text-indigo-500" />
-                <span className="text-xs sm:text-sm font-bold text-gray-700 dark:text-neutral-300">
-                  {proximoEvento ? `${proximoEvento.hora || 'Hoy'} - ${proximoEvento.titulo}` : 'Día libre'}
-                </span>
-              </Link>
               
               {gastosHoy > 0 && (
                 <Link href="/finanzas" className="snap-start shrink-0 flex items-center gap-2 bg-white dark:bg-neutral-800/60 border border-gray-100 dark:border-neutral-700 rounded-full px-4 py-2 hover:bg-gray-50 dark:hover:bg-neutral-800 transition-colors shadow-sm active:scale-95">
@@ -156,13 +146,6 @@ export default function ResumenDiarioPage() {
                   </span>
                 </Link>
               )}
-
-              <Link href="/focus" className={`snap-start shrink-0 flex items-center gap-2 border rounded-full px-4 py-2 transition-colors shadow-sm active:scale-95 ${batteryColor}`}>
-                <Zap size={15} className={batteryIconColor} />
-                <span className="text-xs sm:text-sm font-bold">
-                  {energiaActual}%
-                </span>
-              </Link>
             </div>
           )}
 

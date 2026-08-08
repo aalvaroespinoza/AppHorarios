@@ -41,7 +41,7 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
         <Newspaper size={16} /> Para Leer Hoy
       </h2>
       
-      <div className="flex overflow-x-auto snap-x snap-mandatory hide-scrollbar gap-4 pb-4 w-full">
+      <div className="flex flex-row overflow-x-auto gap-4 pb-6 pt-2 snap-x snap-mandatory w-full hide-scrollbar">
         {loading ? (
           // Skeletons
           [1, 2, 3].map(i => (
@@ -55,7 +55,7 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
           displayNews.map((item, idx) => (
             <motion.div 
               key={idx}
-              className="min-w-[68vw] sm:min-w-[260px] snap-center bg-white dark:bg-neutral-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-neutral-700 flex flex-col justify-between gap-3 shrink-0"
+              className="flex-shrink-0 w-[85%] max-w-[300px] snap-center bg-white dark:bg-neutral-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between border border-neutral-100 dark:border-neutral-800"
             >
               <div className="flex flex-col gap-2">
                 <h3 className="font-bold text-gray-900 dark:text-white leading-tight">{item.title}</h3>

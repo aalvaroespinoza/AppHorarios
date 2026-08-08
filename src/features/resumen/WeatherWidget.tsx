@@ -114,7 +114,7 @@ export function WeatherWidget() {
                 {/* Hourly Slider */}
                 <motion.div variants={itemVariants} className="flex flex-col gap-3">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Hoy</h3>
-                  <div className="flex overflow-x-auto snap-x hide-scrollbar gap-3 pb-2 items-start">
+                  <div className="flex flex-row overflow-x-auto gap-4 py-4 snap-x hide-scrollbar w-full">
                     {MOCK_HOURLY.map((item, idx) => {
                       const isSelected = selectedHour === item.time;
                       return (
@@ -122,7 +122,7 @@ export function WeatherWidget() {
                           layout
                           key={idx} 
                           onClick={() => setSelectedHour(isSelected ? null : item.time)}
-                          className={`flex flex-col items-center gap-2 snap-center min-w-[4rem] cursor-pointer p-2 rounded-2xl transition-colors ${
+                          className={`flex-shrink-0 w-16 flex flex-col items-center snap-center cursor-pointer p-2 rounded-2xl transition-colors ${
                             isSelected ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/30' : 'hover:bg-gray-50 dark:hover:bg-neutral-800/50'
                           }`}
                         >
