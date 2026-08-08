@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import type { DayOfWeek } from '@/core/types/common';
 
-import { ScenarioTag } from '@/core/components/ui/ScenarioTag';
 import { SubjectList } from '@/features/schedule/SubjectList';
 import { BusScheduleList } from '@/features/schedule/BusScheduleList';
 import { determineScenario, findScenario } from '@/lib/engine';
