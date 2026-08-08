@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { CloudSun, X, Wind, Droplets } from 'lucide-react';
 
 const MOCK_HOURLY = [
@@ -18,14 +18,14 @@ const MOCK_DAILY = [
   { day: 'Sábado', temp: '22°C / 12°C', desc: 'Despejado' },
 ];
 
-const springConfig = { type: 'spring', stiffness: 300, damping: 25 };
+const springConfig = { type: 'spring' as const, stiffness: 300, damping: 25 };
 
 export function WeatherWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [selectedHour, setSelectedHour] = useState<string | null>(null);
 
   // Variantes para animar la entrada escalonada (stagger) del contenido interno
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -33,7 +33,7 @@ export function WeatherWidget() {
     }
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 15 },
     visible: { opacity: 1, y: 0, transition: springConfig }
   };
