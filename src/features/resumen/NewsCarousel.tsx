@@ -71,7 +71,13 @@ export function NewsCarousel({ news, loading = false }: NewsCarouselProps) {
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-xs font-bold text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 transition-colors bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1.5 rounded-full active:scale-95"
                 >
-                  Medium <ExternalLink size={12} />
+                  {(() => {
+                    try {
+                      return new URL(item.url).hostname.replace('www.', '');
+                    } catch {
+                      return 'Enlace';
+                    }
+                  })()} <ExternalLink size={12} />
                 </a>
               </div>
             </motion.div>

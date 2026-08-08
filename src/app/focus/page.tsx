@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, Zap, Timer, PenLine, Droplets, Bike, Dumbbell, Plus, Minus, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronLeft, Zap, Timer, PenLine, Droplets, Bike, Dumbbell, Plus, Minus, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
+import { useLocalStorageState } from '@/core/hooks/useLocalStorageState';
 import { BateriaMentalSection } from '@/features/academia/BateriaMentalSection';
 import PomodoroWidget from '@/components/PomodoroWidget';
 import NativeCard from '@/core/components/ui/NativeCard';
@@ -109,6 +110,20 @@ function StravaWidget() {
 
 
 export default function FocusPage() {
+  const [notasRapidas, setNotasRapidas] = useLocalStorageState('focus_notas_rapidas', '');
+  const [showSaved, setShowSaved] = useState(false);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleNotasChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotasRapidas(e.target.value);
+    setShowSaved(false);
+    if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+    typingTimeoutRef.current = setTimeout(() => {
+      setShowSaved(true);
+      setTimeout(() => setShowSaved(false), 2000);
+    }, 1000);
+  };
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
@@ -170,10 +185,26 @@ export default function FocusPage() {
 
       {/* Notas Rápidas */}
       <section className="flex flex-col gap-3 mt-2">
-        <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
-          <PenLine size={16} /> Notas Rápidas
-        </h2>
+        <div className="flex items-center justify-between px-1">
+          <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase flex items-center gap-2">
+            <PenLine size={16} /> Notas Rápidas
+          </h2>
+          <AnimatePresence>
+            {showSaved && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                className="text-xs font-bold text-emerald-500 flex items-center gap-1"
+              >
+                <CheckCircle2 size={14} /> Guardado
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
         <textarea 
+          value={notasRapidas}
+          onChange={handleNotasChange}
           placeholder="Escribe lo que tienes en mente..."
           className="w-full h-32 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 text-sm text-zinc-300 resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
         />
