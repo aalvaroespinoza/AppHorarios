@@ -55,12 +55,24 @@ Tipos de acciones soportadas (type):
 Tu respuesta (reply) debe ser MUY concisa y conversacional.`;
 };
 
-async function invokeWithRetry(text: string, attempt: number = 1): Promise<ActionPayload> {
+async function invokeWithRetry(text: string, history: any[] = [], attempt: number = 1): Promise<ActionPayload> {
+  let fullPrompt = "";
+  if (history && history.length > 0) {
+    fullPrompt += "Historial de conversación reciente (contexto):\n";
+    history.forEach(msg => {
+      fullPrompt += `${msg.role === 'user' ? 'Usuario' : 'Asistente'}: ${msg.text}\n`;
+    });
+    fullPrompt += "\n[FIN DEL HISTORIAL]\n\n" +
+    "Ten en cuenta este historial para deducir la intención del usuario. Si el usuario está respondiendo a una pregunta tuya sobre un campo faltante, COMPLETA la acción anterior en lugar de crear una nueva, conservando los datos que ya tenías.\n\n";
+  }
+  
+  fullPrompt += `Mensaje actual del usuario: ${text}`;
+
   const aiResponse = await GeminiService.askJson<ActionPayload>(
     'gemini-3.5-flash',
     {
       systemInstruction: getSystemPrompt(),
-      prompt: attempt === 1 ? text : `${text}\n\n[SISTEMA]: Tu respuesta anterior fue inválida o incompleta. Asegúrate de responder estrictamente con el JSON solicitado y llaves correctas.`,
+      prompt: attempt === 1 ? fullPrompt : `${fullPrompt}\n\n[SISTEMA]: Tu respuesta anterior fue inválida o incompleta. Asegúrate de responder estrictamente con el JSON solicitado y llaves correctas.`,
       responseSchema: ACTION_SCHEMA
     }
   );
@@ -68,7 +80,7 @@ async function invokeWithRetry(text: string, attempt: number = 1): Promise<Actio
   if (!aiResponse.success || !aiResponse.data) {
     if (attempt < 2) {
       console.warn(`Intento ${attempt} fallido. Reintentando...`);
-      return invokeWithRetry(text, attempt + 1);
+      return invokeWithRetry(text, history, attempt + 1);
     }
     throw new Error(aiResponse.error || 'Error procesando texto en Gemini');
   }
@@ -87,13 +99,13 @@ import { createGoogleTask } from '@/lib/server/googleTasks';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text } = body;
+    const { text, history } = body;
     
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'Falta el texto a analizar' }, { status: 400 });
     }
 
-    const actionData = await invokeWithRetry(text, 1);
+    const actionData = await invokeWithRetry(text, history || [], 1);
 
     // Guardar en Supabase asíncronamente (no bloqueante para responder rápido)
     supabaseServerAdmin

@@ -203,10 +203,17 @@ export default function LifeOSConsole() {
     setIsSubmitting(true);
 
     try {
+      const recentHistory = history
+        .slice(-6)
+        .map(msg => ({ role: msg.role, text: msg.text }));
+
       const response = await fetch('/api/brain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: commandText }),
+        body: JSON.stringify({ 
+          text: commandText,
+          history: recentHistory
+        }),
       });
 
       if (!response.ok) {
