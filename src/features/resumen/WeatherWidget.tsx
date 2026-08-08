@@ -167,7 +167,7 @@ export function WeatherWidget() {
                 <motion.div variants={itemVariants} className="flex flex-col gap-3">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Hoy</h3>
                   <div className="flex flex-row overflow-x-auto gap-4 py-4 snap-x hide-scrollbar w-full">
-                    {MOCK_HOURLY.map((item, idx) => {
+                    {(weather?.hourly || []).map((item: any, idx: number) => {
                       const isSelected = selectedHour === item.time;
                       return (
                         <motion.div 
@@ -180,7 +180,7 @@ export function WeatherWidget() {
                         >
                           <motion.span layout className="text-xs font-medium text-gray-500">{item.time}</motion.span>
                           <motion.div layout className="text-blue-400">{item.icon}</motion.div>
-                          <motion.span layout className="text-sm font-bold text-gray-900 dark:text-white">{item.temp}</motion.span>
+                          <motion.span layout className="text-sm font-bold text-gray-900 dark:text-white">{item.temp}°C</motion.span>
                           
                           <AnimatePresence>
                             {isSelected && (
@@ -205,15 +205,31 @@ export function WeatherWidget() {
                 {/* Próximos Días */}
                 <motion.div variants={itemVariants} className="flex flex-col gap-3">
                   <h3 className="text-xs font-bold uppercase tracking-widest text-gray-500">Próximos días</h3>
-                  <div className="flex flex-col gap-3">
-                    {MOCK_DAILY.map((item, idx) => (
-                      <div key={idx} className="flex items-center justify-between bg-gray-50 dark:bg-neutral-800/50 p-3 rounded-2xl">
-                        <span className="text-sm font-bold text-gray-900 dark:text-white min-w-[4rem]">{item.day}</span>
-                        <span className="text-xs text-gray-500 dark:text-neutral-400 flex-1 ml-4">{item.desc}</span>
-                        <span className="text-sm font-bold text-gray-900 dark:text-white">{item.temp}</span>
+                  {selectedDay ? (
+                    <div className="flex flex-col gap-4 mt-4 animate-in fade-in zoom-in-95 duration-200">
+                      <button onClick={() => setSelectedDay(null)} className="text-sm text-blue-500 mb-2 font-medium text-left">← Volver al pronóstico general</button>
+                      <h3 className="text-xl font-bold capitalize">{selectedDay.date}</h3>
+                      <div className="flex items-center gap-4 text-lg">
+                        <span className="text-red-500">Máx: {selectedDay.max}°C</span>
+                        <span className="text-blue-500">Mín: {selectedDay.min}°C</span>
                       </div>
-                    ))}
-                  </div>
+                      <p className="text-gray-500">Detalles ampliados para este día irán aquí...</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      {(weather?.daily || []).map((item: any, idx: number) => (
+                        <div 
+                          key={idx} 
+                          onClick={() => setSelectedDay(item)}
+                          className="flex items-center justify-between bg-gray-50 dark:bg-neutral-800/50 p-3 rounded-2xl cursor-pointer hover:bg-gray-100 dark:hover:bg-neutral-800 transition-colors"
+                        >
+                          <span className="text-sm font-bold text-gray-900 dark:text-white min-w-[4rem] capitalize">{item.date}</span>
+                          <span className="text-xs text-gray-500 dark:text-neutral-400 flex-1 ml-4">Cod: {item.code}</span>
+                          <span className="text-sm font-bold text-gray-900 dark:text-white">{item.max}° / {item.min}°</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </motion.div>
               </motion.div>
             </motion.div>
