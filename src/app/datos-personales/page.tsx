@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, KeyRound, Eye, EyeOff, Copy, Plus, X, Check, Trash2, Edit2 } from 'lucide-react';
+import { ChevronLeft, KeyRound, Eye, EyeOff, Copy, Plus, X, Check, Trash2, Edit2, Search, Server } from 'lucide-react';
 import Link from 'next/link';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 
@@ -32,6 +32,44 @@ export default function DatosPersonalesPage() {
   const [editingItem, setEditingItem] = useState<VaultItem | null>(null);
   const [formTitle, setFormTitle] = useState('');
   const [formValue, setFormValue] = useState('');
+
+  // Shodan State
+  const [shodanIp, setShodanIp] = useState('');
+  const [shodanResult, setShodanResult] = useState<any>(null);
+  const [shodanError, setShodanError] = useState('');
+  const [shodanLoading, setShodanLoading] = useState(false);
+  const [shodanMissingKey, setShodanMissingKey] = useState(false);
+
+  const handleShodanLookup = async () => {
+    if (!shodanIp.trim()) return;
+    setShodanLoading(true);
+    setShodanError('');
+    setShodanMissingKey(false);
+    setShodanResult(null);
+
+    try {
+      const res = await fetch('/api/shodan/lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ip: shodanIp.trim() })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.error === 'MISSING_API_KEY') {
+          setShodanMissingKey(true);
+        } else {
+          setShodanError(data.error || 'Error consultando Shodan');
+        }
+      } else {
+        setShodanResult(data);
+      }
+    } catch (e) {
+      setShodanError('Error de red al consultar Shodan');
+    } finally {
+      setShodanLoading(false);
+    }
+  };
 
   useEffect(() => {
     setIsMounted(true);
@@ -212,6 +250,99 @@ export default function DatosPersonalesPage() {
             </motion.div>
           );
         })}
+      </div>
+
+      {/* Herramientas Section */}
+      <div className="mt-8 mb-6">
+        <h2 className="text-xl font-bold tracking-tight flex items-center gap-2 mb-4 text-gray-900 dark:text-white">
+          Herramientas <Server size={18} className="text-indigo-500" />
+        </h2>
+        
+        <div className="bg-white dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800 rounded-2xl p-5 shadow-sm">
+          <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-2">Consulta IP en Shodan</h3>
+          <p className="text-xs text-gray-500 dark:text-neutral-400 mb-4">
+            Revisá qué puertos están expuestos y de quién es la IP.
+          </p>
+          
+          <div className="flex gap-2 mb-4">
+            <input 
+              type="text"
+              placeholder="Ej: 8.8.8.8"
+              value={shodanIp}
+              onChange={e => setShodanIp(e.target.value)}
+              disabled={shodanLoading}
+              className="flex-1 min-w-0 bg-gray-50 dark:bg-[#0a0a0c] border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-white focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+            <button 
+              onClick={handleShodanLookup}
+              disabled={shodanLoading || !shodanIp.trim()}
+              className="bg-indigo-500 hover:bg-indigo-600 disabled:bg-indigo-500/50 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-xl font-medium text-sm transition-colors flex items-center gap-2 shadow-sm whitespace-nowrap"
+            >
+              {shodanLoading ? 'Buscando...' : <><Search size={16} /> Consultar</>}
+            </button>
+          </div>
+
+          <AnimatePresence mode="wait">
+            {shodanMissingKey && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center mt-2"
+              >
+                <p className="text-zinc-400 text-sm mb-2 font-medium">Falta configurar Shodan API.</p>
+                <p className="text-xs text-zinc-500">
+                  Agregá <code className="text-indigo-400 font-mono bg-indigo-900/20 px-1 py-0.5 rounded">SHODAN_API_KEY</code> a tu .env.local
+                </p>
+              </motion.div>
+            )}
+
+            {shodanError && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-red-500/10 border border-red-500/20 text-red-500 text-sm px-4 py-3 rounded-xl mt-2"
+              >
+                {shodanError}
+              </motion.div>
+            )}
+
+            {shodanResult && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="bg-gray-50 dark:bg-zinc-800/40 border border-gray-200 dark:border-zinc-700/50 rounded-xl p-4 mt-2 flex flex-col gap-3"
+              >
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <span className="block text-[10px] font-bold text-gray-400 dark:text-neutral-500 uppercase tracking-wider mb-0.5">Organización</span>
+                    <span className="text-sm text-gray-900 dark:text-white font-medium">{shodanResult.org}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[10px] font-bold text-gray-400 dark:text-neutral-500 uppercase tracking-wider mb-0.5">País</span>
+                    <span className="text-sm text-gray-900 dark:text-white font-medium">{shodanResult.country_name}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-gray-400 dark:text-neutral-500 uppercase tracking-wider mb-1">Puertos Abiertos</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {shodanResult.ports && shodanResult.ports.length > 0 ? (
+                      shodanResult.ports.map((port: number) => (
+                        <span key={port} className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded text-xs font-mono border border-indigo-500/20">
+                          {port}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-xs text-gray-500">Ninguno detectado</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* FAB Button */}
