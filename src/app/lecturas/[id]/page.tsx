@@ -28,12 +28,34 @@ export default function LecturaDetallePage() {
   const [savingNotes, setSavingNotes] = useState(false);
   const [notas, setNotas] = useState('');
   
+  const [iframeFailed, setIframeFailed] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(true);
+  
   const supabase = createClient();
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const iframeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (id) fetchRecurso(id as string);
   }, [id]);
+
+  useEffect(() => {
+    if (recurso?.url) {
+      setIframeLoading(true);
+      setIframeFailed(false);
+      
+      if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
+      
+      iframeTimeoutRef.current = setTimeout(() => {
+        setIframeFailed(true);
+        setIframeLoading(false);
+      }, 3000);
+    }
+    
+    return () => {
+      if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
+    };
+  }, [recurso?.url]);
 
   const fetchRecurso = async (recursoId: string) => {
     try {
@@ -154,15 +176,55 @@ export default function LecturaDetallePage() {
         </div>
       </header>
 
-      <a 
-        href={recurso.url} 
-        target="_blank" 
-        rel="noreferrer"
-        className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white py-4 rounded-2xl font-bold shadow-lg transition-colors active:scale-95"
-      >
-        <ExternalLink size={20} />
-        Abrir Recurso Original
-      </a>
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => alert("Para traducir esta página, usa la traducción nativa de tu navegador.\n\nEn iOS Safari: toca el ícono 'aA' en la barra de direcciones y selecciona 'Traducir página'.\nEn Chrome: usa el ícono de traducción en la barra de direcciones o el menú de opciones.")}
+          className="self-end text-xs text-cyan-400 hover:text-cyan-300 font-medium flex items-center gap-1 bg-cyan-900/20 px-3 py-1.5 rounded-full border border-cyan-800/30 transition-colors active:scale-95"
+        >
+          <Sparkles size={12} />
+          ¿Cómo traducir este recurso?
+        </button>
+
+        {!iframeFailed ? (
+          <div className="relative w-full h-[400px] rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900/40">
+            {iframeLoading && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                <div className="w-6 h-6 border-2 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+                <span className="text-xs text-zinc-500">Cargando lector...</span>
+              </div>
+            )}
+            <iframe
+              src={recurso.url}
+              className={`w-full h-full border-0 transition-opacity duration-300 ${iframeLoading ? 'opacity-0' : 'opacity-100'}`}
+              onLoad={() => {
+                setIframeLoading(false);
+                if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
+              }}
+              onError={() => {
+                setIframeFailed(true);
+                setIframeLoading(false);
+                if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
+              }}
+            />
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center p-6 bg-zinc-900/60 border border-zinc-800 rounded-2xl gap-4 text-center">
+            <p className="text-sm text-zinc-400">
+              Este sitio no permite verse dentro de la app por seguridad.
+            </p>
+            <a 
+              href={recurso.url} 
+              target="_blank" 
+              rel="noreferrer"
+              className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-500 text-white py-3 rounded-xl font-bold shadow-lg transition-colors active:scale-95 text-sm"
+            >
+              <ExternalLink size={18} />
+              Abrir en pestaña nueva
+            </a>
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col gap-2">
         <label className="text-xs font-bold tracking-widest text-zinc-500 uppercase px-1">

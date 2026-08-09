@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     }
 
     // 2. Pedir resumen a Gemini
-    const systemInstruction = "Eres un experto en ciberseguridad. Tu objetivo es explicar de forma clara, sencilla y concisa (2 o 3 párrafos, tono claro para alguien que recién arranca) QUÉ ES este recurso y PARA QUÉ SIRVE en un contexto de aprendizaje de ciberseguridad, basándote ÚNICAMENTE en la descripción provista. Nunca pidas acceder a contenido de terceros, ni traduzcas contenido completo; solo explica su propósito basándote en el texto proporcionado.";
+    const systemInstruction = "Eres un experto en ciberseguridad. Tu objetivo es explicar de forma clara, sencilla y concisa (2 o 3 párrafos, tono claro para alguien que recién arranca) QUÉ ES este recurso y PARA QUÉ SIRVE en un contexto de aprendizaje de ciberseguridad, basándote ÚNICAMENTE en la descripción provista. Usa terminología real de ciberseguridad en español: \"firewall\" o \"cortafuegos\", no traducciones literales incorrectas. Nunca pidas acceder a contenido de terceros, ni traduzcas contenido completo; solo explica su propósito basándote en el texto proporcionado.";
     const prompt = `Descripción original del recurso:\n\n${recurso.descripcion_original}`;
 
     const resumen = await GeminiService.askText('gemini-3.5-flash', systemInstruction, prompt);
