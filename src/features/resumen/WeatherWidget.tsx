@@ -115,10 +115,18 @@ export function WeatherWidget() {
             transition={SPRING_CONFIG}
             onClick={() => setIsExpanded(true)}
             style={{ borderRadius: 24 }}
-            className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-2 flex items-center gap-2 cursor-pointer shadow-sm active:scale-95 transition-transform w-max border border-blue-200 dark:border-blue-800/50"
+            className="rounded-full bg-blue-100 dark:bg-blue-900/30 px-4 py-3 flex items-center justify-between cursor-pointer shadow-sm active:scale-95 transition-transform w-full border border-blue-200 dark:border-blue-800/50"
           >
-            <CloudSun size={18} className="text-blue-500 dark:text-blue-400" />
-            <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{loading || !weather ? '--' : weather.current.temp}°C - Despeñaderos</span>
+            <div className="flex items-center gap-2">
+              <CloudSun size={18} className="text-blue-500 dark:text-blue-400" />
+              <span className="text-sm font-bold text-blue-900 dark:text-blue-100">{loading || !weather ? '--' : weather.current.temp}°C - Despeñaderos</span>
+            </div>
+            {!loading && weather && (
+              <div className="flex items-center gap-3 text-xs font-medium text-blue-800/70 dark:text-blue-200/70 pr-1">
+                <span className="flex items-center gap-1"><Droplets size={12}/> {weather.current.humidity}%</span>
+                <span className="flex items-center gap-1"><Wind size={12}/> {weather.current.wind} km/h</span>
+              </div>
+            )}
           </motion.div>
         ) : (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
