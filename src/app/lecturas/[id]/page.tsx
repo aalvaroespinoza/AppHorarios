@@ -29,7 +29,7 @@ export default function LecturaDetallePage() {
   const [notas, setNotas] = useState('');
   
   const supabase = createClient();
-  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (id) fetchRecurso(id as string);
