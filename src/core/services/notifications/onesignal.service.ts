@@ -23,24 +23,26 @@ export class OneSignalService implements INotificationService {
     if (this.initializationPromise) return this.initializationPromise;
 
     this.initializationPromise = (async () => {
-      try {
-        const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
-        if (!appId) {
-          console.warn('[OneSignal] NEXT_PUBLIC_ONESIGNAL_APP_ID is not defined');
-          return;
-        }
+      const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
+      if (!appId) {
+        throw new Error('NEXT_PUBLIC_ONESIGNAL_APP_ID no está definido. Verificá las variables de entorno.');
+      }
 
+      try {
         await OneSignal.init({
           appId,
           allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
           notifyButton: {
-            enable: false, // We will use custom UI
+            enable: false,
           } as any,
+          serviceWorkerParam: { scope: '/' },
+          serviceWorkerPath: 'sw.js',
         });
         
         this.initialized = true;
-      } catch (error) {
+      } catch (error: any) {
         console.error('[OneSignal] Initialization error:', error);
+        throw new Error(`Error de OneSignal: ${error.message || 'Desconocido'}`);
       }
     })();
 

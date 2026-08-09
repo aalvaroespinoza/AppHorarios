@@ -31,9 +31,9 @@ export default function NotificacionesConfig() {
         setPermissionsGranted(status);
         if (status) setStatusMessage('Permiso ya concedido');
       });
-    }).catch(() => {
+    }).catch((error) => {
       setIsInitializing(false);
-      setStatusMessage('OneSignal no pudo inicializarse');
+      setStatusMessage(`Falló inicialización: ${error instanceof Error ? error.message : 'Error desconocido'}`);
     });
 
     // Load preferences
