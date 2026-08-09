@@ -3,74 +3,25 @@ import { geminiClient } from './client';
 import { GeminiAPIError } from './errors';
 import { GeminiRequestPayload, GeminiResponse } from './types';
 
-/**
- * Extrae de forma robusta el primer objeto o array JSON de un texto, 
- * ignorando basura antes y después, garantizando llaves balanceadas.
- */
-function extractRobustJson(text: string): string {
-  // 1. Limpiar bloques markdown (común en Gemini)
-  let cleanText = text.replace(/```json\n?/gi, '').replace(/```\n?/g, '').trim();
-
-  // 2. Buscar el inicio del JSON (objeto o array)
-  const firstBrace = cleanText.indexOf('{');
-  const firstBracket = cleanText.indexOf('[');
-  
-  if (firstBrace === -1 && firstBracket === -1) {
-    throw new Error('No JSON object or array found in text');
-  }
-
-  const isObject = firstBrace !== -1 && (firstBracket === -1 || firstBrace < firstBracket);
-  const startChar = isObject ? '{' : '[';
-  const endChar = isObject ? '}' : ']';
-  const startIndex = isObject ? firstBrace : firstBracket;
-
-  // 3. Recorrer caracteres balanceando llaves e ignorando las que estén dentro de strings
-  let depth = 0;
-  let endIndex = -1;
-  let inString = false;
-  let escapeNext = false;
-
-  for (let i = startIndex; i < cleanText.length; i++) {
-    const char = cleanText[i];
-
-    if (escapeNext) {
-      escapeNext = false;
-      continue;
-    }
-
-    if (char === '\\') {
-      escapeNext = true;
-      continue;
-    }
-
-    if (char === '"') {
-      inString = !inString;
-      continue;
-    }
-
-    if (!inString) {
-      if (char === startChar) {
-        depth++;
-      } else if (char === endChar) {
-        depth--;
-        if (depth === 0) {
-          endIndex = i;
-          break;
-        }
+function parseAIResponse(rawResponse: string): any {
+  if (typeof rawResponse !== 'string') return rawResponse;
+  try {
+    // 1. Intentar parseo directo
+    return JSON.parse(rawResponse);
+  } catch (e) {
+    // 2. Limpiar bloques de markdown (```json ... ```) o texto basura
+    const jsonMatch = rawResponse.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      try {
+        return JSON.parse(jsonMatch[0]);
+      } catch (err2) {
+        console.error("[Parse Error] JSON extraído inválido:", jsonMatch[0]);
+        throw new Error("El modelo generó un JSON estructurado inválido.");
       }
     }
+    console.error("[Parse Error] No se encontró JSON. RAW:", rawResponse);
+    throw new Error("La IA no devolvió un formato estructurado válido.");
   }
-
-  if (endIndex === -1) {
-    // Fallback: tratar de buscar el último cierre si falló la estructura estricta
-    const lastEnd = cleanText.lastIndexOf(endChar);
-    if (lastEnd > startIndex) {
-      return cleanText.substring(startIndex, lastEnd + 1);
-    }
-    throw new Error('Incomplete JSON structure');
-  }
-
-  return cleanText.substring(startIndex, endIndex + 1);
 }
 
 /**
@@ -107,14 +58,11 @@ export class GeminiService {
       const rawText = response.text();
       
       let parsedData: T;
-      let finalJsonStr = '';
       try {
-        finalJsonStr = extractRobustJson(rawText);
-        parsedData = JSON.parse(finalJsonStr) as T;
+        parsedData = parseAIResponse(rawText) as T;
       } catch (parseError) {
         console.error('[GeminiService] Error parseando JSON.');
         console.error('Texto original:', rawText);
-        console.error('Extraido (fallido):', finalJsonStr);
         throw parseError;
       }
 

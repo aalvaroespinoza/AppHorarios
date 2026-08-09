@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
-  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock 
+  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
@@ -49,6 +49,14 @@ export default function HubPage() {
       icon: <Bus size={28} className="text-blue-400" />,
       color: 'from-blue-500/20 to-blue-600/5 border-blue-500/20',
       description: 'Colectivos'
+    },
+    {
+      id: 'lecturas',
+      title: 'Lecturas',
+      href: '/lecturas',
+      icon: <BookOpen size={28} className="text-cyan-400" />,
+      color: 'from-cyan-500/20 to-cyan-600/5 border-cyan-500/20',
+      description: 'Recursos'
     },
     {
       id: 'agenda',
