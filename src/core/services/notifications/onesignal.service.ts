@@ -35,7 +35,7 @@ export class OneSignalService implements INotificationService {
           allowLocalhostAsSecureOrigin: process.env.NODE_ENV === 'development',
           notifyButton: {
             enable: false, // We will use custom UI
-          },
+          } as any,
         });
         
         this.initialized = true;
@@ -68,7 +68,7 @@ export class OneSignalService implements INotificationService {
 
     try {
       // OneSignal V16 API
-      return OneSignal.Notifications.hasPermission;
+      return OneSignal.Notifications.permission;
     } catch (e) {
       console.error('[OneSignal] Error checking permission', e);
       return false;
