@@ -208,12 +208,22 @@ export default function LifeOSConsole() {
         .slice(-6)
         .map(msg => ({ role: msg.role, text: msg.text }));
 
+      const engine = (await import('@/core/context-engine/instance')).getContextEngine();
+      const todaySnapshot = await engine.getSnapshot(new Date());
+      const tomorrowDate = new Date();
+      tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+      const tomorrowSnapshot = await engine.getSnapshot(tomorrowDate);
+
       const response = await fetch('/api/brain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           text: commandText,
-          history: recentHistory
+          history: recentHistory,
+          context: {
+            today: todaySnapshot,
+            tomorrow: tomorrowSnapshot
+          }
         }),
       });
 

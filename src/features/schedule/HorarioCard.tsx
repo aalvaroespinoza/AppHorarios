@@ -50,14 +50,12 @@ export function HorarioCard({
     if (!currentRecomendado) return;
     
     // Si es ida salimos de Despeñaderos, si es vuelta salimos de Córdoba
-    const lat = direction === 'ida' ? LOCATIONS.despenaderosBusStop!.lat : LOCATIONS.cordobaBusStop!.lat;
-    const lng = direction === 'ida' ? LOCATIONS.despenaderosBusStop!.lng : LOCATIONS.cordobaBusStop!.lng;
+    const locationId = direction === 'ida' ? 'despenaderos' : 'cordoba';
     
     const fetchWeather = async () => {
       try {
-        const res = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=precipitation_probability&timezone=America%2FArgentina%2FBuenos_Aires&forecast_days=2`);
-        if (!res.ok) return;
-        const data = await res.json();
+        const { weatherService } = await import('@/core/services/weather/weather.service');
+        const data = await weatherService.getWeather(locationId);
         
         // Calcular hora real de salida
         const esVuelta = direction === 'vuelta';
@@ -65,15 +63,14 @@ export function HorarioCard({
         const horaSalidaNum = parseInt(horaReal.split(':')[0], 10);
         
         // Formatear hoy como YYYY-MM-DD
-        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Buenos_Aires' });
+        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Cordoba' });
         const hoyDateStr = formatter.format(new Date()); // YYYY-MM-DD
         
         const targetTimeStr = `${hoyDateStr}T${horaSalidaNum.toString().padStart(2, '0')}:00`;
-        const index = data.hourly.time.indexOf(targetTimeStr);
+        const hourlyItem = data.hourly.find(h => h.datetimeISO === targetTimeStr);
         
-        if (index !== -1) {
-          const prob = data.hourly.precipitation_probability[index];
-          setProbLluvia(prob);
+        if (hourlyItem) {
+          setProbLluvia(hourlyItem.precipitationProbability);
         }
       } catch (error) {
         console.error("Error fetching weather:", error);

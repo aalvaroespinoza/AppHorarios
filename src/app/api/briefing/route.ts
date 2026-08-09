@@ -3,16 +3,21 @@ import { serverGemini } from '@/lib/server/gemini';
 
 export async function GET() {
   try {
-    // 1. Fetch a Open-Meteo
-    const weatherRes = await fetch("https://api.open-meteo.com/v1/forecast?latitude=-31.8167&longitude=-64.2833&current=temperature_2m,weather_code&hourly=temperature_2m&timezone=America/Argentina/Cordoba");
-    const weatherData = await weatherRes.json();
+    // 1. Fetch a Open-Meteo mediante el servicio central
+    const { weatherService } = await import('@/core/services/weather/weather.service');
+    const data = await weatherService.getWeather('despenaderos');
 
     // 2. Construir objeto con el clima actual y las próximas 12 horas
-    const currentHourIndex = new Date().getHours();
-    const next12Hours = weatherData.hourly?.temperature_2m?.slice(currentHourIndex, currentHourIndex + 12) || [];
+    const nowISO = new Date().toISOString();
+    const currentHourIndex = data.hourly.findIndex(h => h.datetimeISO >= nowISO);
+    const idx = currentHourIndex === -1 ? 0 : currentHourIndex;
+    const next12Hours = data.hourly.slice(idx, idx + 12).map(h => h.temperature);
     
     const weather = {
-      current: weatherData.current,
+      current: {
+        temperature_2m: data.current.temperature,
+        weather_code: data.current.code
+      },
       next12Hours
     };
 

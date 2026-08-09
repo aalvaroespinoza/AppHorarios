@@ -11,20 +11,35 @@ describe('NotificationService', () => {
     vi.spyOn(oneSignalService, 'schedule').mockResolvedValue('mock-id');
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('should format payload correctly when sending', async () => {
-    // For testing payload generation
     const payload = {
       category: 'reminder' as const,
       title: 'Test',
       message: 'Hello'
     };
     
-    // We mock shouldNotify to always return true for this test
+    // Set mock adapter
+    const mockAdapter = {
+      send: vi.fn().mockResolvedValue(true),
+      schedule: vi.fn(),
+      requestPermission: vi.fn(),
+      getPermissionStatus: vi.fn(),
+      cancel: vi.fn(),
+      getPreferences: vi.fn(),
+      updatePreferences: vi.fn(),
+      shouldNotify: vi.fn()
+    };
+    service.setAdapter(mockAdapter);
+    
     vi.spyOn(service, 'shouldNotify').mockResolvedValue(true);
     
     await service.send(payload);
     
-    expect(oneSignalService.send).toHaveBeenCalledWith(expect.objectContaining({
+    expect(mockAdapter.send).toHaveBeenCalledWith(expect.objectContaining({
       category: 'reminder',
       title: 'Test',
       message: 'Hello'
@@ -32,21 +47,14 @@ describe('NotificationService', () => {
   });
 
   it('should respect preferences in shouldNotify', async () => {
-    // We mock localStorage for preferences
-    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
-      if (key === 'apphorarios_notification_prefs') {
-        return JSON.stringify({ travel: false, reminder: true, schedule: true, system: true });
-      }
-      return null;
-    });
-    
-    // Re-load prefs
-    service.loadPreferences();
+    vi.spyOn(service, 'getPreferences').mockResolvedValue({ travel: false, reminder: true, schedule: true, system: true });
 
     const canNotifyTravel = await service.shouldNotify('travel');
     const canNotifyReminder = await service.shouldNotify('reminder');
+
     
     expect(canNotifyTravel).toBe(false);
     expect(canNotifyReminder).toBe(true);
   });
 });
+

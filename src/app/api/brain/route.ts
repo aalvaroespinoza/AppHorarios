@@ -34,11 +34,19 @@ const ACTION_SCHEMA = {
   required: ["type", "needs_input", "reply"]
 };
 
-const getSystemPrompt = () => {
+const getSystemPrompt = (contextStr?: string) => {
   const now = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Cordoba' });
   return `Eres el cerebro de LifeOS. La fecha y hora actual exacta es: ${now}. NUNCA preguntes la fecha al usuario, usa esta información como ancla absoluta. Analiza la petición del usuario y devuelve SIEMPRE una intención estructurada en JSON.
 NUNCA inventes datos. Si faltan datos cruciales (ej: título o monto), indica "needs_input": true y pregunta qué falta en "reply".
 Para fechas, asume la zona horaria de Argentina. No inventes fechas ambiguas.
+
+--- CONTEXTO ACTUAL (CONTEXT ENGINE) ---
+La siguiente información estructurada contiene el estado de agenda, viajes, recordatorios y clima para HOY y MAÑANA. 
+ÚSALA COMO FUENTE DE VERDAD ABSOLUTA PARA RESPONDER PREGUNTAS DEL USUARIO SOBRE SU DÍA.
+SIEMPRE fíjate en "nextActionableEvent" para saber qué es lo más urgente.
+Datos de contexto:
+${contextStr || 'No disponible'}
+----------------------------------------
 
 Tipos de acciones soportadas (type):
 - create_expense (payload: amount (numero entero), description (string), category (string))
@@ -52,10 +60,10 @@ Tipos de acciones soportadas (type):
 - TASK (payload: title, datetimeISO (formato ISO 8601 estricto con hora))
 - unknown (Usa este tipo para charlar, saludar, o si la intención no encaja en las acciones anteriores).
 
-Tu respuesta (reply) debe ser MUY concisa y conversacional.`;
+Tu respuesta (reply) debe ser MUY concisa y conversacional. Si el usuario hace una pregunta sobre su día, usa el CONTEXTO ACTUAL para responder en el campo "reply" y asigna el type "unknown".`;
 };
 
-async function invokeWithRetry(text: string, history: any[] = [], attempt: number = 1): Promise<ActionPayload> {
+async function invokeWithRetry(text: string, history: Record<string, unknown>[] = [], context: Record<string, unknown> | null = null, attempt: number = 1): Promise<ActionPayload> {
   let fullPrompt = "";
   if (history && history.length > 0) {
     fullPrompt += "Historial de conversación reciente (contexto):\n";
@@ -71,7 +79,7 @@ async function invokeWithRetry(text: string, history: any[] = [], attempt: numbe
   const aiResponse = await GeminiService.askJson<ActionPayload>(
     'gemini-3.5-flash',
     {
-      systemInstruction: getSystemPrompt(),
+      systemInstruction: getSystemPrompt(context ? JSON.stringify(context, null, 2) : undefined),
       prompt: attempt === 1 ? fullPrompt : `${fullPrompt}\n\n[SISTEMA]: Tu respuesta anterior fue inválida o incompleta. Asegúrate de responder estrictamente con el JSON solicitado y llaves correctas.`,
       responseSchema: ACTION_SCHEMA
     }
@@ -80,7 +88,7 @@ async function invokeWithRetry(text: string, history: any[] = [], attempt: numbe
   if (!aiResponse.success || !aiResponse.data) {
     if (attempt < 2) {
       console.warn(`Intento ${attempt} fallido. Reintentando...`);
-      return invokeWithRetry(text, history, attempt + 1);
+      return invokeWithRetry(text, history, context, attempt + 1);
     }
     throw new Error(aiResponse.error || 'Error procesando texto en Gemini');
   }
@@ -99,13 +107,13 @@ import { createGoogleTask } from '@/lib/server/googleTasks';
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { text, history } = body;
+    const { text, history, context } = body;
     
     if (!text || typeof text !== 'string') {
       return NextResponse.json({ error: 'Falta el texto a analizar' }, { status: 400 });
     }
 
-    const actionData = await invokeWithRetry(text, history || [], 1);
+    const actionData = await invokeWithRetry(text, history || [], context, 1);
 
     // Guardar en Supabase asíncronamente (no bloqueante para responder rápido)
     supabaseServerAdmin

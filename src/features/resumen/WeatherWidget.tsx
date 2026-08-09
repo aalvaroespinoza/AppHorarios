@@ -36,41 +36,55 @@ export function WeatherWidget() {
   const [selectedDay, setSelectedDay] = useState<any | null>(null);
 
   useEffect(() => {
-    const url = "https://api.open-meteo.com/v1/forecast?latitude=-31.8167&longitude=-64.2833&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=America/Argentina/Cordoba&forecast_days=5";
-    
-    fetch(url)
-      .then(res => res.json())
-      .then(data => {
-        const currentHourIndex = data.hourly.time.findIndex((t: string) => new Date(t) >= new Date());
-        const nextHours = data.hourly.time.slice(currentHourIndex, currentHourIndex + 12).map((t: string, i: number) => ({
-          time: new Date(t).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
-          temp: Math.round(data.hourly.temperature_2m[currentHourIndex + i]),
-          code: data.hourly.weather_code[currentHourIndex + i]
+    let isMounted = true;
+    const fetchWeather = async () => {
+      try {
+        const { weatherService } = await import('@/core/services/weather/weather.service');
+        const data = await weatherService.getWeather('despenaderos');
+        if (!isMounted) return;
+
+        const pad = (n: number) => String(n).padStart(2, '0');
+        const now = new Date();
+        const nowIso = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())}T${pad(now.getHours())}:00`;
+        
+        const currentHourIndex = data.hourly.findIndex(h => h.datetimeISO >= nowIso);
+        const idx = currentHourIndex === -1 ? 0 : currentHourIndex;
+
+        const nextHours = data.hourly.slice(idx, idx + 12).map(h => ({
+          time: new Date(h.datetimeISO).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' }),
+          temp: Math.round(h.temperature),
+          feelsLike: `${Math.round(h.feelsLike)}°C`,
+          humidity: `${h.precipitationProbability}%`, // Usamos probabilidad como algo más útil en este summary
+          wind: `${h.precipitation} mm`, // Cambiamos para mostrar prep
+          code: h.code,
+          icon: h.condition.includes('lluvia') ? <Droplets size={20} /> : <CloudSun size={20} />
         }));
 
-        const nextDays = data.daily.time.slice(1, 5).map((t: string, i: number) => ({
-          date: new Intl.DateTimeFormat('es-AR', { weekday: 'long' }).format(new Date(t + 'T00:00:00')),
-          max: Math.round(data.daily.temperature_2m_max[i + 1]),
-          min: Math.round(data.daily.temperature_2m_min[i + 1]),
-          code: data.daily.weather_code[i + 1]
+        const nextDays = data.daily.slice(1, 5).map(d => ({
+          date: new Intl.DateTimeFormat('es-AR', { weekday: 'long' }).format(new Date(d.dateISO + 'T00:00:00')),
+          max: Math.round(d.maxTemp),
+          min: Math.round(d.minTemp),
+          code: d.code
         }));
 
         setWeather({
           current: {
-            temp: Math.round(data.current.temperature_2m),
-            wind: Math.round(data.current.wind_speed_10m),
-            humidity: Math.round(data.current.relative_humidity_2m),
-            code: data.current.weather_code
+            temp: Math.round(data.current.temperature),
+            wind: Math.round(data.current.windSpeed),
+            humidity: Math.round(data.current.humidity),
+            code: data.current.code
           },
-          hourly: nextHours,
-          daily: nextDays
+          hourly: nextHours as any,
+          daily: nextDays as any
         });
         setLoading(false);
-      })
-      .catch(err => {
+      } catch (err) {
         console.error("Error fetching weather:", err);
-        setLoading(false);
-      });
+        if (isMounted) setLoading(false);
+      }
+    };
+    fetchWeather();
+    return () => { isMounted = false; };
   }, []);
 
   // Variantes para animar la entrada escalonada (stagger) del contenido interno
