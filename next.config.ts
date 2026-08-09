@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
       {
         // El SW nunca debe cachearse: el navegador siempre descarga
         // la versión más reciente para detectar actualizaciones.
-        source: '/sw.js',
+        source: '/OneSignalSDKWorker.js',
         headers: [
           { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
           { key: 'Service-Worker-Allowed', value: '/' },

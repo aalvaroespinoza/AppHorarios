@@ -35,8 +35,6 @@ export class OneSignalService implements INotificationService {
           notifyButton: {
             enable: false,
           } as any,
-          serviceWorkerParam: { scope: '/' },
-          serviceWorkerPath: 'sw.js',
         });
         
         this.initialized = true;
