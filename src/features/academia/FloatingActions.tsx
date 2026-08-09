@@ -8,11 +8,12 @@ import dynamic from 'next/dynamic';
 import type { useFinanzas } from '@/hooks/useFinanzas';
 import type { useAgenda } from '@/hooks/useAgenda';
 import { SPRING_CONFIG } from '@/lib/animations';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 // Importación perezosa de los widgets pesados
-const PomodoroWidget = dynamic(() => import('@/components/PomodoroWidget'), { ssr: false });
-const FinanzasRapidasWidget = dynamic(() => import('./FinanzasWidget'), { ssr: false });
-const VoiceRecorder = dynamic(() => import('./VoiceRecorder'), { ssr: false });
+const PomodoroWidget = dynamic(() => import('@/components/PomodoroWidget'), { ssr: false, loading: () => <Skeleton className="h-40 w-full" /> });
+const FinanzasRapidasWidget = dynamic(() => import('./FinanzasWidget'), { ssr: false, loading: () => <Skeleton className="h-40 w-full" /> });
+const VoiceRecorder = dynamic(() => import('./VoiceRecorder'), { ssr: false, loading: () => <Skeleton className="h-40 w-full" /> });
 
 export function FloatingActions({ finanzas, agenda }: { finanzas: ReturnType<typeof useFinanzas>, agenda: ReturnType<typeof useAgenda> }) {
   const [showMenu, setShowMenu] = useState(false);

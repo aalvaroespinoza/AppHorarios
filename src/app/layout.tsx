@@ -28,6 +28,8 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
+import PageTransitionWrapper from "@/components/layout/PageTransitionWrapper";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +40,9 @@ export default function RootLayout({
       <body className={`${inter.className} bg-black text-white min-h-[100dvh] antialiased overflow-x-hidden`}>
         <EscenarioProvider>
           <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] w-full max-w-[100vw] overflow-x-hidden">
-            {children}
+            <PageTransitionWrapper>
+              {children}
+            </PageTransitionWrapper>
           </main>
           <BottomTabBar />
           <ServiceWorkerRegister />

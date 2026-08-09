@@ -6,7 +6,11 @@ import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2, Map as MapIcon } fr
 import NativeCard from '@/core/components/ui/NativeCard';
 import AntiSleepButton from '@/components/AntiSleepButton';
 import dynamic from 'next/dynamic';
-const RouteMap = dynamic(() => import('./RouteMap').then((mod) => mod.RouteMap), { ssr: false });
+import { Skeleton } from '@/components/ui/Skeleton';
+const RouteMap = dynamic(() => import('./RouteMap').then((mod) => mod.RouteMap), { 
+  ssr: false,
+  loading: () => <Skeleton className="h-64 w-full" />
+});
 import { calcularHoraLlegada } from '@/core/utils/time';
 import { addMinutes, OFFSET_PARADA_VUELTA_MIN } from '@/lib/engine/recommendation-engine';
 import { useCountdown } from '@/hooks/useCountdown';
