@@ -48,16 +48,23 @@ export class OneSignalService implements INotificationService {
   }
 
   public async requestPermission(): Promise<boolean> {
-    if (typeof window === 'undefined') return false;
+    if (typeof window === 'undefined') throw new Error('Entorno no soportado');
     await this.initialize();
-    if (!this.initialized) return false;
+    if (!this.initialized) throw new Error('Falló la inicialización de OneSignal');
 
     try {
-      await OneSignal.Slidedown.promptPush();
-      return this.getPermissionStatus();
-    } catch (e) {
+      // iOS PWA requires the native prompt, not Slidedown if it's not configured
+      // Fallback to requestPermission which uses native browser prompt
+      await OneSignal.Notifications.requestPermission();
+      const granted = OneSignal.Notifications.permission;
+      if (!granted) throw new Error('El usuario rechazó los permisos o el navegador los bloqueó.');
+      return true;
+    } catch (e: unknown) {
       console.error('[OneSignal] Error requesting permission', e);
-      return false;
+      if (e instanceof Error) {
+        throw new Error(e.message);
+      }
+      throw new Error('Error desconocido al solicitar permiso');
     }
   }
 

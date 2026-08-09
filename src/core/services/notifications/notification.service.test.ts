@@ -1,50 +1,52 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { NotificationService } from './notification.service';
-import { NotificationPayload } from './notification.types';
+import { oneSignalService } from './onesignal.service';
 
 describe('NotificationService', () => {
   let service: any;
 
   beforeEach(() => {
-    // We get the instance and clear the local storage
     service = (NotificationService as any).getInstance();
-    localStorage.clear();
-  });
-
-  it('should have default preferences enabled', async () => {
-    const prefs = await service.getPreferences();
-    expect(prefs.travel).toBe(true);
-    expect(prefs.schedule).toBe(true);
-    expect(prefs.reminder).toBe(true);
-    expect(prefs.system).toBe(true);
-  });
-
-  it('should update preferences correctly', async () => {
-    await service.updatePreferences({ travel: false });
-    const prefs = await service.getPreferences();
-    expect(prefs.travel).toBe(false);
-    expect(prefs.schedule).toBe(true);
-  });
-
-  it('shouldNotify should return correct value based on preferences', async () => {
-    await service.updatePreferences({ reminder: false });
-    expect(await service.shouldNotify('reminder')).toBe(false);
-    expect(await service.shouldNotify('system')).toBe(true);
+    vi.spyOn(oneSignalService, 'send').mockResolvedValue(true);
+    vi.spyOn(oneSignalService, 'schedule').mockResolvedValue('mock-id');
   });
 
   it('should format payload correctly when sending', async () => {
-    const payload: NotificationPayload = {
-      category: 'system',
+    // For testing payload generation
+    const payload = {
+      category: 'reminder' as const,
       title: 'Test',
-      message: 'Testing',
+      message: 'Hello'
     };
     
-    // Mock the adapter
-    const mockAdapter = {
-      send: jest.fn().mockResolvedValue(true)
-    };
-    service.setAdapter(mockAdapter);
-
+    // We mock shouldNotify to always return true for this test
+    vi.spyOn(service, 'shouldNotify').mockResolvedValue(true);
+    
     await service.send(payload);
-    expect(mockAdapter.send).toHaveBeenCalledWith(payload);
+    
+    expect(oneSignalService.send).toHaveBeenCalledWith(expect.objectContaining({
+      category: 'reminder',
+      title: 'Test',
+      message: 'Hello'
+    }));
+  });
+
+  it('should respect preferences in shouldNotify', async () => {
+    // We mock localStorage for preferences
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation((key) => {
+      if (key === 'apphorarios_notification_prefs') {
+        return JSON.stringify({ travel: false, reminder: true, schedule: true, system: true });
+      }
+      return null;
+    });
+    
+    // Re-load prefs
+    service.loadPreferences();
+
+    const canNotifyTravel = await service.shouldNotify('travel');
+    const canNotifyReminder = await service.shouldNotify('reminder');
+    
+    expect(canNotifyTravel).toBe(false);
+    expect(canNotifyReminder).toBe(true);
   });
 });

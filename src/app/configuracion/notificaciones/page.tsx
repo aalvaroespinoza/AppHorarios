@@ -11,6 +11,8 @@ import { NotificationPreferences } from '@/core/services/notifications/notificat
 export default function NotificacionesConfig() {
   const router = useRouter();
   const [isMounted, setIsMounted] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<string>('');
+  const [isInitializing, setIsInitializing] = useState(true);
   const [permissionsGranted, setPermissionsGranted] = useState(false);
   const [preferences, setPreferences] = useState<NotificationPreferences>({
     travel: true,
@@ -23,8 +25,15 @@ export default function NotificacionesConfig() {
     setIsMounted(true);
     
     // Check OneSignal permission status
-    oneSignalService.getPermissionStatus().then(status => {
-      setPermissionsGranted(status);
+    oneSignalService.initialize().then(() => {
+      setIsInitializing(false);
+      oneSignalService.getPermissionStatus().then(status => {
+        setPermissionsGranted(status);
+        if (status) setStatusMessage('Permiso ya concedido');
+      });
+    }).catch(() => {
+      setIsInitializing(false);
+      setStatusMessage('OneSignal no pudo inicializarse');
     });
 
     // Load preferences
@@ -34,11 +43,29 @@ export default function NotificacionesConfig() {
   }, []);
 
   const handleTogglePermission = async () => {
+    if (isInitializing) {
+      setStatusMessage('Aguardá, OneSignal todavía está inicializando...');
+      return;
+    }
+
     if (!permissionsGranted) {
-      const granted = await oneSignalService.requestPermission();
-      setPermissionsGranted(granted);
+      try {
+        setStatusMessage('Solicitando permisos...');
+        const granted = await oneSignalService.requestPermission();
+        if (granted) {
+          setPermissionsGranted(true);
+          setStatusMessage('¡Permiso concedido!');
+        } else {
+          setStatusMessage('Permiso rechazado o no soportado por el navegador/PWA.');
+        }
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setStatusMessage(error.message);
+        } else {
+          setStatusMessage('La solicitud de permiso falló.');
+        }
+      }
     } else {
-      // Browsers don't allow un-requesting push easily from JS, usually requires manual revoke.
       alert("Para desactivar completamente las notificaciones, debés hacerlo desde los permisos de tu navegador.");
     }
   };
@@ -85,10 +112,14 @@ export default function NotificacionesConfig() {
               {!permissionsGranted && (
                 <button
                   onClick={handleTogglePermission}
-                  className="mt-4 w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-xl transition-colors"
+                  disabled={isInitializing}
+                  className={`mt-4 w-full font-medium py-2.5 rounded-xl transition-colors ${isInitializing ? 'bg-zinc-700 text-zinc-400' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
                 >
-                  Activar notificaciones
+                  {isInitializing ? 'Inicializando...' : 'Activar notificaciones'}
                 </button>
+              )}
+              {statusMessage && (
+                <p className="mt-3 text-sm text-blue-400 text-center">{statusMessage}</p>
               )}
             </div>
           </NativeCard>

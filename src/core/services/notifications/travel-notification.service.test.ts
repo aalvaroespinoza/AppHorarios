@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TravelNotificationService } from './travel-notification.service';
 import { notificationService } from './notification.service';
 
@@ -8,11 +9,11 @@ describe('TravelNotificationService', () => {
     service = (TravelNotificationService as any).getInstance();
     service.notifiedSet.clear();
     localStorage.clear();
-    jest.spyOn(notificationService, 'schedule').mockResolvedValue('mock-id');
+    vi.spyOn(notificationService, 'schedule').mockResolvedValue('mock-id');
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('should not notify duplicates', async () => {
