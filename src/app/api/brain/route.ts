@@ -34,11 +34,16 @@ const ACTION_SCHEMA = {
   required: ["type", "needs_input", "reply"]
 };
 
-const getSystemPrompt = (contextStr?: string) => {
+const getSystemPrompt = (contextStr?: string, longTermMemoryStr?: string) => {
   const now = new Date().toLocaleString('es-AR', { timeZone: 'America/Argentina/Cordoba' });
   return `Eres el cerebro de LifeOS. La fecha y hora actual exacta es: ${now}. NUNCA preguntes la fecha al usuario, usa esta información como ancla absoluta. Analiza la petición del usuario y devuelve SIEMPRE una intención estructurada en JSON.
 NUNCA inventes datos. Si faltan datos cruciales (ej: título o monto), indica "needs_input": true y pregunta qué falta en "reply".
 Para fechas, asume la zona horaria de Argentina. No inventes fechas ambiguas.
+
+--- MEMORIA A LARGO PLAZO (PATRONES Y HÁBITOS) ---
+Utiliza este historial de los últimos 20 eventos enviados por el usuario de manera implícita para desambiguar referencias como "lo de siempre", "el mismo de ayer", o entender sus hábitos comunes (ej: suele gastar en X los findes, menciona Y materia). NO respondas mencionando que leíste este historial, simplemente úsalo de fondo para entender mejor el contexto de su mensaje actual.
+Eventos recientes (raw_text):
+${longTermMemoryStr || 'No hay eventos previos'}
 
 --- CONTEXTO ACTUAL (CONTEXT ENGINE) ---
 La siguiente información estructurada contiene el estado de agenda, viajes, recordatorios y clima para HOY y MAÑANA. 
@@ -63,7 +68,7 @@ Tipos de acciones soportadas (type):
 Tu respuesta (reply) debe ser MUY concisa y conversacional. Si el usuario hace una pregunta sobre su día, usa el CONTEXTO ACTUAL para responder en el campo "reply" y asigna el type "unknown".`;
 };
 
-async function invokeWithRetry(text: string, history: Record<string, unknown>[] = [], context: Record<string, unknown> | null = null, attempt: number = 1): Promise<ActionPayload> {
+async function invokeWithRetry(text: string, history: Record<string, unknown>[] = [], context: Record<string, unknown> | null = null, longTermMemoryStr: string = "", attempt: number = 1): Promise<ActionPayload> {
   let fullPrompt = "";
   if (history && history.length > 0) {
     fullPrompt += "Historial de conversación reciente (contexto):\n";
@@ -79,7 +84,7 @@ async function invokeWithRetry(text: string, history: Record<string, unknown>[] 
   const aiResponse = await GeminiService.askJson<ActionPayload>(
     'gemini-3.5-flash',
     {
-      systemInstruction: getSystemPrompt(context ? JSON.stringify(context, null, 2) : undefined),
+      systemInstruction: getSystemPrompt(context ? JSON.stringify(context, null, 2) : undefined, longTermMemoryStr),
       prompt: attempt === 1 ? fullPrompt : `${fullPrompt}\n\n[SISTEMA]: Tu respuesta anterior fue inválida o incompleta. Asegúrate de responder estrictamente con el JSON solicitado y llaves correctas.`,
       responseSchema: ACTION_SCHEMA
     }
@@ -88,7 +93,7 @@ async function invokeWithRetry(text: string, history: Record<string, unknown>[] 
   if (!aiResponse.success || !aiResponse.data) {
     if (attempt < 2) {
       console.warn(`Intento ${attempt} fallido. Reintentando...`);
-      return invokeWithRetry(text, history, context, attempt + 1);
+      return invokeWithRetry(text, history, context, longTermMemoryStr, attempt + 1);
     }
     throw new Error(aiResponse.error || 'Error procesando texto en Gemini');
   }
@@ -113,7 +118,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Falta el texto a analizar' }, { status: 400 });
     }
 
-    const actionData = await invokeWithRetry(text, history || [], context, 1);
+    // Traer memoria de largo plazo (últimos 20 eventos)
+    const { data: memoryData, error: memoryError } = await supabaseServerAdmin
+      .from('raw_events')
+      .select('raw_text')
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    let longTermMemoryStr = '';
+    if (!memoryError && memoryData && memoryData.length > 0) {
+      longTermMemoryStr = memoryData.map((e: any) => `- ${e.raw_text}`).join('\n');
+    }
+
+    const actionData = await invokeWithRetry(text, history || [], context, longTermMemoryStr, 1);
 
     // Guardar en Supabase asíncronamente (no bloqueante para responder rápido)
     supabaseServerAdmin

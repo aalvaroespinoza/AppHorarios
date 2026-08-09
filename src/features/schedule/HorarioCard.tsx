@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2, Map as MapIcon } from 'lucide-react';
 import NativeCard from '@/core/components/ui/NativeCard';
 import AntiSleepButton from '@/components/AntiSleepButton';
+import { RouteMap } from './RouteMap';
 import { calcularHoraLlegada } from '@/core/utils/time';
 import { addMinutes, OFFSET_PARADA_VUELTA_MIN } from '@/lib/engine/recommendation-engine';
 import { useCountdown } from '@/hooks/useCountdown';
@@ -35,6 +36,7 @@ export function HorarioCard({
   bec: ReturnType<typeof useBec>;
 }) {
   const [verAlternativas, setVerAlternativas] = useState(false);
+  const [verMapa, setVerMapa] = useState(false);
   
   const [currentRecomendado, setCurrentRecomendado] = useState<RawScheduleEntry | null>(recomendacion.recomendado);
   const [currentAlternativas, setCurrentAlternativas] = useState<RawScheduleEntry[]>(recomendacion.alternativas);
@@ -250,6 +252,35 @@ export function HorarioCard({
                     </span>
                   </motion.button>
                 ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
+      {esVuelta && (
+        <div className="border-t border-zinc-800/80 pt-4 mt-2">
+          <motion.button 
+            whileTap={TAP_ANIMATION}
+            onClick={() => setVerMapa(!verMapa)}
+            className="flex items-center justify-between w-full text-sm text-zinc-400 hover:text-white transition-colors py-1"
+          >
+            <div className="flex items-center gap-2">
+              <MapIcon size={16} />
+              <span>Ver en el mapa</span>
+            </div>
+            {verMapa ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </motion.button>
+          <AnimatePresence>
+            {verMapa && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={SPRING_CONFIG}
+                className="mt-4 overflow-hidden"
+              >
+                <RouteMap />
               </motion.div>
             )}
           </AnimatePresence>

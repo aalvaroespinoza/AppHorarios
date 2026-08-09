@@ -88,7 +88,7 @@ export class WeatherService {
 
     // 3. Fetch Open-Meteo
     const coords = this.getCoordinates(location);
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=America%2FArgentina%2FCordoba&forecast_days=7`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,uv_index&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=America%2FArgentina%2FCordoba&forecast_days=7`;
 
     try {
       // AbortController para timeout (10s)
@@ -148,6 +148,7 @@ export class WeatherService {
       code: raw.hourly.weather_code[i],
       precipitationProbability: raw.hourly.precipitation_probability[i],
       precipitation: raw.hourly.precipitation[i],
+      uvIndex: raw.hourly.uv_index ? raw.hourly.uv_index[i] : undefined,
     }));
 
     const daily: WeatherDaily[] = raw.daily.time.map((dateStr: string, i: number) => ({
@@ -155,7 +156,9 @@ export class WeatherService {
       maxTemp: raw.daily.temperature_2m_max[i],
       minTemp: raw.daily.temperature_2m_min[i],
       condition: this.parseWmoCode(raw.daily.weather_code[i]),
-      code: raw.daily.weather_code[i]
+      code: raw.daily.weather_code[i],
+      sunrise: raw.daily.sunrise ? raw.daily.sunrise[i] : undefined,
+      sunset: raw.daily.sunset ? raw.daily.sunset[i] : undefined,
     }));
 
     return {

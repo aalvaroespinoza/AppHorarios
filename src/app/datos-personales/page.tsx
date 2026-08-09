@@ -125,19 +125,19 @@ export default function DatosPersonalesPage() {
     }
   };
 
-  if (!isMounted) return <div className="min-h-[100dvh] bg-gray-50 dark:bg-neutral-900" />;
+  if (!isMounted) return <div className="min-h-[100dvh] bg-gray-50 dark:bg-[#0a0a0c]" />;
 
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] pb-24 relative bg-gray-50 dark:bg-neutral-900 text-neutral-900 dark:text-white px-4"
+      className="max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] pb-24 relative bg-gray-50 dark:bg-[#0a0a0c] text-neutral-900 dark:text-white px-4"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
       <header className="flex items-center gap-3 mt-2">
         <Link 
           href="/boveda"
-          className="w-10 h-10 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-full flex items-center justify-center text-gray-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors shadow-sm"
+          className="w-10 h-10 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors shadow-sm"
         >
           <ChevronLeft size={20} />
         </Link>
@@ -165,7 +165,7 @@ export default function DatosPersonalesPage() {
               layout
               key={item.id}
               onClick={() => copyToClipboard(item.value, item.id)}
-              className="group bg-white dark:bg-neutral-800/80 border border-gray-200 dark:border-neutral-700 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer active:scale-[0.98] transition-all shadow-sm hover:border-gray-300 dark:hover:border-neutral-600"
+              className="group bg-white dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 flex flex-col gap-3 cursor-pointer active:scale-[0.98] transition-all shadow-sm hover:border-gray-300 dark:hover:border-zinc-700"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex flex-col min-w-0 flex-1">
@@ -180,7 +180,7 @@ export default function DatosPersonalesPage() {
                 <div className="flex gap-1.5 shrink-0 items-center">
                   <button 
                     onClick={(e) => toggleVisibility(item.id, e)}
-                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-neutral-700/50 flex items-center justify-center text-gray-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
+                    className="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-800 flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-black dark:hover:text-white transition-colors"
                   >
                     {isRevealed ? <EyeOff size={14} /> : <Eye size={14} />}
                   </button>
@@ -195,7 +195,7 @@ export default function DatosPersonalesPage() {
               </div>
 
               {/* Actions row */}
-              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100 dark:border-neutral-700/50">
+              <div className="flex items-center justify-end gap-3 pt-2 border-t border-gray-100 dark:border-zinc-800">
                 <button 
                   onClick={(e) => { e.stopPropagation(); openModal(item); }}
                   className="text-xs font-semibold text-gray-500 dark:text-neutral-400 flex items-center gap-1 hover:text-indigo-500 transition-colors"
@@ -237,7 +237,7 @@ export default function DatosPersonalesPage() {
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
               transition={SPRING_CONFIG}
-              className="relative w-full max-w-md bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4"
+              className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4"
             >
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -251,21 +251,21 @@ export default function DatosPersonalesPage() {
                   placeholder="Título (Ej: CBU)"
                   value={formTitle}
                   onChange={e => setFormTitle(e.target.value)}
-                  className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white focus:outline-none focus:border-rose-500 transition-colors"
+                  className="w-full bg-gray-50 dark:bg-[#0a0a0c] border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white focus:outline-none focus:border-rose-500 transition-colors"
                 />
                 <textarea 
                   placeholder="Valor"
                   value={formValue}
                   onChange={e => setFormValue(e.target.value)}
                   rows={3}
-                  className="w-full bg-gray-50 dark:bg-neutral-950 border border-gray-200 dark:border-neutral-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white focus:outline-none focus:border-rose-500 transition-colors resize-none"
+                  className="w-full bg-gray-50 dark:bg-[#0a0a0c] border border-gray-200 dark:border-zinc-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-white focus:outline-none focus:border-rose-500 transition-colors resize-none"
                 />
               </div>
 
               <div className="flex gap-3 mt-2">
                 <button 
                   onClick={closeModal}
-                  className="flex-1 py-3 bg-gray-100 dark:bg-neutral-800 text-gray-600 dark:text-neutral-300 font-bold rounded-xl active:scale-[0.98] transition-transform"
+                  className="flex-1 py-3 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300 font-bold rounded-xl active:scale-[0.98] transition-transform"
                 >
                   Cancelar
                 </button>

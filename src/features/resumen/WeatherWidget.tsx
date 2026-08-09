@@ -2,8 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, Variants } from 'framer-motion';
-import { CloudSun, X, Wind, Droplets } from 'lucide-react';
+import { CloudSun, X, Wind, Droplets, SunMedium, Sunset } from 'lucide-react';
 import { SPRING_CONFIG } from '@/lib/animations';
+import { useEscenario } from '@/hooks/useEscenario';
+import { calcularColectivos } from '@/lib/engine/recommendation-engine';
+import type { DayOfWeek } from '@/core/types/common';
 
 const MOCK_HOURLY = [
   { time: '14:00', temp: '15°C', icon: <CloudSun size={20} />, feelsLike: '14°C', humidity: '45%', wind: '12 km/h' },
@@ -27,13 +30,23 @@ export function WeatherWidget() {
 
   interface WeatherData {
     current: { temp: number; wind: number; humidity: number; code: number };
-    hourly: { time: string; temp: number; code: number }[];
+    hourly: { time: string; temp: number; code: number; uvIndex?: number }[];
     daily: { date: string; max: number; min: number; code: number }[];
+    rawHourly: any[];
+    rawDaily: any[];
   }
 
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedDay, setSelectedDay] = useState<any | null>(null);
+  const [warnings, setWarnings] = useState<{uv: string | null, sunset: string | null}>({uv: null, sunset: null});
+
+  const { cursaArquitectura, duermeEnCordoba, diaSeleccionado } = useEscenario();
+  const recIda = calcularColectivos(diaSeleccionado as DayOfWeek, 'ida', cursaArquitectura, duermeEnCordoba, '00:00');
+  const recVuelta = calcularColectivos(diaSeleccionado as DayOfWeek, 'vuelta', cursaArquitectura, duermeEnCordoba, '00:00');
+
+  const horaIda = recIda.recomendado?.horaSalida;
+  const horaVuelta = recVuelta.recomendado?.horaSalida;
 
   useEffect(() => {
     let isMounted = true;
@@ -57,6 +70,7 @@ export function WeatherWidget() {
           humidity: `${h.precipitationProbability}%`, // Usamos probabilidad como algo más útil en este summary
           wind: `${h.precipitation} mm`, // Cambiamos para mostrar prep
           code: h.code,
+          uvIndex: h.uvIndex,
           icon: h.condition.includes('lluvia') ? <Droplets size={20} /> : <CloudSun size={20} />
         }));
 
@@ -75,7 +89,9 @@ export function WeatherWidget() {
             code: data.current.code
           },
           hourly: nextHours as any,
-          daily: nextDays as any
+          daily: nextDays as any,
+          rawHourly: data.hourly,
+          rawDaily: data.daily
         });
         setLoading(false);
       } catch (err) {
@@ -86,6 +102,60 @@ export function WeatherWidget() {
     fetchWeather();
     return () => { isMounted = false; };
   }, []);
+
+  useEffect(() => {
+    if (weather && weather.rawHourly && weather.rawDaily) {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const d = new Date();
+      const todayStr = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+
+      let uvWarningStr = null;
+      let sunsetWarningStr = null;
+
+      if (horaIda || horaVuelta) {
+        const checkUV = (hora: string | undefined) => {
+          if (!hora) return false;
+          const hour = hora.split(':')[0];
+          const targetIso = `${todayStr}T${hour.padStart(2, '0')}:00`;
+          const hData = weather.rawHourly.find(h => h.datetimeISO === targetIso);
+          if (hData && hData.uvIndex && hData.uvIndex > 6) {
+            return true;
+          }
+          return false;
+        };
+
+        const idaHighUV = checkUV(horaIda);
+        const vueltaHighUV = checkUV(horaVuelta);
+        if (idaHighUV && vueltaHighUV) {
+           uvWarningStr = "UV Alto (>6) en tus viajes de ida y vuelta. Usá protector solar.";
+        } else if (idaHighUV) {
+           uvWarningStr = "UV Alto (>6) en tu viaje de ida. Usá protector solar.";
+        } else if (vueltaHighUV) {
+           uvWarningStr = "UV Alto (>6) en tu viaje de vuelta. Usá protector solar.";
+        }
+      }
+
+      if (horaVuelta && weather.rawDaily[0]?.sunset) {
+        const sunsetIso = weather.rawDaily[0].sunset; // "2026-08-08T18:45"
+        const sunsetTime = sunsetIso.split('T')[1];
+        if (sunsetTime) {
+          const sunsetHour = parseInt(sunsetTime.split(':')[0], 10);
+          const sunsetMin = parseInt(sunsetTime.split(':')[1], 10);
+          const sunsetTotal = sunsetHour * 60 + sunsetMin;
+          
+          const vHour = parseInt(horaVuelta.split(':')[0], 10);
+          const vMin = parseInt(horaVuelta.split(':')[1], 10);
+          const vTotal = vHour * 60 + vMin;
+          
+          if (Math.abs(sunsetTotal - vTotal) <= 60) {
+            sunsetWarningStr = `Tu viaje de vuelta coincidirá con el atardecer (${sunsetTime})`;
+          }
+        }
+      }
+      
+      setWarnings({ uv: uvWarningStr, sunset: sunsetWarningStr });
+    }
+  }, [weather, horaIda, horaVuelta]);
 
   // Variantes para animar la entrada escalonada (stagger) del contenido interno
   const containerVariants: Variants = {
@@ -185,6 +255,31 @@ export function WeatherWidget() {
                     <span className="text-sm font-bold text-gray-700 dark:text-neutral-300">{loading || !weather ? '--' : weather.current.humidity}%</span>
                   </div>
                 </motion.div>
+
+                {/* Avisos de Viaje */}
+                <AnimatePresence>
+                  {(warnings.uv || warnings.sunset) && (
+                    <motion.div 
+                      variants={itemVariants} 
+                      initial="hidden" 
+                      animate="visible" 
+                      className="flex flex-col gap-2 -mt-2"
+                    >
+                      {warnings.uv && (
+                        <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 p-3 rounded-xl">
+                          <SunMedium size={18} className="shrink-0" />
+                          <span className="text-xs font-semibold">{warnings.uv}</span>
+                        </div>
+                      )}
+                      {warnings.sunset && (
+                        <div className="flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 p-3 rounded-xl">
+                          <Sunset size={18} className="shrink-0" />
+                          <span className="text-xs font-semibold">{warnings.sunset}</span>
+                        </div>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Hourly Slider */}
                 <motion.div variants={itemVariants} className="flex flex-col gap-3">

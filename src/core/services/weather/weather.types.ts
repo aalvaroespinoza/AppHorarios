@@ -28,6 +28,7 @@ export interface WeatherHourly {
   code: number;
   precipitationProbability: number;
   precipitation: number;
+  uvIndex?: number;
 }
 
 export interface WeatherDaily {
@@ -36,6 +37,8 @@ export interface WeatherDaily {
   minTemp: number;
   condition: WeatherCondition;
   code: number;
+  sunrise?: string;
+  sunset?: string;
 }
 
 export interface WeatherData {
