@@ -96,10 +96,27 @@ export class OneSignalService implements INotificationService {
   }
 
   public async schedule(payload: NotificationPayload, date: Date): Promise<string | null> {
-    // We would need a backend endpoint for scheduling, or local notifications
-    // For now, we will return null or throw since it requires backend logic
-    console.warn('[OneSignal] Client-side scheduling not fully implemented');
-    return null;
+    try {
+      // OneSignal expects 'YYYY-MM-DD HH:MM:SS GMT-0000' or similar
+      // Or timezone formatted string
+      const sendAfter = date.toString(); // API accepts UTC string like "Thu Sep 24 2015 14:00:00 GMT-0700 (PDT)"
+      
+      const response = await fetch('/api/notifications/send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ...payload, sendAfter }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data?.data?.id || 'scheduled';
+      }
+      return null;
+    } catch (error) {
+      console.error('[OneSignalService] Error scheduling notification', error);
+      return null;
+    }
   }
 
   public async cancel(id: string): Promise<boolean> {

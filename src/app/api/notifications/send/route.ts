@@ -38,6 +38,7 @@ export async function POST(req: NextRequest) {
           es: payload.title
         },
         data: payload.data,
+        send_after: payload.sendAfter,
       }),
     });
 

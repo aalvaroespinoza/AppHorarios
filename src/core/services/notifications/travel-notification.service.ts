@@ -25,31 +25,35 @@ export class TravelNotificationService {
     return TravelNotificationService.instance;
   }
 
+  private ensureLoadedPromise: Promise<void> | null = null;
+
   private loadNotified() {
     if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem('apphorarios_notified_travels');
-        if (stored) {
-          const arr = JSON.parse(stored);
-          this.notifiedSet = new Set(arr);
-        }
-      } catch (e) {
-        console.error('[TravelNotificationService] Error loading notified set', e);
+      if (!this.ensureLoadedPromise) {
+        this.ensureLoadedPromise = import('@/core/utils/indexedDB').then(({ idb }) => {
+          return idb.get<string[]>('apphorarios_notified_travels')
+            .then((arr) => {
+              if (arr) this.notifiedSet = new Set(arr);
+            })
+            .catch(e => console.error('[TravelNotificationService] Error loading notified set', e));
+        });
       }
+    } else {
+      this.ensureLoadedPromise = Promise.resolve();
     }
   }
 
   private saveNotified() {
     if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem('apphorarios_notified_travels', JSON.stringify(Array.from(this.notifiedSet)));
-      } catch (e) {
-        console.error('[TravelNotificationService] Error saving notified set', e);
-      }
+      import('@/core/utils/indexedDB').then(({ idb }) => {
+        idb.set('apphorarios_notified_travels', Array.from(this.notifiedSet))
+          .catch(e => console.error('[TravelNotificationService] Error saving notified set', e));
+      });
     }
   }
 
   public async handleRecommendation(recommendation: TravelRecommendation) {
+    if (this.ensureLoadedPromise) await this.ensureLoadedPromise;
     const shouldNotify = await notificationService.shouldNotify('travel');
     if (!shouldNotify) return;
 

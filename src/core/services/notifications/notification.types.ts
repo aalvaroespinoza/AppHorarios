@@ -16,6 +16,7 @@ export interface NotificationPayload {
   priority?: NotificationPriority;
   data?: Record<string, any>;
   actions?: NotificationAction[];
+  sendAfter?: string;
 }
 
 export interface NotificationPreferences {
