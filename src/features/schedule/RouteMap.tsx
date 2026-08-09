@@ -1,62 +1,52 @@
 "use client";
 
 import React from 'react';
-import Map, { Marker } from 'react-map-gl/mapbox';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import { MapPin } from 'lucide-react';
+import { MapContainer, TileLayer, Marker } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { LOCATIONS } from '@/data/locations';
 
-const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+const createIcon = (color: string, label: string) => {
+  return L.divIcon({
+    className: 'custom-div-icon bg-transparent border-none',
+    html: `
+      <div class="flex flex-col items-center" style="transform: translate(-50%, -100%); width: 60px;">
+        <div class="${color} rounded-full p-1.5 shadow-lg flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <span class="text-[10px] font-bold text-white bg-black/80 px-2 py-0.5 rounded mt-1 border border-zinc-700 whitespace-nowrap">${label}</span>
+      </div>
+    `,
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
+  });
+};
 
 export function RouteMap() {
-  if (!MAPBOX_TOKEN) {
-    return (
-      <div className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-6 text-center">
-        <p className="text-zinc-400 text-sm mb-2 font-medium">Falta configurar Mapbox.</p>
-        <p className="text-xs text-zinc-500">
-          Agregá <code className="text-blue-400 font-mono bg-blue-900/20 px-1 py-0.5 rounded">NEXT_PUBLIC_MAPBOX_TOKEN</code> a tu .env.local
-        </p>
-      </div>
-    );
-  }
-
-  // Center between Cordoba and Despeñaderos
   const cordoba = LOCATIONS.cordobaBusStop!;
   const despenaderos = LOCATIONS.despenaderosBusStop!;
 
   const centerLat = (cordoba.lat + despenaderos.lat) / 2;
   const centerLng = (cordoba.lng + despenaderos.lng) / 2;
 
+  const cbaIcon = createIcon('bg-blue-500', 'CBA');
+  const despIcon = createIcon('bg-emerald-500', 'DESP');
+
   return (
-    <div className="w-full h-64 rounded-xl overflow-hidden border border-zinc-800 relative shadow-inner">
-      <Map
-        initialViewState={{
-          latitude: centerLat,
-          longitude: centerLng,
-          zoom: 9
-        }}
-        mapStyle="mapbox://styles/mapbox/dark-v11"
-        mapboxAccessToken={MAPBOX_TOKEN}
-        attributionControl={false}
+    <div className="w-full h-64 rounded-xl overflow-hidden border border-zinc-800 relative shadow-inner z-0">
+      <MapContainer 
+        center={[centerLat, centerLng]} 
+        zoom={9.5} 
+        style={{ height: '100%', width: '100%', background: '#0a0a0c' }}
+        attributionControl={true}
       >
-        <Marker latitude={cordoba.lat} longitude={cordoba.lng}>
-          <div className="flex flex-col items-center">
-            <div className="bg-blue-500 rounded-full p-1.5 shadow-lg">
-              <MapPin size={16} className="text-white" />
-            </div>
-            <span className="text-[10px] font-bold text-white bg-black/80 px-2 py-0.5 rounded mt-1 border border-zinc-700">CBA</span>
-          </div>
-        </Marker>
-        
-        <Marker latitude={despenaderos.lat} longitude={despenaderos.lng}>
-          <div className="flex flex-col items-center">
-            <div className="bg-emerald-500 rounded-full p-1.5 shadow-lg">
-              <MapPin size={16} className="text-white" />
-            </div>
-            <span className="text-[10px] font-bold text-white bg-black/80 px-2 py-0.5 rounded mt-1 border border-zinc-700">DESP</span>
-          </div>
-        </Marker>
-      </Map>
+        <TileLayer
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        />
+        <Marker position={[cordoba.lat, cordoba.lng]} icon={cbaIcon} />
+        <Marker position={[despenaderos.lat, despenaderos.lng]} icon={despIcon} />
+      </MapContainer>
     </div>
   );
 }

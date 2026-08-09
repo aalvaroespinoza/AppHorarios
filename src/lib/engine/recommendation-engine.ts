@@ -89,6 +89,14 @@ export const calcularColectivos = (
       // Ordenamos descendente para encontrar el que llega más cerca a la hora de cursar (el más tarde posible)
       validas.sort((a, b) => timeToMins(b.horaSalida) - timeToMins(a.horaSalida));
       idealBus = validas[0];
+
+      // OVERRIDE: Preferencia explícita del usuario por el Canelo de las 06:30 cuando cursa a las 08:00
+      if (primerBloque.startTime === '08:00') {
+        const canelo0630 = validas.find(h => h.empresa === 'canelo' && h.horaSalida === '06:30');
+        if (canelo0630) {
+          idealBus = canelo0630;
+        }
+      }
     }
   } else {
     // VUELTA
