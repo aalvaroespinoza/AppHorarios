@@ -103,7 +103,7 @@ export function useTodaySchedule() {
             id: `ida-${diaSeleccionado}-${rec.horaSalida}`,
             claseTime: materiasDelDia[0].horaInicio,
             colectivoTime: rec.horaSalida,
-            leaveHomeTime: rec.saleDeCasa || rec.horaSalida, // Fallback si no tiene saleDeCasa
+            leaveHomeTime: (rec as any).saleDeCasa || rec.horaSalida, // Fallback si no tiene saleDeCasa
             empresa: rec.empresa
           }).catch(console.error);
         }
