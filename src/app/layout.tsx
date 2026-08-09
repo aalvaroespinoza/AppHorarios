@@ -4,6 +4,7 @@ import "./globals.css";
 import BottomTabBar from "@/components/layout/BottomTabBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { EscenarioProvider } from "@/context/EscenarioContext";
+import NotificationProvider from "@/components/NotificationProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,6 +42,7 @@ export default function RootLayout({
           </main>
           <BottomTabBar />
           <ServiceWorkerRegister />
+          <NotificationProvider />
         </EscenarioProvider>
       </body>
     </html>

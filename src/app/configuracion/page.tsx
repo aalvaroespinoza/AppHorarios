@@ -56,21 +56,16 @@ export default function Configuracion() {
         <section className="mb-6">
           <h2 className="text-[13px] uppercase text-zinc-500 font-medium tracking-wide mb-2 ml-4">General</h2>
           <NativeCard className="p-0 overflow-hidden bg-zinc-900 border-none divide-y divide-zinc-800">
-            {/* Toggle Notificaciones */}
-            <div className="flex items-center justify-between p-3 active:bg-zinc-800/50 transition-colors">
+            {/* Link a Notificaciones */}
+            <Link href="/configuracion/notificaciones" className="w-full flex items-center justify-between p-3 active:bg-zinc-800/50 transition-colors text-left">
               <div className="flex items-center gap-3">
                 <div className="bg-red-500 p-1.5 rounded-[10px] text-white">
                   <Bell size={18} fill="currentColor" />
                 </div>
                 <span className="font-medium text-[16px] text-white">Notificaciones</span>
               </div>
-              <div 
-                onClick={() => setNotisA(!notisA)}
-                className={`w-12 h-7 rounded-full p-0.5 cursor-pointer transition-colors ${notisA ? 'bg-green-500' : 'bg-zinc-700'}`}
-              >
-                <div className={`bg-white w-6 h-6 rounded-full shadow-md transform transition-transform ${notisA ? 'translate-x-5' : 'translate-x-0'}`} />
-              </div>
-            </div>
+              <ChevronRight size={18} className="text-zinc-500" />
+            </Link>
 
             {/* Limpiar Caché / Forzar Recarga */}
             <button 

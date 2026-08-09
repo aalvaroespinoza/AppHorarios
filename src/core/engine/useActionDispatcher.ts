@@ -65,6 +65,28 @@ export function useActionDispatcher() {
           };
           
           deadlines.agregarDeadline(nuevoDeadline);
+
+          // Schedule Notification
+          if (finalDate && finalTime) {
+            import('@/core/services/notifications/notification.service').then(({ notificationService }) => {
+              const [hours, mins] = finalTime.split(':').map(Number);
+              const scheduleDate = new Date(`${finalDate}T00:00:00`);
+              scheduleDate.setHours(hours, mins, 0, 0);
+
+              if (scheduleDate.getTime() > new Date().getTime()) {
+                notificationService.schedule({
+                  category: 'reminder',
+                  title: '⏰ Recordatorio',
+                  message: title,
+                  data: {
+                    type: 'reminder',
+                    reminderId: nuevoDeadline.id,
+                  }
+                }, scheduleDate).catch(console.error);
+              }
+            });
+          }
+
           return {
             success: true,
             data: nuevoDeadline,

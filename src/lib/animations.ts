@@ -1,11 +1,13 @@
-export const SPRING_CONFIG = {
+import type { Transition } from "framer-motion";
+
+export const SPRING_CONFIG: Transition = {
   type: "spring",
   stiffness: 300,
   damping: 25,
   mass: 1,
 };
 
-export const SPRING_CONFIG_QUICK = {
+export const SPRING_CONFIG_QUICK: Transition = {
   type: "spring",
   stiffness: 400,
   damping: 25,
