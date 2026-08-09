@@ -94,6 +94,35 @@ export function useTodaySchedule() {
   const recomendacionIda = calcularColectivos(diaSeleccionado as DayOfWeek, 'ida', cursaArquitectura, duermeEnCordoba, horaParaFiltro);
   const recomendacionVuelta = calcularColectivos(diaSeleccionado as DayOfWeek, 'vuelta', cursaArquitectura, duermeEnCordoba, horaParaFiltro);
 
+  useEffect(() => {
+    if (isToday) {
+      import('@/core/services/notifications/travel-notification.service').then(({ travelNotificationService }) => {
+        if (recomendacionIda.recomendado && materiasDelDia.length > 0) {
+          const rec = recomendacionIda.recomendado;
+          travelNotificationService.handleRecommendation({
+            id: `ida-${diaSeleccionado}-${rec.horaSalida}`,
+            claseTime: materiasDelDia[0].horaInicio,
+            colectivoTime: rec.horaSalida,
+            leaveHomeTime: rec.saleDeCasa || rec.horaSalida, // Fallback si no tiene saleDeCasa
+            empresa: rec.empresa
+          }).catch(console.error);
+        }
+
+        if (recomendacionVuelta.recomendado && materiasDelDia.length > 0) {
+          const rec = recomendacionVuelta.recomendado;
+          travelNotificationService.handleRecommendation({
+            id: `vuelta-${diaSeleccionado}-${rec.horaSalida}`,
+            claseTime: materiasDelDia[materiasDelDia.length - 1].horaFin,
+            colectivoTime: rec.horaSalida,
+            leaveHomeTime: rec.horaSalida, // Para la vuelta asumimos la salida de terminal
+            empresa: rec.empresa,
+            destino: 'Alta Gracia'
+          }).catch(console.error);
+        }
+      });
+    }
+  }, [isToday, recomendacionIda.recomendado, recomendacionVuelta.recomendado, materiasDelDia, diaSeleccionado]);
+
   return {
     materiasDelDia,
     isToday,
