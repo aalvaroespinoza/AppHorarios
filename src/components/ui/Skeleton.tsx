@@ -2,7 +2,7 @@ import React from 'react';
 
 export function Skeleton({ className = '' }: { className?: string }) {
   return (
-    <div className={`animate-pulse bg-zinc-800/80 rounded-2xl ${className}`} />
+    <div className={`animate-pulse bg-gray-200 dark:bg-zinc-800/80 rounded-2xl ${className}`} />
   );
 }
 

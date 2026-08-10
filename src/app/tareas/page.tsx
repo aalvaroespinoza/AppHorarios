@@ -211,8 +211,8 @@ export default function TareasPage() {
         onClick={() => toggleTask(t.id, t.status)}
         className={`border p-4 transition-colors cursor-pointer group flex items-start gap-3 ${
           isCompleted 
-            ? 'bg-zinc-900/20 border-zinc-800/50 opacity-60 hover:opacity-80' 
-            : 'bg-zinc-900/60 border-zinc-800 hover:border-zinc-700'
+            ? 'bg-gray-50 dark:bg-zinc-900/20 border-gray-200 dark:border-zinc-800/50 opacity-60 hover:opacity-80' 
+            : 'bg-white dark:bg-zinc-900/60 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700'
         }`}
       >
         <div className={`mt-0.5 transition-colors ${isCompleted ? 'text-emerald-500' : 'text-zinc-500 group-hover:text-indigo-400'}`}>
@@ -220,7 +220,7 @@ export default function TareasPage() {
         </div>
         <div className="flex flex-col gap-1 flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className={`text-base font-semibold truncate ${isCompleted ? 'text-zinc-400 line-through' : 'text-zinc-100'}`}>
+            <h3 className={`text-base font-semibold truncate ${isCompleted ? 'text-gray-400 dark:text-zinc-400 line-through' : 'text-gray-900 dark:text-zinc-100'}`}>
               {title}
             </h3>
             {!isCompleted && priority !== 'baja' && priorityColor !== 'bg-transparent' && (
@@ -228,7 +228,7 @@ export default function TareasPage() {
             )}
           </div>
           {date && (
-            <p className={`text-xs font-medium flex items-center gap-1 ${isCompleted ? 'text-zinc-600 line-through' : 'text-zinc-500'}`}>
+            <p className={`text-xs font-medium flex items-center gap-1 ${isCompleted ? 'text-gray-400 dark:text-zinc-600 line-through' : 'text-gray-500 dark:text-zinc-500'}`}>
               <Calendar size={12} /> {dayjs(date).format('DD MMM, HH:mm')}
             </p>
           )}
@@ -248,8 +248,8 @@ export default function TareasPage() {
     if (tasksList.length === 0) return null;
     return (
       <div className="flex flex-col gap-3 mb-6">
-        <h3 className="text-xs font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2">
-          {icon} {title} <span className="ml-auto bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full text-[10px]">{tasksList.length}</span>
+        <h3 className="text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-500 uppercase px-1 flex items-center gap-2">
+          {icon} {title} <span className="ml-auto bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 px-2 py-0.5 rounded-full text-[10px]">{tasksList.length}</span>
         </h3>
         {tasksList.map(t => renderTask(t, false))}
       </div>
@@ -259,19 +259,19 @@ export default function TareasPage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-[#0a0a0c] text-white pb-24"
+      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white pb-24"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
       <header className="flex items-center gap-3 mt-2">
         <Link 
           href="/boveda"
-          className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors shadow-sm"
+          className="w-10 h-10 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm"
         >
           <ChevronLeft size={20} />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
             Tareas
           </h1>
         </div>
@@ -288,7 +288,7 @@ export default function TareasPage() {
           onChange={(e) => setNewTaskTitle(e.target.value)}
           placeholder="Añadir una tarea rápida..."
           disabled={isCreating}
-          className="flex-1 bg-zinc-900/60 border border-zinc-800 rounded-2xl px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
+          className="flex-1 bg-gray-100 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800 rounded-2xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
         />
         <button 
           type="submit"
@@ -308,7 +308,7 @@ export default function TareasPage() {
           {pendingTasks.length > 0 ? (
             <>
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-zinc-500 font-medium">{pendingTasks.length} tareas pendientes</span>
+                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium">{pendingTasks.length} tareas pendientes</span>
                 {!suggestions && pendingTasks.length > 1 && (
                   <button
                     onClick={handleSuggestOrder}
@@ -368,16 +368,16 @@ export default function TareasPage() {
               {renderGroup('Sin Fecha', groupedPending.sin_fecha, <Circle size={10} className="fill-zinc-600 text-zinc-600" />)}
             </>
           ) : (
-            <NativeCard className="bg-zinc-900/40 border border-zinc-800/60 border-dashed p-8 flex flex-col items-center justify-center text-center gap-3 mb-6">
-              <ListTodo size={36} className="text-zinc-600 mb-1" />
-              <p className="text-sm text-zinc-400 font-medium">
+            <NativeCard className="bg-gray-50 dark:bg-zinc-900/40 border border-gray-200 dark:border-zinc-800/60 border-dashed p-8 flex flex-col items-center justify-center text-center gap-3 mb-6">
+              <ListTodo size={36} className="text-gray-300 dark:text-zinc-600 mb-1" />
+              <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium">
                 No hay tareas pendientes. Agrega una arriba o díctale a LifeOS.
               </p>
             </NativeCard>
           )}
 
           {completedTasks.length > 0 && (
-            <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-zinc-800/50">
+            <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-zinc-800/50">
               <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2 mb-2">
                 <CheckSquare size={16} /> Completadas ({completedTasks.length})
               </h2>

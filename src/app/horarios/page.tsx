@@ -13,7 +13,7 @@ export default function HorariosPage() {
   const escenario = useEscenario();
   const [tab, setTab] = useState<'ida' | 'vuelta'>('ida');
 
-  if (!escenario.isMounted) return <div className="min-h-[100dvh] bg-black" />;
+  if (!escenario.isMounted) return <div className="min-h-[100dvh] bg-gray-50 dark:bg-black" />;
 
   const { diaSeleccionado } = escenario;
   
@@ -36,7 +36,7 @@ export default function HorariosPage() {
   });
 
   return (
-    <main className="min-h-[100dvh] bg-black text-white font-sans max-w-md mx-auto ">
+    <main className="min-h-[100dvh] bg-gray-50 dark:bg-black text-gray-900 dark:text-white font-sans max-w-md mx-auto ">
       <header className="pt-10 pb-2 px-4 flex flex-col gap-4">
         <div className="flex justify-between items-start">
           <div>
@@ -44,9 +44,9 @@ export default function HorariosPage() {
               <Bus className="text-blue-500" />
               Todos los Horarios
             </h1>
-            <p className="text-sm text-zinc-400 leading-tight">Consulta la grilla completa de colectivos.</p>
+            <p className="text-sm text-gray-500 dark:text-zinc-400 leading-tight">Consulta la grilla completa de colectivos.</p>
           </div>
-          <Link href="/configuracion" className="w-10 h-10 bg-zinc-800/80 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors">
+          <Link href="/configuracion" className="w-10 h-10 bg-gray-200 dark:bg-zinc-800/80 rounded-full flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors">
             <Settings size={20} />
           </Link>
         </div>
@@ -62,17 +62,17 @@ export default function HorariosPage() {
       </header>
 
       {/* Tabs Ida/Vuelta fijados (Sticky) */}
-      <div className="sticky top-0 z-50 bg-black/95 backdrop-blur-md px-4 py-3 border-b border-zinc-800/80 shadow-md">
-        <div className="flex bg-zinc-800/80 p-1.5 rounded-xl shadow-inner max-w-md mx-auto">
+      <div className="sticky top-0 z-50 bg-gray-50/95 dark:bg-black/95 backdrop-blur-md px-4 py-3 border-b border-gray-200 dark:border-zinc-800/80 shadow-md">
+        <div className="flex bg-gray-200 dark:bg-zinc-800/80 p-1.5 rounded-xl shadow-inner max-w-md mx-auto">
           <button 
             onClick={() => setTab('ida')}
-            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'ida' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'ida' ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'}`}
           >
             Ida
           </button>
           <button 
             onClick={() => setTab('vuelta')}
-            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'vuelta' ? 'bg-zinc-700 text-white shadow-sm' : 'text-zinc-400 hover:text-zinc-200'}`}
+            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'vuelta' ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'}`}
           >
             Vuelta
           </button>
@@ -86,8 +86,8 @@ export default function HorariosPage() {
           {Object.keys(agrupadosPorEmpresa).length > 0 ? (
             <div className="flex flex-col gap-6">
               {Object.entries(agrupadosPorEmpresa).map(([empresa, horarios]) => (
-                <NativeCard key={empresa} className="p-0 overflow-hidden border border-zinc-800 bg-zinc-950">
-                  <div className={`px-4 py-3 border-b border-zinc-800 font-bold tracking-wide uppercase text-sm flex items-center justify-between ${tab === 'ida' ? 'bg-blue-500/10 text-blue-400' : 'bg-[#34c759]/10 text-[#34c759]'}`}>
+                <NativeCard key={empresa} className="p-0 overflow-hidden border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950">
+                  <div className={`px-4 py-3 border-b border-gray-200 dark:border-zinc-800 font-bold tracking-wide uppercase text-sm flex items-center justify-between ${tab === 'ida' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-[#34c759]/10 text-green-600 dark:text-[#34c759]'}`}>
                     <span>{empresa}</span>
                     <span className="text-xs font-semibold opacity-70 bg-black/20 px-2 py-0.5 rounded-full">{horarios.length} viajes</span>
                   </div>
@@ -96,9 +96,9 @@ export default function HorariosPage() {
                       {horarios.map((h, idx) => (
                         <div 
                           key={idx} 
-                          className="flex flex-col items-center justify-center py-2.5 rounded-xl bg-zinc-900 border border-zinc-800/80 hover:border-zinc-600 transition-all cursor-default"
+                          className="flex flex-col items-center justify-center py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800/80 hover:border-gray-300 dark:hover:border-zinc-600 transition-all cursor-default"
                         >
-                          <span className="text-lg font-bold text-zinc-100 tracking-tight">{h.horaSalida}</span>
+                          <span className="text-lg font-bold text-gray-900 dark:text-zinc-100 tracking-tight">{h.horaSalida}</span>
                           {h.notas && (
                             <div className="flex items-center gap-0.5 mt-1 text-blue-400">
                               <MapPin size={9} />
@@ -113,7 +113,7 @@ export default function HorariosPage() {
               ))}
             </div>
           ) : (
-            <NativeCard className="p-6 text-center text-zinc-500 text-sm bg-zinc-900/20 border-dashed border-zinc-800">
+            <NativeCard className="p-6 text-center text-gray-400 dark:text-zinc-500 text-sm bg-gray-50 dark:bg-zinc-900/20 border-dashed border-gray-200 dark:border-zinc-800">
               No hay viajes de {tab} programados para este día.
             </NativeCard>
           )}

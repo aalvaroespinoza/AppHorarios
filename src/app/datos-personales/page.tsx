@@ -288,10 +288,10 @@ export default function DatosPersonalesPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="bg-zinc-900/50 border border-zinc-800 rounded-xl p-4 text-center mt-2"
+                className="bg-gray-100 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800 rounded-xl p-4 text-center mt-2"
               >
-                <p className="text-zinc-400 text-sm mb-2 font-medium">Falta configurar Shodan API.</p>
-                <p className="text-xs text-zinc-500">
+                <p className="text-gray-500 dark:text-zinc-400 text-sm mb-2 font-medium">Falta configurar Shodan API.</p>
+                <p className="text-xs text-gray-400 dark:text-zinc-500">
                   Agregá <code className="text-indigo-400 font-mono bg-indigo-900/20 px-1 py-0.5 rounded">SHODAN_API_KEY</code> a tu .env.local
                 </p>
               </motion.div>

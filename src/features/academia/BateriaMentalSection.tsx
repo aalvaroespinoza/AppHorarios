@@ -42,10 +42,10 @@ export function BateriaMentalSection() {
   return (
     <section className="mt-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <h2 className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Batería Mental</h2>
+        <h2 className="text-gray-500 dark:text-zinc-400 text-xs font-bold uppercase tracking-widest">Batería Mental</h2>
         <button 
           onClick={() => setIsAdding(!isAdding)}
-          className="w-7 h-7 bg-zinc-800 rounded-full flex items-center justify-center text-zinc-300 hover:text-white"
+          className="w-7 h-7 bg-gray-200 dark:bg-zinc-800 rounded-full flex items-center justify-center text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-white"
         >
           <Plus size={14} />
         </button>
@@ -60,12 +60,12 @@ export function BateriaMentalSection() {
             transition={SPRING_CONFIG}
             className="overflow-hidden"
           >
-            <div className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-3 flex flex-col gap-2 mb-2">
+            <div className="bg-gray-100 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800 rounded-2xl p-3 flex flex-col gap-2 mb-2">
               <input 
                 placeholder="¿Qué hay que hacer?"
                 value={nuevaTarea}
                 onChange={e => setNuevaTarea(e.target.value)}
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-base text-white focus:outline-none focus:border-blue-500"
+                className="w-full bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-xl px-3 py-2 text-base text-gray-900 dark:text-white focus:outline-none focus:border-blue-500"
               />
               <div className="flex gap-2 items-center justify-between mt-1">
                 <div className="flex gap-1.5">
@@ -76,7 +76,7 @@ export function BateriaMentalSection() {
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all border ${
                         nuevaEnergia === nivel 
                           ? getEnergiaColor(nivel)
-                          : 'bg-zinc-800/50 text-zinc-500 border-transparent hover:text-zinc-300'
+                          : 'bg-gray-100 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-500 border-transparent hover:text-gray-700 dark:hover:text-zinc-300'
                       }`}
                     >
                       {nivel}
@@ -105,8 +105,8 @@ export function BateriaMentalSection() {
               onClick={() => setFiltro(f.id as any)}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all border ${
                 isActive 
-                  ? 'bg-zinc-100 text-zinc-900 border-zinc-100 shadow-md' 
-                  : 'bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-100 text-gray-900 dark:text-zinc-900 border-zinc-100 shadow-md' 
+                  : 'bg-gray-100 dark:bg-zinc-800/50 text-gray-500 dark:text-zinc-400 border-gray-200 dark:border-zinc-700/50 hover:bg-gray-200 dark:hover:bg-zinc-800'
               }`}
             >
               {Icon && <Icon size={12} className={isActive ? 'text-zinc-900' : f.color} />}
@@ -118,7 +118,7 @@ export function BateriaMentalSection() {
 
       <div className="flex flex-col gap-2 min-h-[100px]">
         {tareasFiltradas.length === 0 ? (
-          <p className="text-zinc-600 text-xs italic text-center py-6 border border-dashed border-zinc-800 rounded-2xl">
+          <p className="text-gray-400 dark:text-zinc-600 text-xs italic text-center py-6 border border-dashed border-gray-200 dark:border-zinc-800 rounded-2xl">
             No hay tareas de esta energía.
           </p>
         ) : (
@@ -133,8 +133,8 @@ export function BateriaMentalSection() {
                 transition={SPRING_CONFIG}
                 className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                   t.completada 
-                    ? 'bg-zinc-900/40 border-zinc-800/50 grayscale' 
-                    : 'bg-zinc-900/80 border-zinc-800/80 shadow-sm'
+                    ? 'bg-gray-50 dark:bg-zinc-900/40 border-gray-200 dark:border-zinc-800/50 grayscale' 
+                    : 'bg-white dark:bg-zinc-900/80 border-gray-200 dark:border-zinc-800/80 shadow-sm'
                 }`}
               >
                 <div className="flex items-center gap-3">
@@ -149,7 +149,7 @@ export function BateriaMentalSection() {
                     {t.completada && <Check size={14} />}
                   </button>
                   <div className="flex flex-col">
-                    <span className={`text-sm font-semibold transition-all ${t.completada ? 'text-zinc-500 line-through' : 'text-zinc-200'}`}>
+                    <span className={`text-sm font-semibold transition-all ${t.completada ? 'text-gray-400 dark:text-zinc-500 line-through' : 'text-gray-900 dark:text-zinc-200'}`}>
                       {t.titulo}
                     </span>
                   </div>

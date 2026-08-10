@@ -119,12 +119,12 @@ export function HorarioCard({
   if (!currentRecomendado) {
     return (
       <NativeCard className="flex flex-col items-center justify-center py-12 text-center gap-4">
-        <div className="w-16 h-16 bg-zinc-800/50 rounded-full flex items-center justify-center border border-zinc-700">
-          <Moon size={28} className="text-zinc-400" />
+        <div className="w-16 h-16 bg-gray-100 dark:bg-zinc-800/50 rounded-full flex items-center justify-center border border-gray-200 dark:border-zinc-700">
+          <Moon size={28} className="text-gray-400 dark:text-zinc-400" />
         </div>
         <div>
-          <p className="text-lg font-semibold text-white">Hoy no hay {titulo.toLowerCase()} programada 🏠</p>
-          <p className="text-sm text-zinc-500 mt-1">Disfrutá tu tiempo o descansá en Córdoba.</p>
+          <p className="text-lg font-semibold text-gray-900 dark:text-white">Hoy no hay {titulo.toLowerCase()} programada 🏠</p>
+          <p className="text-sm text-gray-500 dark:text-zinc-500 mt-1">Disfrutá tu tiempo o descansá en Córdoba.</p>
         </div>
       </NativeCard>
     );
@@ -135,7 +135,7 @@ export function HorarioCard({
       <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${becUsado ? 'bg-green-500/10' : 'bg-blue-500/10'}`} />
 
       <div className="flex items-center justify-between mb-5">
-        <div className="flex items-center gap-2 text-zinc-400">
+        <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400">
           <Icon size={18} />
           <h2 className="font-semibold text-sm uppercase tracking-wider">{titulo}</h2>
         </div>
@@ -145,7 +145,7 @@ export function HorarioCard({
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
             becUsado 
               ? 'bg-green-900/30 text-green-400 border-green-800/50 hover:bg-green-900/50' 
-              : 'bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:bg-zinc-800 hover:text-white'
+              : 'bg-gray-100 dark:bg-zinc-800/50 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-700/50 hover:bg-gray-200 dark:hover:bg-zinc-800 hover:text-gray-900 dark:hover:text-white'
           }`}
         >
           <CheckCircle2 size={16} />
@@ -155,17 +155,17 @@ export function HorarioCard({
 
       <div className="flex justify-between items-end mb-6">
         <div>
-          <p className="text-zinc-400 font-medium text-sm mb-1">{currentRecomendado.empresa}</p>
+          <p className="text-gray-500 dark:text-zinc-400 font-medium text-sm mb-1">{currentRecomendado.empresa}</p>
           {esVuelta ? (
             <>
-              <div className="text-sm text-zinc-400 mb-1 mt-2">Sale de Terminal: {currentRecomendado.horaSalida}</div>
-              <div className="text-sm text-blue-400 mb-1 font-medium">Pasa por tu parada (Ministerio):</div>
-              <div className="text-6xl font-sans tracking-tight text-white leading-none">
+              <div className="text-sm text-gray-500 dark:text-zinc-400 mb-1 mt-2">Sale de Terminal: {currentRecomendado.horaSalida}</div>
+              <div className="text-sm text-blue-600 dark:text-blue-400 mb-1 font-medium">Pasa por tu parada (Ministerio):</div>
+              <div className="text-6xl font-sans tracking-tight text-gray-900 dark:text-white leading-none">
                 {horaReal}
               </div>
             </>
           ) : (
-            <div className="text-6xl font-sans tracking-tight text-white leading-none">
+            <div className="text-6xl font-sans tracking-tight text-gray-900 dark:text-white leading-none">
               {currentRecomendado.horaSalida}
             </div>
           )}
@@ -175,10 +175,10 @@ export function HorarioCard({
           <div className="flex flex-col items-end gap-2">
             <div className={`font-medium px-3 py-1.5 rounded-full text-sm flex items-center gap-2 shadow-sm ${
               minutosFaltantes > 0 && minutosFaltantes <= 60 
-                ? 'bg-blue-900/40 text-blue-400 animate-pulse' 
+                ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 animate-pulse' 
                 : minutosFaltantes < 0
-                  ? 'bg-red-900/30 text-red-400'
-                  : 'bg-zinc-800/80 text-zinc-300'
+                  ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+                  : 'bg-gray-100 dark:bg-zinc-800/80 text-gray-700 dark:text-zinc-300'
             }`}>
               <span className="relative flex h-2 w-2">
                 {minutosFaltantes > 0 && minutosFaltantes <= 60 && (
@@ -205,8 +205,8 @@ export function HorarioCard({
       </div>
 
       {currentRecomendado.notas && (
-        <div className="bg-blue-950/20 border border-blue-900/30 p-3 rounded-2xl mb-4 text-sm text-blue-200 flex gap-2 items-start">
-          <MapPin size={16} className="text-blue-400 shrink-0 mt-0.5" />
+        <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/30 p-3 rounded-2xl mb-4 text-sm text-blue-700 dark:text-blue-200 flex gap-2 items-start">
+          <MapPin size={16} className="text-blue-500 dark:text-blue-400 shrink-0 mt-0.5" />
           <span className="leading-snug">
             {currentRecomendado.notas.replace(/llegada estimada/i, `Llegada estimada a las ${calcularHoraLlegada(currentRecomendado.horaSalida, direction)}`)}
           </span>
@@ -216,18 +216,18 @@ export function HorarioCard({
       <AntiSleepButton targetLat={targetLat} targetLng={targetLng} />
       
       {probLluvia !== null && probLluvia > 40 && (
-        <div className="bg-blue-900/40 border border-blue-500/30 text-blue-300 px-4 py-2.5 rounded-2xl mb-4 text-sm font-medium flex items-center gap-2">
+        <div className="bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 px-4 py-2.5 rounded-2xl mb-4 text-sm font-medium flex items-center gap-2">
           <span>🌧️</span>
           <span>Probabilidad de lluvia del {probLluvia}% a la hora de salida. ¡Salí con margen!</span>
         </div>
       )}
 
       {currentAlternativas.length > 0 && (
-        <div className="border-t border-zinc-800/80 pt-4 mt-2">
+        <div className="border-t border-gray-200 dark:border-zinc-800/80 pt-4 mt-2">
           <motion.button 
             whileTap={TAP_ANIMATION}
             onClick={() => setVerAlternativas(!verAlternativas)}
-            className="flex items-center justify-between w-full text-sm text-zinc-400 hover:text-white transition-colors py-1"
+            className="flex items-center justify-between w-full text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors py-1"
           >
             <span>Ver siguientes {currentAlternativas.length} opciones</span>
             {verAlternativas ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
@@ -246,13 +246,13 @@ export function HorarioCard({
                     whileTap={TAP_ANIMATION}
                     key={idx} 
                     onClick={() => handleSwap(alt, idx)}
-                    className="flex flex-col justify-center bg-zinc-800/40 border border-zinc-700/50 p-3 rounded-xl hover:bg-zinc-800/80 transition-colors text-left"
+                    className="flex flex-col justify-center bg-gray-100 dark:bg-zinc-800/40 border border-gray-200 dark:border-zinc-700/50 p-3 rounded-xl hover:bg-gray-200 dark:hover:bg-zinc-800/80 transition-colors text-left"
                   >
                     <div className="flex justify-between items-center w-full">
-                      <span className="font-semibold text-white text-lg">{alt.horaSalida}</span>
-                      <span className="text-zinc-400 text-sm font-medium">{alt.empresa}</span>
+                      <span className="font-semibold text-gray-900 dark:text-white text-lg">{alt.horaSalida}</span>
+                      <span className="text-gray-500 dark:text-zinc-400 text-sm font-medium">{alt.empresa}</span>
                     </div>
-                    <span className="text-zinc-400 text-sm font-medium mt-1">
+                    <span className="text-gray-500 dark:text-zinc-400 text-sm font-medium mt-1">
                       Hora estimada de Llegada: {calcularHoraLlegada(alt.horaSalida, direction)}
                     </span>
                   </motion.button>
@@ -263,11 +263,11 @@ export function HorarioCard({
         </div>
       )}
 
-      <div className="border-t border-zinc-800/80 pt-4 mt-2">
+      <div className="border-t border-gray-200 dark:border-zinc-800/80 pt-4 mt-2">
         <motion.button 
           whileTap={TAP_ANIMATION}
           onClick={() => setVerMapa(!verMapa)}
-          className="flex items-center justify-between w-full text-sm text-zinc-400 hover:text-white transition-colors py-1"
+          className="flex items-center justify-between w-full text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors py-1"
         >
           <div className="flex items-center gap-2">
             <MapIcon size={16} />

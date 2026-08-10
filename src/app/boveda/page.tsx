@@ -103,18 +103,18 @@ export default function HubPage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-5 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] pb-24 relative bg-[#0a0a0c]"
+      className="p-5 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] pb-24 relative bg-gray-50 dark:bg-[#0a0a0c]"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
       <header className="flex flex-col gap-1.5 mt-2 mb-2">
-        <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-2 border border-white/10 shadow-inner">
-          <LayoutGrid size={24} className="text-white" />
+        <div className="w-12 h-12 bg-gray-200/50 dark:bg-white/5 rounded-2xl flex items-center justify-center mb-2 border border-gray-300/50 dark:border-white/10 shadow-inner">
+          <LayoutGrid size={24} className="text-gray-700 dark:text-white" />
         </div>
-        <h1 className="text-3xl font-black tracking-tight text-white leading-tight">
+        <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white leading-tight">
           Menú
         </h1>
-        <p className="text-sm text-zinc-400 font-medium">
+        <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium">
           Acceso rápido a todas tus herramientas.
         </p>
       </header>
@@ -132,8 +132,8 @@ export default function HubPage() {
               <div className="mb-3">
                 {app.icon}
               </div>
-              <h2 className="text-base font-bold text-white tracking-tight">{app.title}</h2>
-              <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider mt-0.5">{app.description}</span>
+              <h2 className="text-base font-bold text-white dark:text-white tracking-tight">{app.title}</h2>
+              <span className="text-[11px] font-semibold text-white/70 dark:text-zinc-400 uppercase tracking-wider mt-0.5">{app.description}</span>
             </motion.div>
           </Link>
         ))}

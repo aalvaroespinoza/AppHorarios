@@ -54,12 +54,12 @@ const TabItem: React.FC<TabItemProps> = ({ tab, isActive, onClick }) => {
           size={24} 
           strokeWidth={isActive ? 2.5 : 2}
           className={`mb-1 transition-colors duration-300 ${
-            isActive ? 'text-blue-500' : 'text-zinc-500'
+            isActive ? 'text-blue-500' : 'text-gray-400 dark:text-zinc-500'
           }`}
         />
         <span 
           className={`text-[10px] font-semibold tracking-wide transition-colors duration-300 ${
-            isActive ? 'text-blue-500' : 'text-zinc-500'
+            isActive ? 'text-blue-500' : 'text-gray-400 dark:text-zinc-500'
           }`}
         >
           {tab.label}
@@ -82,7 +82,7 @@ export default function BottomTabBar({ tabs = defaultTabs }: BottomTabBarProps) 
       initial={{ y: "100%" }} 
       animate={{ y: 0 }} 
       transition={SPRING_CONFIG}
-      className="fixed bottom-0 w-full z-50 backdrop-blur-xl bg-black/80 border-t border-zinc-800/80 pt-2 px-4 shadow-[0_-10px_30px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]"
+      className="fixed bottom-0 w-full z-50 backdrop-blur-xl bg-white/80 dark:bg-black/80 border-t border-gray-200/80 dark:border-zinc-800/80 pt-2 px-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] dark:shadow-[0_-10px_30px_rgba(0,0,0,0.5)] pb-[env(safe-area-inset-bottom)]"
     >
       <div className="flex justify-around items-center max-w-md mx-auto">
         {tabs.map((tab) => (

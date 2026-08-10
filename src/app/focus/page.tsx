@@ -35,21 +35,21 @@ export default function FocusPage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-[#0a0a0c] text-white pb-24"
+      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white pb-24"
       style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
       <header className="flex flex-col gap-2 mt-2">
         <Link 
           href="/boveda"
-          className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors shadow-sm mb-2"
+          className="w-10 h-10 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm mb-2"
         >
           <ChevronLeft size={20} />
         </Link>
         <h1 className="text-3xl font-black tracking-tight text-white leading-tight">
           Focus Station
         </h1>
-        <p className="text-sm text-zinc-400 font-medium">
+        <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium">
           Controla tu energía, hidratación y entrenamiento.
         </p>
       </header>
@@ -112,7 +112,7 @@ export default function FocusPage() {
           value={notasRapidas}
           onChange={handleNotasChange}
           placeholder="Escribe lo que tienes en mente..."
-          className="w-full h-32 bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4 text-sm text-zinc-300 resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
+          className="w-full h-32 bg-gray-100 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800 rounded-2xl p-4 text-sm text-gray-700 dark:text-zinc-300 resize-none focus:outline-none focus:border-amber-500/50 transition-colors"
         />
       </section>
     </motion.div>

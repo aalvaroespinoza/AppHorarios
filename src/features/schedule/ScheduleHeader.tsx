@@ -18,7 +18,7 @@ export function ScheduleHeader({ diaCapitalizado, setDiaSeleccionado }: Schedule
         <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400 text-[11px] font-black tracking-[0.25em] uppercase mb-1 drop-shadow-sm">
           APP HORARIO
         </h2>
-        <h1 className="text-3xl font-bold tracking-tight text-white">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
           {diaCapitalizado}
         </h1>
       </div>
@@ -38,11 +38,11 @@ export function ScheduleHeader({ diaCapitalizado, setDiaSeleccionado }: Schedule
         <div className="flex gap-2">
           <Link 
             href="/horarios"
-            className="bg-zinc-900 w-10 h-10 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm hover:bg-zinc-800 transition-colors"
+            className="bg-white dark:bg-zinc-900 w-10 h-10 rounded-full border border-gray-200 dark:border-zinc-800 flex items-center justify-center shadow-sm hover:bg-gray-100 dark:hover:bg-zinc-800 transition-colors"
           >
-            <LayoutGrid size={16} className="text-zinc-400" />
+            <LayoutGrid size={16} className="text-gray-500 dark:text-zinc-400" />
           </Link>
-          <div className="bg-zinc-900 px-4 py-2 rounded-full border border-zinc-800 flex items-center justify-center shadow-sm">
+          <div className="bg-white dark:bg-zinc-900 px-4 py-2 rounded-full border border-gray-200 dark:border-zinc-800 flex items-center justify-center shadow-sm">
             <RelojMinimalista />
           </div>
         </div>

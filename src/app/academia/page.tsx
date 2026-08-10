@@ -92,22 +92,22 @@ export default function AcademiaPage() {
         <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 text-[11px] font-black tracking-[0.25em] uppercase drop-shadow-sm">
           CENTRO DE CONTROL
         </h2>
-        <h1 className="text-3xl font-bold tracking-tight text-white pr-32 leading-tight">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white pr-32 leading-tight">
           Planner 📚
         </h1>
       </header>
 
       {/* Week Navigator */}
       <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between text-zinc-400 px-1">
+        <div className="flex items-center justify-between text-gray-500 dark:text-zinc-400 px-1">
           <div className="flex items-center gap-1">
-            <button onClick={() => setWeekOffset(o => o - 1)} className="p-1 hover:bg-zinc-800 rounded-lg">
+            <button onClick={() => setWeekOffset(o => o - 1)} className="p-1 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg">
               <ChevronLeft size={18} />
             </button>
-            <h3 className="text-sm font-semibold capitalize tracking-wide text-zinc-300">
+            <h3 className="text-sm font-semibold capitalize tracking-wide text-gray-700 dark:text-zinc-300">
               {monthName} {yearStr}
             </h3>
-            <button onClick={() => setWeekOffset(o => o + 1)} className="p-1 hover:bg-zinc-800 rounded-lg">
+            <button onClick={() => setWeekOffset(o => o + 1)} className="p-1 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg">
               <ChevronRight size={18} />
             </button>
           </div>
@@ -129,8 +129,8 @@ export default function AcademiaPage() {
                 onClick={() => handleDaySelect(dayData.dateISO, dayData.dayName)}
                 className={`flex flex-col items-center justify-center min-w-[50px] py-2 rounded-2xl transition-all ${
                   isSelected 
-                    ? 'bg-zinc-100 text-zinc-900 shadow-md' 
-                    : 'bg-zinc-800/60 text-zinc-400 hover:text-white border border-zinc-700/50'
+                    ? 'bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-md' 
+                    : 'bg-gray-100 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-zinc-700/50'
                 } ${dayData.isToday && !isSelected ? 'border-blue-500/50' : ''}`}
               >
                 <span className="text-[10px] font-bold uppercase mb-0.5">{dayData.dayName.slice(0, 3)}</span>

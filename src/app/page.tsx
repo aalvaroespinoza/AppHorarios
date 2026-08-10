@@ -27,7 +27,7 @@ export default function Hoy() {
     recomendacionVuelta
   } = useTodaySchedule();
 
-  if (!isMounted) return <div className="min-h-[100dvh] bg-black" />;
+  if (!isMounted) return <div className="min-h-[100dvh] bg-gray-50 dark:bg-black" />;
 
   const diaCapitalizado = diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1);
 

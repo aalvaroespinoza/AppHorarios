@@ -290,7 +290,7 @@ export default function LifeOSConsole() {
 
   if (!isMounted) {
     return (
-      <div className="flex flex-col h-[100dvh] bg-[#0a0a0c] items-center justify-center">
+      <div className="flex flex-col h-[100dvh] bg-gray-50 dark:bg-[#0a0a0c] items-center justify-center">
         <Loader2 size={32} className="animate-spin text-indigo-500" />
       </div>
     );
@@ -299,16 +299,16 @@ export default function LifeOSConsole() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="fixed inset-0 z-40 flex flex-col bg-[#0a0a0c] text-neutral-200 pt-[env(safe-area-inset-top)] pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
+      className="fixed inset-0 z-40 flex flex-col bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-neutral-200 pt-[env(safe-area-inset-top)] pb-[calc(3.5rem+env(safe-area-inset-bottom))]"
     >
       
       {/* Header Nativo y Discreto */}
-      <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-[#0a0a0c] sticky top-0 z-10 flex-shrink-0">
+      <div className="px-5 py-4 border-b border-gray-200 dark:border-white/5 flex items-center justify-between bg-gray-50 dark:bg-[#0a0a0c] sticky top-0 z-10 flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center">
             <Sparkles size={16} className="text-indigo-400" />
           </div>
-          <h1 className="text-base font-semibold tracking-tight text-white">LifeOS</h1>
+          <h1 className="text-base font-semibold tracking-tight text-gray-900 dark:text-white">LifeOS</h1>
         </div>
         
         {/* Indicador de estado de IA */}
@@ -319,7 +319,7 @@ export default function LifeOSConsole() {
               <span className="text-[10px] font-medium text-indigo-400 uppercase tracking-wider">Procesando</span>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-800/50 border border-white/5">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-gray-200 dark:bg-neutral-800/50 border border-gray-300 dark:border-white/5">
               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
               <span className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">En línea</span>
             </div>
@@ -328,7 +328,7 @@ export default function LifeOSConsole() {
       </div>
       
       {/* Área principal de conversación */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-[#0a0a0c]">
+      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50 dark:bg-[#0a0a0c]">
         <div className="flex-1 overflow-y-auto px-4 py-6 space-y-6 scroll-smooth">
             {history.length === 0 ? (
               <div className="flex flex-col h-full items-center justify-center max-w-sm mx-auto">
@@ -365,9 +365,9 @@ export default function LifeOSConsole() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.4, delay: 0.3 + (idx * 0.1) }}
                       onClick={() => setInputText(suggestion)}
-                      className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] active:scale-[0.98] transition-all text-left group"
+                      className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gray-100 dark:bg-white/[0.02] border border-gray-200 dark:border-white/5 hover:bg-gray-200 dark:hover:bg-white/[0.04] active:scale-[0.98] transition-all text-left group"
                     >
-                      <span className="text-sm text-neutral-300 group-hover:text-white transition-colors">{suggestion}</span>
+                      <span className="text-sm text-gray-700 dark:text-neutral-300 group-hover:text-gray-900 dark:group-hover:text-white transition-colors">{suggestion}</span>
                       <ChevronRight size={16} className="text-neutral-500 group-hover:text-neutral-300 transition-colors" />
                     </motion.button>
                   ))}
@@ -393,31 +393,6 @@ export default function LifeOSConsole() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         className="self-start max-w-[90%] flex gap-3"
                       >
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-white/10 flex items-center justify-center flex-shrink-0 mt-1">
-                          <Bot size={14} className="text-indigo-400" />
-                        </div>
-                        
-                        <div className="flex flex-col gap-2 w-full">
-                          {msg.status === 'loading' ? (
-                            <div className="bg-white/[0.03] border border-white/5 px-4 py-3.5 rounded-[20px] rounded-tl-[4px] flex items-center gap-3 w-fit">
-                              <div className="flex gap-1.5">
-                                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
-                                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
-                                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
-                              </div>
-                            </div>
-                          ) : msg.status === 'error' ? (
-                            <div className="bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-[20px] rounded-tl-[4px] text-[15px] shadow-sm leading-relaxed">
-                              {msg.text}
-                            </div>
-                          ) : (
-                            <div className="bg-white/[0.04] border border-white/5 text-neutral-100 px-4 py-3 rounded-[20px] rounded-tl-[4px] text-[15px] shadow-sm leading-relaxed flex flex-col gap-2">
-                              <span>{msg.text}</span>
-                              {msg.action && (
-                                <Link 
-                                  href={msg.action.url}
-                                  className="mt-1 w-fit flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-full text-indigo-300 text-xs font-medium transition-colors"
-                                >
                                   {msg.action.label}
                                   <ExternalLink size={12} />
                                 </Link>
@@ -435,31 +410,31 @@ export default function LifeOSConsole() {
           </div>
 
           {/* Footer: Acciones Rápidas & Input */}
-          <div className="w-full bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-white/5 flex-shrink-0 pb-4 pt-3">
+          <div className="w-full bg-gray-50/90 dark:bg-[#0a0a0c]/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/5 flex-shrink-0 pb-4 pt-3">
             <div className="max-w-md mx-auto w-full px-3 flex flex-col gap-3">
               
               {/* Acciones Rápidas (Chips) */}
               <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 px-1 -mx-1 snap-x">
-                <button onClick={() => handleQuickAction('Recordatorio: ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+                <button onClick={() => handleQuickAction('Recordatorio: ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-gray-100 dark:bg-white/[0.03] hover:bg-gray-200 dark:hover:bg-white/[0.06] border border-gray-200 dark:border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 dark:text-neutral-300 transition-colors">
                   <Bell size={12} className="text-amber-400" />
                   <span>Recordatorio</span>
                 </button>
-                <button onClick={() => handleQuickAction('Gasté ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+                <button onClick={() => handleQuickAction('Gasté ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-gray-100 dark:bg-white/[0.03] hover:bg-gray-200 dark:hover:bg-white/[0.06] border border-gray-200 dark:border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 dark:text-neutral-300 transition-colors">
                   <DollarSign size={12} className="text-emerald-400" />
                   <span>Gasto</span>
                 </button>
-                <button onClick={() => handleQuickAction('Agendame ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+                <button onClick={() => handleQuickAction('Agendame ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-gray-100 dark:bg-white/[0.03] hover:bg-gray-200 dark:hover:bg-white/[0.06] border border-gray-200 dark:border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 dark:text-neutral-300 transition-colors">
                   <Calendar size={12} className="text-blue-400" />
                   <span>Evento</span>
                 </button>
-                <button onClick={() => handleQuickAction('Nota: ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-neutral-300 transition-colors">
+                <button onClick={() => handleQuickAction('Nota: ')} className="snap-start flex-shrink-0 flex items-center gap-1.5 bg-gray-100 dark:bg-white/[0.03] hover:bg-gray-200 dark:hover:bg-white/[0.06] border border-gray-200 dark:border-white/5 px-3 py-1.5 rounded-full text-xs font-medium text-gray-700 dark:text-neutral-300 transition-colors">
                   <StickyNote size={12} className="text-purple-400" />
                   <span>Nota</span>
                 </button>
               </div>
 
               {/* Formulario de Input */}
-              <form onSubmit={handleSubmit} className="relative flex items-end bg-white/[0.03] rounded-[24px] p-1.5 border border-white/10 focus-within:border-indigo-500/50 focus-within:bg-white/[0.05] transition-all">
+              <form onSubmit={handleSubmit} className="relative flex items-end bg-gray-100 dark:bg-white/[0.03] rounded-[24px] p-1.5 border border-gray-200 dark:border-white/10 focus-within:border-indigo-500/50 focus-within:bg-gray-50 dark:focus-within:bg-white/[0.05] transition-all">
                 <button
                   type="button"
                   onClick={toggleListening}
@@ -484,7 +459,7 @@ export default function LifeOSConsole() {
                   disabled={isSubmitting}
                   placeholder="Escribe o dicta algo..."
                   rows={1}
-                  className="flex-1 max-h-32 min-h-[44px] bg-transparent border-none text-[16px] text-white placeholder-neutral-500 py-2.5 px-2 focus:outline-none focus:ring-0 disabled:opacity-50 resize-none overflow-y-auto leading-relaxed"
+                  className="flex-1 max-h-32 min-h-[44px] bg-transparent border-none text-[16px] text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-neutral-500 py-2.5 px-2 focus:outline-none focus:ring-0 disabled:opacity-50 resize-none overflow-y-auto leading-relaxed"
                   style={{
                     height: inputText ? `${Math.min(120, Math.max(44, inputText.split('\n').length * 24 + 20))}px` : '44px'
                   }}

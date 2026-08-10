@@ -72,17 +72,17 @@ export default function FinanzasPage() {
         <div className="flex items-center gap-3">
           <Link 
             href="/academia"
-            className="w-10 h-10 bg-zinc-900 border border-zinc-800 rounded-full flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+            className="w-10 h-10 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors"
           >
             <ChevronLeft size={20} />
           </Link>
-          <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
             Finanzas <Wallet size={20} className="text-emerald-400" />
           </h1>
         </div>
         <button 
           onClick={() => setShowSplit(true)}
-          className="px-3 py-1.5 rounded-full bg-zinc-900/40 border border-zinc-800/80 text-[10px] font-bold text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800 transition-colors tracking-widest uppercase"
+          className="px-3 py-1.5 rounded-full bg-gray-100 dark:bg-zinc-900/40 border border-gray-200 dark:border-zinc-800/80 text-[10px] font-bold text-gray-500 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300 hover:bg-gray-200 dark:hover:bg-zinc-800 transition-colors tracking-widest uppercase"
         >
           Split
         </button>
@@ -90,14 +90,14 @@ export default function FinanzasPage() {
 
       {/* Dashboard Superior */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-5 shadow-lg backdrop-blur-md">
-          <p className="text-zinc-500 text-[11px] font-bold uppercase tracking-wider mb-1">Balance Total</p>
+        <div className="bg-gray-100 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800/80 rounded-3xl p-5 shadow-lg backdrop-blur-md">
+          <p className="text-gray-500 dark:text-zinc-500 text-[11px] font-bold uppercase tracking-wider mb-1">Balance Total</p>
           <p className={`text-2xl font-bold tracking-tight ${balanceTotal >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
             {formatoMoneda(balanceTotal)}
           </p>
         </div>
-        <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-3xl p-5 shadow-lg backdrop-blur-md">
-          <p className="text-zinc-500 text-[11px] font-bold uppercase tracking-wider mb-1">Gastos del Mes</p>
+        <div className="bg-gray-100 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800/80 rounded-3xl p-5 shadow-lg backdrop-blur-md">
+          <p className="text-gray-500 dark:text-zinc-500 text-[11px] font-bold uppercase tracking-wider mb-1">Gastos del Mes</p>
           <p className="text-2xl font-bold tracking-tight text-red-400">
             {formatoMoneda(gastosDelMes)}
           </p>
@@ -105,14 +105,14 @@ export default function FinanzasPage() {
       </div>
 
       {/* Formulario Rápido */}
-      <section className="bg-zinc-900/50 border border-zinc-800/80 rounded-3xl p-5 shadow-xl backdrop-blur-md">
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-zinc-400 mb-4">Nueva Transacción</h2>
+      <section className="bg-gray-100 dark:bg-zinc-900/50 border border-gray-200 dark:border-zinc-800/80 rounded-3xl p-5 shadow-xl backdrop-blur-md">
+        <h2 className="font-semibold text-sm uppercase tracking-wider text-gray-500 dark:text-zinc-400 mb-4">Nueva Transacción</h2>
         
-        <div className="flex gap-2 mb-4 bg-zinc-950 p-1 rounded-2xl border border-zinc-800/50">
+        <div className="flex gap-2 mb-4 bg-gray-200 dark:bg-zinc-950 p-1 rounded-2xl border border-gray-200 dark:border-zinc-800/50">
           <button 
             onClick={() => setTipo('gasto')}
             className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
-              tipo === 'gasto' ? 'bg-red-500/20 text-red-500 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+              tipo === 'gasto' ? 'bg-red-500/20 text-red-500 shadow-sm' : 'text-gray-500 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300'
             }`}
           >
             Gasto
@@ -120,7 +120,7 @@ export default function FinanzasPage() {
           <button 
             onClick={() => setTipo('ingreso')}
             className={`flex-1 py-2 rounded-xl text-sm font-bold transition-all ${
-              tipo === 'ingreso' ? 'bg-emerald-500/20 text-emerald-500 shadow-sm' : 'text-zinc-500 hover:text-zinc-300'
+              tipo === 'ingreso' ? 'bg-emerald-500/20 text-emerald-500 shadow-sm' : 'text-gray-500 dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300'
             }`}
           >
             Ingreso
@@ -129,7 +129,7 @@ export default function FinanzasPage() {
 
         <div className="flex flex-col gap-3">
           <div className="relative">
-            <span className="absolute left-4 top-3 text-zinc-500 font-bold">$</span>
+            <span className="absolute left-4 top-3 text-gray-400 dark:text-zinc-500 font-bold">$</span>
             <input 
               type="text"
               inputMode="decimal"
@@ -137,7 +137,7 @@ export default function FinanzasPage() {
               placeholder="0.00"
               value={monto}
               onChange={(e) => setMonto(e.target.value)}
-              className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl pl-8 pr-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl pl-8 pr-4 py-3 text-lg font-bold text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -149,8 +149,8 @@ export default function FinanzasPage() {
                   onClick={() => setCategoria(cat)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
                     categoria === cat 
-                      ? 'bg-zinc-100 text-zinc-900' 
-                      : 'bg-zinc-800/60 text-zinc-400 hover:text-white border border-zinc-700/50'
+                      ? 'bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900' 
+                      : 'bg-gray-100 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-zinc-700/50'
                   }`}
                 >
                   {cat}
@@ -164,7 +164,7 @@ export default function FinanzasPage() {
             placeholder={tipo === 'gasto' ? 'Descripción (Ej: Hamburguesa)' : 'Descripción (Ej: Sueldo)'}
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
-            className="w-full bg-zinc-950 border border-zinc-800 rounded-2xl px-4 py-3 text-base text-white focus:outline-none focus:border-blue-500 transition-colors"
+            className="w-full bg-white dark:bg-zinc-950 border border-gray-200 dark:border-zinc-800 rounded-2xl px-4 py-3 text-base text-gray-900 dark:text-white focus:outline-none focus:border-blue-500 transition-colors"
           />
 
           <button 
@@ -183,7 +183,7 @@ export default function FinanzasPage() {
 
       {/* Historial */}
       <section>
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-zinc-500 mb-3 ml-2">Últimos Movimientos</h2>
+        <h2 className="font-semibold text-sm uppercase tracking-wider text-gray-500 dark:text-zinc-500 mb-3 ml-2">Últimos Movimientos</h2>
         <div className="flex flex-col gap-3">
           {transacciones.length === 0 ? (
             <p className="text-zinc-500 text-sm italic ml-2">No hay movimientos registrados.</p>
@@ -194,7 +194,7 @@ export default function FinanzasPage() {
                   <Trash2 size={18} className="text-white" />
                 </div>
                 <motion.div 
-                  className="relative z-10 flex items-center justify-between bg-zinc-900/80 border border-zinc-800/80 p-4 shadow-sm"
+                  className="relative z-10 flex items-center justify-between bg-white dark:bg-zinc-900/80 border border-gray-200 dark:border-zinc-800/80 p-4 shadow-sm"
                   drag="x"
                   dragConstraints={{ left: 0, right: 0 }}
                   dragElastic={{ left: 0.8, right: 0 }}
@@ -206,7 +206,7 @@ export default function FinanzasPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                      t.tipo === 'ingreso' ? 'bg-emerald-500/10' : 'bg-zinc-800'
+                      t.tipo === 'ingreso' ? 'bg-emerald-500/10' : 'bg-gray-100 dark:bg-zinc-800'
                     }`}>
                       {t.tipo === 'ingreso' ? (
                         <ArrowUpRight size={18} className="text-emerald-500" />
@@ -215,11 +215,11 @@ export default function FinanzasPage() {
                       )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-sm text-white">{t.descripcion}</h3>
-                      <p className="text-xs text-zinc-500">{t.categoria} • {new Date(t.fecha).toLocaleDateString()}</p>
+                      <h3 className="font-bold text-sm text-gray-900 dark:text-white">{t.descripcion}</h3>
+                      <p className="text-xs text-gray-500 dark:text-zinc-500">{t.categoria} • {new Date(t.fecha).toLocaleDateString()}</p>
                     </div>
                   </div>
-                  <span className={`font-bold tabular-nums ${t.tipo === 'ingreso' ? 'text-emerald-400' : 'text-white'}`}>
+                  <span className={`font-bold tabular-nums ${t.tipo === 'ingreso' ? 'text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
                     {t.tipo === 'gasto' ? '-' : '+'}{formatoMoneda(t.monto)}
                   </span>
                 </motion.div>
@@ -240,10 +240,10 @@ export default function FinanzasPage() {
             className="fixed inset-0 z-50 flex items-center justify-center px-4"
           >
             <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowSplit(false)} />
-            <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-5 max-h-[80vh] overflow-hidden">
+            <div className="relative w-full max-w-md bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-5 max-h-[80vh] overflow-hidden">
               <div className="flex justify-between items-center">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  Cuentas Claras <span className="text-[10px] bg-zinc-800 px-2 py-0.5 rounded-full text-zinc-400 uppercase tracking-widest font-black">Beta</span>
+                <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                  Cuentas Claras <span className="text-[10px] bg-gray-100 dark:bg-zinc-800 px-2 py-0.5 rounded-full text-gray-500 dark:text-zinc-400 uppercase tracking-widest font-black">Beta</span>
                 </h2>
                 <button onClick={() => setShowSplit(false)} className="text-zinc-500 hover:text-white p-1 bg-zinc-800/50 rounded-full"><X size={18} /></button>
               </div>
