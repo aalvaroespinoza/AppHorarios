@@ -5,6 +5,7 @@ import BottomTabBar from "@/components/layout/BottomTabBar";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { EscenarioProvider } from "@/context/EscenarioContext";
 import NotificationProvider from "@/components/NotificationProvider";
+import { ThemeProvider } from "@/context/ThemeContext";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -28,26 +29,57 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
 };
 
-import PageTransitionWrapper from "@/components/layout/PageTransitionWrapper";
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="dark">
-      <body className={`${inter.className} bg-black text-white min-h-[100dvh] antialiased overflow-x-hidden`}>
-        <EscenarioProvider>
-          <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] w-full max-w-[100vw] overflow-x-hidden">
-            <PageTransitionWrapper>
+    <html lang="es">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('app_theme') || 'dark';
+                  var isDark = true;
+                  if (theme === 'light') {
+                    isDark = false;
+                  } else if (theme === 'auto') {
+                    var cacheRaw = localStorage.getItem('weather_cache_cordoba');
+                    if (cacheRaw) {
+                      var w = JSON.parse(cacheRaw);
+                      if (w && w.data && w.data.daily && w.data.daily.length > 0) {
+                        var now = new Date();
+                        var sunrise = new Date(w.data.daily[0].sunrise);
+                        var sunset = new Date(w.data.daily[0].sunset);
+                        isDark = now < sunrise || now >= sunset;
+                      }
+                    }
+                  }
+                  if (isDark) {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
+      <body className={`${inter.className} bg-gray-50 text-neutral-900 dark:bg-black dark:text-white min-h-[100dvh] antialiased overflow-x-hidden transition-colors duration-300`}>
+        <ThemeProvider>
+          <EscenarioProvider>
+            <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] w-full max-w-[100vw] overflow-x-hidden">
               {children}
-            </PageTransitionWrapper>
-          </main>
-          <BottomTabBar />
-          <ServiceWorkerRegister />
-          <NotificationProvider />
-        </EscenarioProvider>
+            </main>
+            <BottomTabBar />
+            <ServiceWorkerRegister />
+            <NotificationProvider />
+          </EscenarioProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
