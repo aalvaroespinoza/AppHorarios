@@ -12,8 +12,10 @@ import { subjectData } from '@/data/subjects';
 import type { DayOfWeek } from '@/core/types/common';
 import { SPRING_CONFIG } from '@/lib/animations';
 import { getEdificio, parseMateria } from '@/core/utils/edificio';
+import { MateriaDetailModal } from '@/components/MateriaDetailModal';
 
 export function MiniCalendar() {
+  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
   const [viewDate, setViewDate] = useState(new Date());
   
   const monthName = viewDate.toLocaleString('es-AR', { month: 'long' });
@@ -349,7 +351,10 @@ export function MiniCalendar() {
                           isDeadline ? 'border-emerald-500' : isClase ? 'border-blue-500' : 'border-amber-500'
                         }`} />
                         
-                        <div className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-4 transition-colors hover:bg-zinc-800/50">
+                        <div 
+                          onClick={() => setSelectedSubject(ev)}
+                          className="bg-zinc-800/30 border border-zinc-700/30 rounded-2xl p-4 transition-all hover:bg-zinc-800/50 cursor-pointer active:scale-98"
+                        >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1">
                               <p className="text-zinc-400 text-[10px] font-bold mb-1 tracking-wider uppercase flex items-center gap-1.5">
@@ -405,6 +410,11 @@ export function MiniCalendar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <MateriaDetailModal 
+        materia={selectedSubject} 
+        onClose={() => setSelectedSubject(null)} 
+      />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import type { useAgenda } from '@/hooks/useAgenda';
 import { SPRING_CONFIG } from '@/lib/animations';
 
 import { getEdificio, parseMateria } from '@/core/utils/edificio';
+import { MateriaDetailModal } from '@/components/MateriaDetailModal';
 
 interface AgendaViewProps {
   fechaSeleccionada: string;
@@ -17,6 +18,7 @@ interface AgendaViewProps {
 }
 
 export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agendaDelDia }: AgendaViewProps) {
+  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
   const [mostrarFormEvento, setMostrarFormEvento] = useState(false);
   const [nuevoEvento, setNuevoEvento] = useState({ 
     titulo: '', 
@@ -79,7 +81,8 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
               )}
 
               <motion.div 
-                className={`relative z-10 p-3.5 rounded-2xl shadow-sm ${item.color || 'bg-zinc-800 border border-zinc-700/50 text-zinc-100'}`}
+                onClick={() => setSelectedSubject(item)}
+                className={`relative z-10 p-3.5 rounded-2xl shadow-sm cursor-pointer active:scale-98 transition-transform ${item.color || 'bg-zinc-800 border border-zinc-700/50 text-zinc-100'}`}
                 drag={item.tipo === 'custom' ? "x" : false}
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={{ left: 0.8, right: 0 }}
@@ -205,6 +208,11 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
           )}
         </AnimatePresence>
       </div>
+
+      <MateriaDetailModal 
+        materia={selectedSubject} 
+        onClose={() => setSelectedSubject(null)} 
+      />
     </section>
   );
 }
