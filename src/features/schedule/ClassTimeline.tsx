@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseMateriaInfo } from '@/core/utils/edificio';
 
-interface ClassItem {
+export interface ClassItem {
   id?: string;
   nombre?: string;
   name?: string;
@@ -16,27 +16,53 @@ interface ClassItem {
   timeEnd?: string;
   curso?: string;
   aula?: string;
+  color?: string;
 }
 
-interface ClassTimelineProps {
+export interface ClassTimelineProps {
+  materiasDelDia?: ClassItem[];
   classes?: ClassItem[];
+  isToday?: boolean;
+  horaActualHHMM?: string;
+  linePosition?: "none" | "before" | "inside" | "after";
+  activeIndex?: number;
 }
 
-export function ClassTimeline({ classes = [] }: ClassTimelineProps) {
+export function ClassTimeline({
+  materiasDelDia,
+  classes,
+  isToday,
+  horaActualHHMM,
+  linePosition,
+  activeIndex
+}: ClassTimelineProps) {
+  const items = materiasDelDia || classes || [];
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
+
+  if (items.length === 0) {
+    return (
+      <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-2xl p-4 text-center text-sm text-neutral-500 italic">
+        Sin materias programadas para hoy 📚
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3 w-full">
-      {classes.map((cls, idx) => {
-        const info = parseMateriaInfo(cls.nombre || cls.name || cls.title || cls.rawText || '');
+      {items.map((cls, idx) => {
+        const rawString = cls.nombre || cls.name || cls.title || cls.rawText || '';
+        const info = parseMateriaInfo(rawString);
         const horaInicio = cls.horaInicio || cls.timeStart || "08:00";
         const horaFin = cls.horaFin || cls.timeEnd || "11:10";
+        const isActive = activeIndex === idx && isToday;
 
         return (
           <div
             key={cls.id || idx}
             onClick={() => setSelectedSubject(cls)}
-            className="cursor-pointer active:scale-98 transition-transform bg-neutral-900/80 border border-neutral-800 rounded-2xl p-4 flex items-center justify-between hover:border-neutral-700"
+            className={`cursor-pointer active:scale-98 transition-transform bg-neutral-900/80 border rounded-2xl p-4 flex items-center justify-between hover:border-neutral-700 ${
+              isActive ? 'border-purple-500/80 bg-purple-950/20 shadow-md shadow-purple-950/30' : 'border-neutral-800'
+            }`}
           >
             <div className="flex flex-col gap-1">
               <span className="font-bold text-white text-base">{info.nombre}</span>
@@ -45,8 +71,12 @@ export function ClassTimeline({ classes = [] }: ClassTimelineProps) {
                 Aula {info.aula} · 📍 {info.edificio}
               </span>
             </div>
-            <div className="text-right">
-              <span className="text-xs font-semibold text-purple-400 bg-purple-950/40 border border-purple-800/40 px-2.5 py-1 rounded-lg">
+            <div className="text-right flex items-center gap-2">
+              <span className={`text-xs font-semibold px-2.5 py-1 rounded-lg border ${
+                isActive 
+                  ? 'bg-purple-600 text-white border-purple-500 animate-pulse' 
+                  : 'text-purple-400 bg-purple-950/40 border-purple-800/40'
+              }`}>
                 {horaInicio} - {horaFin}
               </span>
             </div>
@@ -56,7 +86,8 @@ export function ClassTimeline({ classes = [] }: ClassTimelineProps) {
 
       <AnimatePresence>
         {selectedSubject && (() => {
-          const info = parseMateriaInfo(selectedSubject.nombre || selectedSubject.title || selectedSubject.rawText || selectedSubject.name || '');
+          const rawString = selectedSubject.nombre || selectedSubject.title || selectedSubject.rawText || selectedSubject.name || '';
+          const info = parseMateriaInfo(rawString);
           return (
             <motion.div
               initial={{ opacity: 0 }}
@@ -78,7 +109,7 @@ export function ClassTimeline({ classes = [] }: ClassTimelineProps) {
                   <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Detalle de Cursado</span>
                   <button
                     onClick={() => setSelectedSubject(null)}
-                    className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-gray-400 hover:text-white"
+                    className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-gray-400 hover:text-white transition-colors"
                   >
                     ✕
                   </button>
