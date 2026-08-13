@@ -136,7 +136,7 @@ export async function POST(request: Request) {
     supabaseServerAdmin
       .from('raw_events')
       .insert([{ raw_text: text, parsed_data: actionData, status: 'processed' }])
-      .then(({ error }) => {
+      .then(({ error }: { error: any }) => {
         if (error) console.error('Error insertando en Supabase:', error);
       });
 

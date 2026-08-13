@@ -50,7 +50,7 @@ export default function TareasPage() {
         return;
       }
 
-      const filtered = (data || []).filter(item => {
+      const filtered = (data || []).filter((item: any) => {
         const type = item.parsed_data?.type;
         return type === 'TASK' || type === 'create_reminder' || type === 'REMINDER';
       });
