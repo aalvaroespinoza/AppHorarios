@@ -393,6 +393,31 @@ export default function LifeOSConsole() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         className="self-start max-w-[90%] flex gap-3"
                       >
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500/20 to-purple-500/10 border border-white/10 flex items-center justify-center flex-shrink-0 mt-1">
+                          <Bot size={14} className="text-indigo-400" />
+                        </div>
+                        
+                        <div className="flex flex-col gap-2 w-full">
+                          {msg.status === 'loading' ? (
+                            <div className="bg-white/[0.03] border border-white/5 px-4 py-3.5 rounded-[20px] rounded-tl-[4px] flex items-center gap-3 w-fit">
+                              <div className="flex gap-1.5">
+                                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
+                                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
+                                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} className="w-1.5 h-1.5 rounded-full bg-indigo-400/60" />
+                              </div>
+                            </div>
+                          ) : msg.status === 'error' ? (
+                            <div className="bg-red-500/10 border border-red-500/20 text-red-200 px-4 py-3 rounded-[20px] rounded-tl-[4px] text-[15px] shadow-sm leading-relaxed">
+                              {msg.text}
+                            </div>
+                          ) : (
+                            <div className="bg-white/[0.04] border border-white/5 text-neutral-100 px-4 py-3 rounded-[20px] rounded-tl-[4px] text-[15px] shadow-sm leading-relaxed flex flex-col gap-2">
+                              <span>{msg.text}</span>
+                              {msg.action && (
+                                <Link 
+                                  href={msg.action.url}
+                                  className="mt-1 w-fit flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/30 rounded-full text-indigo-300 text-xs font-medium transition-colors"
+                                >
                                   {msg.action.label}
                                   <ExternalLink size={12} />
                                 </Link>
