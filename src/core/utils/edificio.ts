@@ -1,16 +1,37 @@
+export function getEdificioByAula(aulaNum: number): string {
+  if (aulaNum >= 200 && aulaNum <= 299) return "Edificio Central";
+  if (aulaNum >= 400 && aulaNum <= 499) return "I. Chaurrondo";
+  if (aulaNum >= 500 && aulaNum <= 599) return "Gallardo";
+  if (aulaNum >= 600 && aulaNum <= 899) return "Soro";
+  if (aulaNum >= 900 && aulaNum <= 999) return "Poseto";
+  return "Edificio no especificado";
+}
+
+export function parseMateriaInfo(rawText: string) {
+  if (!rawText) return { curso: 'N/A', aula: 'N/A', nombre: rawText || 'Materia', edificio: 'N/A' };
+  
+  // Intenta extraer patrón: "2K3 Aula:400 Análisis de Sistemas..."
+  const match = String(rawText).match(/^([0-9][a-zA-Z][0-9]+)\s*Aula:\s*(\d+)\s+(.+)$/i);
+  if (match) {
+    const aulaNum = parseInt(match[2], 10);
+    return {
+      curso: match[1],
+      aula: match[2],
+      nombre: match[3],
+      edificio: getEdificioByAula(aulaNum)
+    };
+  }
+  
+  return { curso: 'Consultar', aula: 'N/A', nombre: String(rawText), edificio: 'N/A' };
+}
+
 export function getEdificio(aulaStr: string | null | undefined): string {
   if (!aulaStr) return "";
-  // Extraer solo los números del string del aula
   const numMatches = String(aulaStr).match(/\d+/);
   if (!numMatches) return "";
   const num = parseInt(numMatches[0], 10);
-  
-  if (num >= 200 && num <= 299) return "Edificio Central";
-  if (num >= 400 && num <= 499) return "I. Chaurrondo";
-  if (num >= 500 && num <= 599) return "Gallardo";
-  if (num >= 600 && num <= 899) return "Soro";
-  if (num >= 900 && num <= 999) return "Poseto";
-  return "";
+  const ed = getEdificioByAula(num);
+  return ed === "Edificio no especificado" ? "" : ed;
 }
 
 export interface MateriaParsed {
@@ -19,9 +40,6 @@ export interface MateriaParsed {
   nombre: string;
 }
 
-/**
- * Normaliza y extrae curso, aula y nombre desde un objeto o un string crudo tipo "1K2 Aula:520 Arquitectura de Computadoras"
- */
 export function parseMateria(input: any): MateriaParsed {
   if (!input) return { curso: "", aula: "", nombre: "" };
 
@@ -42,15 +60,13 @@ export function parseMateria(input: any): MateriaParsed {
   }
 
   const str = String(input).trim();
-
-  // Pattern matching: "1K2 Aula:520 Arquitectura de Computadoras" or "1K2 Aula 520 Arquitectura..." or "Aula:520 Arquitectura..."
-  const fullMatch = str.match(/^(?:([0-9][A-Za-z0-9]+)\s+)?(?:Aula[:\s]*([0-9A-Za-z]+)\s+)?(.*)$/i);
-
-  if (fullMatch && (fullMatch[1] || fullMatch[2])) {
-    const curso = fullMatch[1] || "";
-    const aula = fullMatch[2] || "";
-    const nombre = fullMatch[3]?.trim() || str;
-    return { curso, aula, nombre };
+  const info = parseMateriaInfo(str);
+  if (info.curso !== 'Consultar') {
+    return {
+      curso: info.curso,
+      aula: info.aula,
+      nombre: info.nombre
+    };
   }
 
   return { curso: "", aula: "", nombre: str };

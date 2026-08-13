@@ -1,87 +1,121 @@
 "use client";
 
-import React from 'react';
-import { Clock, CheckCircle2 } from 'lucide-react';
-import NativeCard from '@/core/components/ui/NativeCard';
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { parseMateriaInfo } from '@/core/utils/edificio';
 
-interface Materia {
-  nombre: string;
-  horaInicio: string;
-  horaFin: string;
-  color?: string;
+interface ClassItem {
+  id?: string;
+  nombre?: string;
+  name?: string;
+  title?: string;
+  rawText?: string;
+  horaInicio?: string;
+  horaFin?: string;
+  timeStart?: string;
+  timeEnd?: string;
+  curso?: string;
+  aula?: string;
 }
 
 interface ClassTimelineProps {
-  materiasDelDia: Materia[];
-  isToday: boolean;
-  horaActualHHMM: string;
-  linePosition: 'before' | 'inside' | 'after' | 'none';
-  activeIndex: number;
+  classes?: ClassItem[];
 }
 
-export function ClassTimeline({ 
-  materiasDelDia, 
-  isToday, 
-  horaActualHHMM, 
-  linePosition, 
-  activeIndex 
-}: ClassTimelineProps) {
-  if (materiasDelDia.length === 0) return null;
+export function ClassTimeline({ classes = [] }: ClassTimelineProps) {
+  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
 
   return (
-    <NativeCard className="py-6">
-      <div className="flex items-center gap-2 mb-5 text-zinc-400">
-        <Clock size={18} />
-        <h2 className="font-semibold text-sm uppercase tracking-wider">Cursado</h2>
-      </div>
-      
-      <div className="flex flex-col gap-0 relative">
-        {/* Línea vertical continua */}
-        <div className="absolute left-[9px] top-3 bottom-3 w-0.5 bg-zinc-800 rounded-full" />
-        
-        {materiasDelDia.map((materia, idx) => {
-          const isFinished = isToday && materia.horaFin <= horaActualHHMM;
-          const showLineBefore = isToday && linePosition === 'before' && idx === activeIndex;
-          const showLineInside = isToday && linePosition === 'inside' && idx === activeIndex;
-          const showLineAfter = isToday && linePosition === 'after' && idx === activeIndex;
-          
-          const TimeLine = () => (
-            <div className="absolute left-0 right-0 z-20 flex items-center ml-1">
-              <div className="w-3 h-3 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-              <div className="h-[2px] flex-1 bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-            </div>
-          );
+    <div className="flex flex-col gap-3 w-full">
+      {classes.map((cls, idx) => {
+        const info = parseMateriaInfo(cls.nombre || cls.name || cls.title || cls.rawText || '');
+        const horaInicio = cls.horaInicio || cls.timeStart || "08:00";
+        const horaFin = cls.horaFin || cls.timeEnd || "11:10";
 
-          return (
-            <div key={idx} className="relative pl-8 py-3">
-              {showLineBefore && <div className="absolute -top-1.5 left-0 right-0"><TimeLine /></div>}
-              
-              {/* Punto en la línea */}
-              <div className={`absolute left-[3px] top-[22px] w-3.5 h-3.5 bg-zinc-900 border-[2.5px] rounded-full z-10 transition-colors ${
-                isFinished ? 'border-zinc-700' : 'border-blue-500'
-              }`} />
-              
-              <div className={`bg-zinc-800/30 border rounded-2xl p-4 transition-all relative ${
-                isFinished ? 'border-zinc-800/50 opacity-50 grayscale' : 'border-zinc-700/30'
-              }`}>
-                {showLineInside && <div className="absolute top-1/2 left-0 right-0 -translate-y-1/2 -ml-8"><TimeLine /></div>}
-                <h3 className={`font-semibold text-base flex items-center gap-2 ${isFinished ? 'text-zinc-300' : 'text-white'}`}>
-                  {materia.color && (
-                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${materia.color.split(' ')[0]}`} />
-                  )}
-                  {materia.nombre}
-                  {isFinished && <CheckCircle2 size={16} className="text-zinc-500" />}
-                </h3>
-                <p className="text-zinc-400 text-sm mt-1.5 font-medium">
-                  {materia.horaInicio} <span className="text-zinc-600 mx-1">-</span> {materia.horaFin}
-                </p>
-              </div>
-              
-              {showLineAfter && <div className="absolute -bottom-1.5 left-0 right-0"><TimeLine /></div>}
+        return (
+          <div
+            key={cls.id || idx}
+            onClick={() => setSelectedSubject(cls)}
+            className="cursor-pointer active:scale-98 transition-transform bg-neutral-900/80 border border-neutral-800 rounded-2xl p-4 flex items-center justify-between hover:border-neutral-700"
+          >
+            <div className="flex flex-col gap-1">
+              <span className="font-bold text-white text-base">{info.nombre}</span>
+              <span className="text-xs text-neutral-400">
+                {info.curso !== 'N/A' && info.curso !== 'Consultar' ? `${info.curso} | ` : ''}
+                Aula {info.aula} · 📍 {info.edificio}
+              </span>
             </div>
+            <div className="text-right">
+              <span className="text-xs font-semibold text-purple-400 bg-purple-950/40 border border-purple-800/40 px-2.5 py-1 rounded-lg">
+                {horaInicio} - {horaFin}
+              </span>
+            </div>
+          </div>
+        );
+      })}
+
+      <AnimatePresence>
+        {selectedSubject && (() => {
+          const info = parseMateriaInfo(selectedSubject.nombre || selectedSubject.title || selectedSubject.rawText || selectedSubject.name || '');
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+              onClick={() => setSelectedSubject(null)}
+            >
+              <motion.div
+                initial={{ y: "100%" }}
+                animate={{ y: 0 }}
+                exit={{ y: "100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-t-3xl sm:rounded-3xl p-6 flex flex-col gap-5 text-white"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header del Submenú */}
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                  <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Detalle de Cursado</span>
+                  <button
+                    onClick={() => setSelectedSubject(null)}
+                    className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-gray-400 hover:text-white"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Nombre de la Materia */}
+                <div>
+                  <h3 className="text-xl font-bold text-white">{info.nombre}</h3>
+                  <p className="text-sm text-neutral-400 mt-0.5">
+                    ⏰ Horario: <span className="text-white font-medium">{selectedSubject.horaInicio || selectedSubject.timeStart || "08:00"} a {selectedSubject.horaFin || selectedSubject.timeEnd || "11:10"} hs</span>
+                  </p>
+                </div>
+
+                {/* Grid de Detalles: Curso, Aula y Edificio */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-2xl p-3.5 flex flex-col">
+                    <span className="text-xs text-neutral-400">Curso</span>
+                    <span className="text-base font-bold text-purple-300 mt-1">{info.curso}</span>
+                  </div>
+
+                  <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-2xl p-3.5 flex flex-col">
+                    <span className="text-xs text-neutral-400">Aula</span>
+                    <span className="text-base font-bold text-emerald-300 mt-1">Aula {info.aula}</span>
+                  </div>
+
+                  <div className="col-span-2 bg-neutral-800/60 border border-neutral-700/50 rounded-2xl p-3.5 flex flex-col">
+                    <span className="text-xs text-neutral-400">Ubicación / Edificio</span>
+                    <span className="text-base font-bold text-amber-300 mt-1 flex items-center gap-1.5">
+                      📍 {info.edificio}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
           );
-        })}
-      </div>
-    </NativeCard>
+        })()}
+      </AnimatePresence>
+    </div>
   );
 }
