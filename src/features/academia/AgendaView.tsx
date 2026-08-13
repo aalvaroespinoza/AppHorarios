@@ -6,6 +6,8 @@ import { Clock, Plus, Trash2 } from 'lucide-react';
 import type { useAgenda } from '@/hooks/useAgenda';
 import { SPRING_CONFIG } from '@/lib/animations';
 
+import { getEdificio, parseMateria } from '@/core/utils/edificio';
+
 interface AgendaViewProps {
   fechaSeleccionada: string;
   diaNombre: string;
@@ -87,17 +89,37 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
                   }
                 }}
               >
-                <h3 className="font-bold text-[15px] leading-tight mb-1">{item.titulo}</h3>
-                <div className="flex items-center gap-2 text-xs opacity-80 font-medium">
-                  <span className="bg-black/20 px-2 py-0.5 rounded-md">
-                    {item.horaInicio} - {item.horaFin}
-                  </span>
-                  {item.modalidad && (
-                    <span className="bg-black/20 px-2 py-0.5 rounded-md capitalize">
-                      {item.modalidad}
-                    </span>
-                  )}
-                </div>
+                {(() => {
+                  const materia = parseMateria(item.titulo || item);
+                  const edificioName = getEdificio(materia.aula);
+                  return (
+                    <div className="flex flex-col text-center">
+                      <span className="font-bold text-sm">{materia.nombre}</span>
+                      {(materia.curso || materia.aula) && (
+                        <span className="text-xs mt-1">
+                          {materia.curso ? `Curso: ${materia.curso}` : ''}
+                          {materia.curso && materia.aula ? ' | ' : ''}
+                          {materia.aula ? `Aula: ${materia.aula}` : ''}
+                        </span>
+                      )}
+                      {edificioName && (
+                        <span className="text-xs font-semibold opacity-80">
+                          📍 {edificioName}
+                        </span>
+                      )}
+                      <div className="flex items-center justify-center gap-2 text-xs opacity-80 font-medium mt-1">
+                        <span className="bg-black/20 px-2 py-0.5 rounded-md">
+                          {item.horaInicio} - {item.horaFin}
+                        </span>
+                        {item.modalidad && (
+                          <span className="bg-black/20 px-2 py-0.5 rounded-md capitalize">
+                            {item.modalidad}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
               </motion.div>
             </div>
           ))

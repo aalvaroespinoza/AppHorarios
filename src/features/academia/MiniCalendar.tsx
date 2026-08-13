@@ -11,6 +11,7 @@ import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
 import { subjectData } from '@/data/subjects';
 import type { DayOfWeek } from '@/core/types/common';
 import { SPRING_CONFIG } from '@/lib/animations';
+import { getEdificio, parseMateria } from '@/core/utils/edificio';
 
 export function MiniCalendar() {
   const [viewDate, setViewDate] = useState(new Date());
@@ -354,8 +355,28 @@ export function MiniCalendar() {
                               <p className="text-zinc-400 text-[10px] font-bold mb-1 tracking-wider uppercase flex items-center gap-1.5">
                                 {isDeadline ? '⏳ Recordatorio / Entrega' : isClase ? '📘 Clase Regular' : '📅 Evento Personal'}
                               </p>
-                              <h3 className="text-white font-bold text-base leading-tight mb-1">{ev.titulo}</h3>
-                              <div className="flex items-center gap-2">
+                              {(() => {
+                                const materia = parseMateria(ev.titulo || ev);
+                                const edificioName = getEdificio(materia.aula);
+                                return (
+                                  <div className="flex flex-col text-center mb-1">
+                                    <span className="font-bold text-sm">{materia.nombre}</span>
+                                    {(materia.curso || materia.aula) && (
+                                      <span className="text-xs mt-1">
+                                        {materia.curso ? `Curso: ${materia.curso}` : ''}
+                                        {materia.curso && materia.aula ? ' | ' : ''}
+                                        {materia.aula ? `Aula: ${materia.aula}` : ''}
+                                      </span>
+                                    )}
+                                    {edificioName && (
+                                      <span className="text-xs font-semibold opacity-80">
+                                        📍 {edificioName}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })()}
+                              <div className="flex items-center gap-2 justify-center">
                                 <span className="bg-black/20 text-zinc-300 text-xs font-medium px-2 py-0.5 rounded-md">
                                   {isDeadline ? (ev.horaInicio !== '23:59' ? ev.horaInicio : 'Todo el día') : `${ev.horaInicio} - ${ev.horaFin}`}
                                 </span>
