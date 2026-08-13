@@ -1,71 +1,141 @@
-import type { SubjectData } from '@/types/subject';
+import type { DayOfWeek } from '@/core/types/common';
 
-/**
- * Base de datos estática de materias.
- * Cursada real — NO modificar con datos inventados.
- */
+export interface ClassBlock {
+  day: DayOfWeek;
+  startTime: string; // "HH:MM"
+  endTime: string;   // "HH:MM"
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  code?: string;
+  shift?: string;
+  modality?: string;
+  color?: string;
+  isOptional?: boolean;
+  classBlocks: ClassBlock[];
+}
+
+export interface SubjectData {
+  version: string;
+  updatedAt: string;
+  subjects: Subject[];
+}
+
 export const subjectData: SubjectData = {
-  version: '2.0.0',
+  version: "2.0.0",
   updatedAt: new Date().toISOString(),
   subjects: [
     {
-      id: 'arquitectura-computadoras',
-      name: 'Arquitectura de Computadoras',
-      shift: 'mañana',
-      modality: 'presencial',
-      isOptional: false,
-      color: 'bg-pink-300 text-pink-900',
+      id: "ingles-1",
+      name: "1K9 Aula:209 Inglés I",
+      shift: "Mañana",
+      modality: "Presencial",
+      color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
       classBlocks: [
-        { day: 'martes', startTime: '08:00', endTime: '11:10' },
-        { day: 'jueves', startTime: '08:00', endTime: '11:10' },
-      ],
+        { day: "lunes", startTime: "11:20", endTime: "12:50" }
+      ]
     },
     {
-      id: 'analisis-sistemas-informacion',
-      name: 'Análisis de Sistemas de Información',
-      shift: 'mañana',
-      modality: 'presencial',
-      isOptional: false,
-      color: 'bg-fuchsia-100 text-fuchsia-900',
+      id: "arquitectura-comp-mar",
+      name: "1K2 Aula:520 Arquitectura de Computadoras",
+      shift: "Mañana",
+      modality: "Presencial",
+      color: "bg-rose-500/20 text-rose-300 border-rose-500/30",
       classBlocks: [
-        { day: 'miercoles', startTime: '08:00', endTime: '10:25' },
-        { day: 'jueves', startTime: '11:20', endTime: '14:00' },
-      ],
+        { day: "martes", startTime: "08:00", endTime: "11:10" }
+      ]
     },
     {
-      id: 'sintaxis-semantica-lenguajes',
-      name: 'Sintaxis y Semántica de los Lenguajes',
-      shift: 'tarde',
-      modality: 'presencial',
-      isOptional: false,
-      color: 'bg-green-400 text-green-950',
+      id: "paradigmas-prog-mar",
+      name: "2K8 Aula:514 Paradigmas de Programación",
+      shift: "Tarde/Noche",
+      modality: "Presencial",
+      color: "bg-purple-500/20 text-purple-300 border-purple-500/30",
       classBlocks: [
-        { day: 'miercoles', startTime: '12:05', endTime: '15:40' },
-        { day: 'jueves', startTime: '14:55', endTime: '18:05' },
-      ],
+        { day: "martes", startTime: "17:20", endTime: "20:40" }
+      ]
     },
     {
-      id: 'paradigmas-programacion',
-      name: 'Paradigmas de Programación',
-      shift: 'noche',
-      modality: 'presencial',
-      isOptional: false,
-      color: 'bg-purple-300 text-purple-900',
+      id: "analisis-sistemas-mier",
+      name: "2K3 Aula:400 Análisis de Sistemas de Información",
+      shift: "Mañana",
+      modality: "Presencial",
+      color: "bg-pink-500/20 text-pink-300 border-pink-500/30",
       classBlocks: [
-        { day: 'martes', startTime: '17:20', endTime: '20:40' },
-        { day: 'viernes', startTime: '19:55', endTime: '23:05' },
-      ],
+        { day: "miercoles", startTime: "08:00", endTime: "10:25" }
+      ]
     },
     {
-      id: 'algebra-geometria-analitica',
-      name: 'Álgebra y Geometría Analítica',
-      shift: 'tarde',
-      modality: 'virtual',
-      isOptional: false,
-      color: 'bg-blue-300 text-blue-900',
+      id: "sintaxis-semantica-mier",
+      name: "2K7 Aula:702 Sintaxis y Semántica de los Lenguajes",
+      shift: "Tarde",
+      modality: "Presencial",
+      color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
       classBlocks: [
-        { day: 'viernes', startTime: '14:00', endTime: '17:10' },
-      ],
+        { day: "miercoles", startTime: "12:05", endTime: "15:40" }
+      ]
     },
-  ],
+    {
+      id: "arquitectura-comp-jue",
+      name: "1K2 Aula:702 Arquitectura de Computadoras",
+      shift: "Mañana",
+      modality: "Presencial",
+      color: "bg-rose-500/20 text-rose-300 border-rose-500/30",
+      classBlocks: [
+        { day: "jueves", startTime: "08:00", endTime: "11:10" }
+      ]
+    },
+    {
+      id: "analisis-sistemas-jue",
+      name: "2K3 Aula:702 Análisis de Sistemas de Información",
+      shift: "Mañana",
+      modality: "Presencial",
+      color: "bg-pink-500/20 text-pink-300 border-pink-500/30",
+      classBlocks: [
+        { day: "jueves", startTime: "11:20", endTime: "14:00" }
+      ]
+    },
+    {
+      id: "sintaxis-semantica-jue",
+      name: "2K7 Aula:500 Sintaxis y Semántica de los Lenguajes",
+      shift: "Tarde",
+      modality: "Presencial",
+      color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+      classBlocks: [
+        { day: "jueves", startTime: "14:55", endTime: "18:05" }
+      ]
+    },
+    {
+      id: "algebra-viernes",
+      name: "1HK Álgebra y Geometría Analítica",
+      shift: "Tarde",
+      modality: "Presencial",
+      color: "bg-blue-500/20 text-blue-300 border-blue-500/30",
+      classBlocks: [
+        { day: "viernes", startTime: "14:00", endTime: "17:10" }
+      ]
+    },
+    {
+      id: "paradigmas-prog-vie",
+      name: "2K8 Aula:802 Paradigmas de Programación",
+      shift: "Noche",
+      modality: "Presencial",
+      color: "bg-purple-500/20 text-purple-300 border-purple-500/30",
+      classBlocks: [
+        { day: "viernes", startTime: "19:55", endTime: "23:05" }
+      ]
+    },
+    {
+      id: "fisica-sabado",
+      name: "1H20 Aula:999 Física I",
+      shift: "Mañana",
+      modality: "Presencial",
+      color: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+      classBlocks: [
+        { day: "sabado", startTime: "09:00", endTime: "13:00" }
+      ]
+    }
+  ]
 };
