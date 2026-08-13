@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { parseMateriaInfo } from '@/core/utils/edificio';
+import { parseMateriaInfo, getSubjectColorMapping } from '@/core/utils/edificio';
 import { MateriaDetailModal } from '@/components/MateriaDetailModal';
 import { Clock } from 'lucide-react';
 
@@ -50,16 +50,9 @@ export function ClassTimeline({
 
   return (
     <section className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-5 shadow-xl backdrop-blur-md relative">
-      <div className="flex items-center justify-between mb-4 text-neutral-400">
-        <div className="flex items-center gap-2">
-          <Clock size={18} className="text-purple-400" />
-          <h2 className="font-bold text-xs uppercase tracking-wider text-neutral-300">Cursado / Horario del día</h2>
-        </div>
-        {isToday && horaActualHHMM && (
-          <span className="text-xs font-mono font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-full">
-            Ahora: {horaActualHHMM} hs
-          </span>
-        )}
+      <div className="flex items-center gap-2 mb-4 text-neutral-400">
+        <Clock size={18} className="text-zinc-400" />
+        <h2 className="font-bold text-xs uppercase tracking-wider text-zinc-300">Cursado / Horario del día</h2>
       </div>
 
       {/* Timeline Vertical */}
@@ -70,6 +63,8 @@ export function ClassTimeline({
           const horaInicio = cls.horaInicio || cls.timeStart || "08:00";
           const horaFin = cls.horaFin || cls.timeEnd || "11:10";
           const isActive = activeIndex === idx && isToday;
+          
+          const mapping = getSubjectColorMapping(cls.color);
 
           return (
             <div key={cls.id || idx} className="relative">
@@ -77,7 +72,7 @@ export function ClassTimeline({
               <span 
                 className={`absolute -left-[1.65rem] top-3.5 h-3.5 w-3.5 rounded-full border-[3px] border-neutral-950 z-20 transition-all ${
                   isActive 
-                    ? 'bg-purple-500 ring-4 ring-purple-500/30 scale-110' 
+                    ? `${mapping.dot} ring-4 ${mapping.ring} scale-110` 
                     : 'bg-neutral-700'
                 }`} 
               />
@@ -86,44 +81,34 @@ export function ClassTimeline({
                 onClick={() => setSelectedSubject(cls)}
                 className={`group relative z-10 p-4 rounded-2xl border transition-all cursor-pointer active:scale-98 ${
                   isActive
-                    ? 'bg-gradient-to-r from-purple-950/40 to-neutral-900 border-purple-500/80 shadow-lg shadow-purple-950/40 text-white'
-                    : 'bg-neutral-900/80 border-neutral-800 text-neutral-200 hover:border-neutral-700 hover:bg-neutral-800/60'
+                    ? `bg-gradient-to-r ${mapping.gradient} ${mapping.border} shadow-lg ${mapping.shadow}`
+                    : `bg-neutral-900/80 border-neutral-800 ${mapping.bgHover}`
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <h3 className="font-bold text-base leading-tight text-white group-hover:text-purple-300 transition-colors">
+                    <h3 className={`font-bold text-base leading-tight transition-colors ${isActive ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
                       {info.nombre}
                     </h3>
-                    <div className="flex flex-wrap items-center gap-1.5 text-xs opacity-80 mt-1">
-                      {info.curso !== 'N/A' && info.curso !== 'Consultar' && (
-                        <span className="bg-black/30 px-2 py-0.5 rounded-md font-medium text-purple-300">
-                          {info.curso}
-                        </span>
-                      )}
-                      {info.aula !== 'N/A' && (
-                        <span className="bg-black/30 px-2 py-0.5 rounded-md font-medium text-emerald-300">
+                    {info.aula !== 'N/A' && (
+                      <div className="flex items-center gap-1.5 text-xs opacity-80 mt-1">
+                        <span className={`px-2 py-0.5 rounded-md font-medium ${mapping.bg} ${mapping.text}`}>
                           Aula {info.aula}
                         </span>
-                      )}
-                      {info.edificio !== 'N/A' && (
-                        <span className="bg-black/30 px-2 py-0.5 rounded-md font-medium text-amber-300">
-                          📍 {info.edificio}
-                        </span>
-                      )}
-                    </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-col items-end shrink-0">
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
                       isActive 
-                        ? 'bg-purple-600 text-white border-purple-400 animate-pulse' 
+                        ? `${mapping.dot} text-white ${mapping.border} animate-pulse` 
                         : 'bg-black/40 text-neutral-300 border-neutral-800'
                     }`}>
                       {horaInicio} - {horaFin}
                     </span>
                     {isActive && (
-                      <span className="text-[10px] font-extrabold uppercase tracking-wider text-purple-400 mt-1">
+                      <span className={`text-[10px] font-extrabold uppercase tracking-wider mt-1 ${mapping.text}`}>
                         En curso
                       </span>
                     )}

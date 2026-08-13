@@ -84,3 +84,16 @@ export function parseMateria(input: any): MateriaParsed {
 
   return { curso: "", aula: "", nombre: String(input) };
 }
+
+export function getSubjectColorMapping(colorStr?: string) {
+  if (!colorStr) return { bg: 'bg-zinc-800/80', bgHover: 'hover:bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-300', dot: 'bg-zinc-500', ring: 'ring-zinc-500/30', shadow: 'shadow-zinc-900/40', gradient: 'from-zinc-900 to-zinc-950' };
+  
+  if (colorStr.includes('emerald')) return { bg: 'bg-emerald-950/40', bgHover: 'hover:bg-emerald-950/60', border: 'border-emerald-500/50', text: 'text-emerald-400', dot: 'bg-emerald-500', ring: 'ring-emerald-500/30', shadow: 'shadow-emerald-900/40', gradient: 'from-emerald-950/40 to-neutral-900' };
+  if (colorStr.includes('rose')) return { bg: 'bg-rose-950/40', bgHover: 'hover:bg-rose-950/60', border: 'border-rose-500/50', text: 'text-rose-400', dot: 'bg-rose-500', ring: 'ring-rose-500/30', shadow: 'shadow-rose-900/40', gradient: 'from-rose-950/40 to-neutral-900' };
+  if (colorStr.includes('purple')) return { bg: 'bg-purple-950/40', bgHover: 'hover:bg-purple-950/60', border: 'border-purple-500/50', text: 'text-purple-400', dot: 'bg-purple-500', ring: 'ring-purple-500/30', shadow: 'shadow-purple-900/40', gradient: 'from-purple-950/40 to-neutral-900' };
+  if (colorStr.includes('pink')) return { bg: 'bg-pink-950/40', bgHover: 'hover:bg-pink-950/60', border: 'border-pink-500/50', text: 'text-pink-400', dot: 'bg-pink-500', ring: 'ring-pink-500/30', shadow: 'shadow-pink-900/40', gradient: 'from-pink-950/40 to-neutral-900' };
+  if (colorStr.includes('amber')) return { bg: 'bg-amber-950/40', bgHover: 'hover:bg-amber-950/60', border: 'border-amber-500/50', text: 'text-amber-400', dot: 'bg-amber-500', ring: 'ring-amber-500/30', shadow: 'shadow-amber-900/40', gradient: 'from-amber-950/40 to-neutral-900' };
+  if (colorStr.includes('blue')) return { bg: 'bg-blue-950/40', bgHover: 'hover:bg-blue-950/60', border: 'border-blue-500/50', text: 'text-blue-400', dot: 'bg-blue-500', ring: 'ring-blue-500/30', shadow: 'shadow-blue-900/40', gradient: 'from-blue-950/40 to-neutral-900' };
+
+  return { bg: 'bg-zinc-800/80', bgHover: 'hover:bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-300', dot: 'bg-zinc-500', ring: 'ring-zinc-500/30', shadow: 'shadow-zinc-900/40', gradient: 'from-zinc-900 to-zinc-950' };
+}
