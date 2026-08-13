@@ -28,13 +28,13 @@ export interface Subject {
   /** Cuatrimestre (1 o 2) */
   semester?: 1 | 2;
   /** Turno predominante */
-  shift: Shift;
+  shift?: Shift | string;
   /** Bloques de clase semanales */
   classBlocks: ClassBlock[];
   /** Nombre del docente responsable (opcional) */
   professor?: string;
   /** Modalidad de cursada */
-  modality: 'presencial' | 'virtual';
+  modality?: 'presencial' | 'virtual' | string;
   /** Indica si la materia es electiva u opcional */
   isOptional?: boolean;
   /** Color para la UI (clases de Tailwind) */
