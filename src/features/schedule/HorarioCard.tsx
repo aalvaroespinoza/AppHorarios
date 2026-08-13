@@ -18,6 +18,7 @@ import { LOCATIONS } from '@/data/locations';
 import type { RawScheduleEntry } from '@/types/schedule';
 import type { useBec } from '@/hooks/useBec';
 import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
+import { parseMateriaRawText } from '@/core/utils/materiaParser';
 
 export const formatMinutosFaltantes = (mins: number) => {
   if (mins < 60) return `${mins} min`;
@@ -115,6 +116,7 @@ export function HorarioCard({
   const targetLng = direction === 'ida' ? LOCATIONS.cordobaBusStop!.lng : LOCATIONS.despenaderosBusStop!.lng;
 
   const minutosFaltantes = useCountdown(horaReal);
+  const parsed = parseMateriaRawText(titulo);
 
   if (!currentRecomendado) {
     return (
@@ -137,7 +139,19 @@ export function HorarioCard({
       <div className="flex items-center justify-between mb-5">
         <div className="flex items-center gap-2 text-gray-500 dark:text-zinc-400">
           <Icon size={18} />
-          <h2 className="font-semibold text-sm uppercase tracking-wider">{titulo}</h2>
+          {parsed.curso ? (
+            <div className="flex flex-col items-center text-center justify-center h-full w-full p-1 gap-0.5">
+              <span className="font-bold text-xs leading-tight">{parsed.nombre}</span>
+              <span className="text-[11px] opacity-80 font-medium">
+                {parsed.curso} | Aula {parsed.aula}
+              </span>
+              <span className="text-[10px] font-bold text-neutral-900 dark:text-white bg-black/10 dark:bg-white/20 px-1.5 py-0.5 rounded-md mt-0.5">
+                📍 {parsed.edificio}
+              </span>
+            </div>
+          ) : (
+            <h2 className="font-semibold text-sm uppercase tracking-wider">{parsed.nombre}</h2>
+          )}
         </div>
         <motion.button 
           whileTap={TAP_ANIMATION}
