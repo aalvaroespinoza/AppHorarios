@@ -3,8 +3,9 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MoreVertical, GraduationCap, Bus, Settings, RotateCcw } from 'lucide-react';
+import { MoreVertical, GraduationCap, Bus, Settings, Calendar } from 'lucide-react';
 import RelojMinimalista from '@/components/RelojMinimalista';
+import { Button } from '@/components/ui/button';
 import type { DayOfWeek } from '@/core/types/common';
 
 interface ScheduleHeaderProps {
@@ -28,7 +29,7 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
                 (diaCapitalizado.toLowerCase() === 'hoy');
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0a0a0c]/90 backdrop-blur-xl -mx-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-neutral-800/80 shadow-md flex flex-col gap-2 transition-all">
+    <header className="sticky top-0 z-50 bg-[#0a0a0c]/90 backdrop-blur-xl -mx-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-neutral-800/80 shadow-md flex flex-col gap-2 transition-all">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 text-[11px] font-black tracking-[0.25em] uppercase mb-0.5 drop-shadow-sm">
@@ -40,26 +41,29 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Botón interactivo "Hoy" compacto (solo visible cuando NO estamos en hoy) */}
+          {/* Botón icono miniatura "Volver a hoy" (solo visible cuando NO estamos en hoy) */}
           <AnimatePresence>
             {!esHoy && (
-              <motion.button
+              <motion.div
                 initial={{ opacity: 0, scale: 0.8, x: 8 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 0.8, x: 8 }}
-                whileTap={{ scale: 0.93 }}
-                onClick={() => setDiaSeleccionado(diaActualHoy)}
-                className="flex items-center gap-1 text-xs font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-1.5 rounded-full hover:bg-cyan-500/25 transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)] active:scale-95 shrink-0"
-                title="Restablecer al día de hoy"
               >
-                <RotateCcw size={11} className="text-cyan-400" />
-                <span>Hoy</span>
-              </motion.button>
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className="w-9 h-9 rounded-full shrink-0 bg-neutral-900 border border-neutral-800 text-cyan-400 hover:bg-neutral-800 hover:text-cyan-300 shadow-sm"
+                  onClick={() => setDiaSeleccionado(diaActualHoy)}
+                  title="Volver al día de hoy"
+                >
+                  <Calendar size={16} />
+                </Button>
+              </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Píldora de la hora (Siempre visible y fija con el header sticky durante todo el scroll) */}
-          <div className="bg-neutral-900/90 border border-neutral-800 px-3.5 py-1.5 rounded-full flex items-center justify-center shadow-inner">
+          {/* Píldora de la hora (Siempre visible y fija con el header sticky) */}
+          <div className="bg-neutral-900/90 border border-neutral-800 px-3.5 py-1.5 rounded-full flex items-center justify-center shadow-inner pointer-events-auto">
             <RelojMinimalista />
           </div>
 

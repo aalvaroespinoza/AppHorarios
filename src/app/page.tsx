@@ -100,7 +100,7 @@ export default function InicioHubPage() {
       isRestMode: false,
       title: nextEvent.title || (isTravel ? 'Próxima Salida' : 'Próxima Materia'),
       description: nextEvent.description || 'Prepárate para tu siguiente compromiso.',
-      buttonText: isTravel ? '📍 Ver viajes a Córdoba' : `🚀 Ir a ${nextEvent.title}`,
+      buttonText: isTravel ? '📍 Ver viaje a Córdoba' : `🚀 Ir a ${nextEvent.title}`,
       buttonHref: isTravel ? '/viajes' : '/academia',
       badgeText: nextEvent.priority === 'critical' ? 'URGENTE' : 'PRÓXIMO',
       badgeVariant: 'default',
@@ -148,14 +148,14 @@ export default function InicioHubPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.06,
+        staggerChildren: 0.05,
         delayChildren: 0.02
       }
     }
   };
 
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 12 },
+    hidden: { opacity: 0, y: 10 },
     visible: {
       opacity: 1,
       y: 0,
@@ -180,7 +180,7 @@ export default function InicioHubPage() {
           {/* Píldora de Clima: Conecta directamente al Resumen Diario */}
           <Link 
             href="/resumen" 
-            className="flex items-center gap-1.5 bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 px-3 py-1 rounded-full text-xs font-semibold text-neutral-300 transition-colors shadow-sm"
+            className="flex items-center gap-1.5 bg-neutral-900/50 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 px-3 py-1 rounded-full text-xs font-semibold text-neutral-300 transition-colors shadow-sm"
             title="Ver reporte meteorológico"
           >
             <CloudSun size={13} className="text-cyan-400" />
@@ -196,34 +196,36 @@ export default function InicioHubPage() {
         </h1>
       </motion.header>
 
-      {/* 2. Acceso Limpio al Menú de Aplicaciones */}
+      {/* 2. Acceso al Menú de Aplicaciones (Tarjeta Central Estricta) */}
       <motion.div variants={itemVariants}>
-        <Link href="/boveda" className="group block">
-          <Card className="bg-neutral-900/60 hover:bg-neutral-900/90 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-3.5 flex items-center justify-between transition-all shadow-sm active:scale-[0.99]">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-neutral-800 text-cyan-400 flex items-center justify-center shrink-0 border border-neutral-700/50">
-                <LayoutGrid size={18} />
+        <Link href="/boveda" className="group block w-full">
+          <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-3.5 transition-all shadow-sm active:scale-[0.99]">
+            <div className="flex items-center justify-between gap-3 min-w-0">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-10 h-10 rounded-xl bg-neutral-800/80 text-cyan-400 flex items-center justify-center shrink-0 border border-neutral-700/50">
+                  <LayoutGrid size={18} />
+                </div>
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors truncate">
+                    Menú de Aplicaciones
+                  </span>
+                  <span className="text-[11px] text-neutral-400 truncate">
+                    Bóveda, Kanban, Notas y Herramientas
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors truncate">
-                  Menú de Aplicaciones
-                </span>
-                <span className="text-[11px] text-neutral-400 truncate">
-                  Bóveda, Kanban, Notas y Herramientas
-                </span>
-              </div>
+              <ChevronRight size={18} className="text-neutral-500 group-hover:text-white transition-colors shrink-0" />
             </div>
-            <ChevronRight size={18} className="text-neutral-500 group-hover:text-white transition-colors shrink-0 ml-2" />
           </Card>
         </Link>
       </motion.div>
 
       {/* 3. Card de Acción Inmediata (Hero Action) */}
       <motion.div variants={itemVariants}>
-        <Card className={`relative overflow-hidden rounded-3xl border p-5 shadow-xl backdrop-blur-md transition-all ${
+        <Card className={`w-full flex flex-col overflow-hidden rounded-3xl border p-5 shadow-xl backdrop-blur-xl transition-all ${
           immediateAction.isRestMode
-            ? 'bg-neutral-900/40 border-neutral-800/80'
-            : 'bg-neutral-900/80 border-cyan-500/30 shadow-[0_0_20px_rgba(6,182,212,0.1)]'
+            ? 'bg-neutral-900/50 border-neutral-800'
+            : 'bg-neutral-900/50 border-cyan-500/30'
         }`}>
           <div className="flex items-start justify-between gap-3 mb-2">
             <div className="flex items-center gap-2">
@@ -244,11 +246,11 @@ export default function InicioHubPage() {
             </Badge>
           </div>
 
-          <div className="flex flex-col gap-0.5 mb-4">
-            <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug">
+          <div className="flex flex-col gap-0.5 mb-4 min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug truncate">
               {immediateAction.title}
             </h2>
-            <p className="text-xs text-neutral-400 leading-relaxed">
+            <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
               {immediateAction.description}
             </p>
           </div>
@@ -261,8 +263,8 @@ export default function InicioHubPage() {
                   : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20'
               }`}
             >
-              <span>{immediateAction.buttonText}</span>
-              <ArrowRight size={16} />
+              <span className="truncate">{immediateAction.buttonText}</span>
+              <ArrowRight size={16} className="shrink-0" />
             </Button>
           </Link>
         </Card>
@@ -277,14 +279,14 @@ export default function InicioHubPage() {
         <div className="grid grid-cols-2 gap-3">
           {/* Card Viajes */}
           <Link href="/viajes" className="group">
-            <Card className="bg-neutral-900/50 hover:bg-neutral-900/90 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 flex flex-col justify-between h-full transition-all shadow-sm active:scale-95">
+            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
                   <Bus size={16} />
                 </div>
                 <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-sky-400 transition-colors" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
                   Viajes
                 </span>
@@ -297,18 +299,18 @@ export default function InicioHubPage() {
 
           {/* Card Finanzas */}
           <Link href="/finanzas" className="group">
-            <Card className="bg-neutral-900/50 hover:bg-neutral-900/90 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 flex flex-col justify-between h-full transition-all shadow-sm active:scale-95">
+            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
                   <Wallet size={16} />
                 </div>
                 <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-emerald-400 transition-colors" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
                   Finanzas
                 </span>
-                <span className="text-base font-extrabold text-white tracking-tight">
+                <span className="text-base font-extrabold text-white tracking-tight truncate block">
                   {formatoMoneda(finanzas.balanceTotal || 0)}
                 </span>
               </div>
@@ -317,14 +319,14 @@ export default function InicioHubPage() {
 
           {/* Card Agenda */}
           <Link href="/academia" className="group">
-            <Card className="bg-neutral-900/50 hover:bg-neutral-900/90 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 flex flex-col justify-between h-full transition-all shadow-sm active:scale-95">
+            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center">
                   <Calendar size={16} />
                 </div>
                 <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-violet-400 transition-colors" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
                   Agenda
                 </span>
@@ -339,18 +341,18 @@ export default function InicioHubPage() {
 
           {/* Card Kanban */}
           <Link href="/kanban" className="group">
-            <Card className="bg-neutral-900/50 hover:bg-neutral-900/90 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-4 flex flex-col justify-between h-full transition-all shadow-sm active:scale-95">
+            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
               <div className="flex items-center justify-between mb-2">
                 <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
                   <Kanban size={16} />
                 </div>
                 <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-amber-400 transition-colors" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
                   Kanban
                 </span>
-                <span className="text-base font-bold text-white tracking-tight">
+                <span className="text-base font-bold text-white tracking-tight truncate block">
                   {inProgressTasksCount} <span className="text-xs text-neutral-400 font-normal">en curso</span>
                 </span>
               </div>

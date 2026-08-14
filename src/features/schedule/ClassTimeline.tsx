@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseMateriaInfo } from '@/core/utils/materiaParser';
 import { getSubjectColorMapping } from '@/core/utils/edificio';
-import { Clock, MapPin, Sparkles } from 'lucide-react';
+import { Clock, MapPin, Sparkles, Bus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -90,6 +90,33 @@ export function ClassTimeline({
           const horaFin = cls.horaFin || cls.timeEnd || "11:10";
           const isCurrentClass = isToday && isTimeBetween(horaInicio, horaFin, currentTime);
           const mapping = getSubjectColorMapping(cls.color);
+
+          // Si es viaje, renderizar tarjeta horizontal minimalista sin badges de aula/curso/edificio
+          if (info.isViaje) {
+            return (
+              <div key={cls.id || idx} className="relative">
+                <span className="absolute -left-[1.65rem] top-3.5 h-3.5 w-3.5 rounded-full border-[3px] border-neutral-950 z-20 bg-sky-400" />
+                <div className="bg-sky-900/20 border border-sky-800/50 backdrop-blur-sm rounded-2xl p-3 flex items-center justify-between transition-all">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+                      <Bus size={14} />
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-sm font-bold text-white leading-tight truncate">
+                        {info.nombre}
+                      </span>
+                      <span className="text-[11px] text-sky-300/80 font-mono">
+                        {horaInicio} - {horaFin} hs
+                      </span>
+                    </div>
+                  </div>
+                  <Badge variant="outline" className="text-[10px] font-bold border-sky-500/30 text-sky-300 bg-sky-500/10 shrink-0">
+                    Viaje
+                  </Badge>
+                </div>
+              </div>
+            );
+          }
 
           return (
             <div key={cls.id || idx} className="relative">
