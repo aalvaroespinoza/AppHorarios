@@ -83,7 +83,7 @@ export default function RootDashboard() {
       title: currentEvent.title || 'Evento en Curso',
       description: currentEvent.description || 'Actividad en desarrollo ahora mismo.',
       buttonText: currentEvent.category === 'travel' ? '🚍 Ver Detalle del Viaje' : `🚀 Continuar con ${currentEvent.title}`,
-      buttonHref: currentEvent.category === 'travel' ? '/' : '/academia',
+      buttonHref: currentEvent.category === 'travel' ? '/horarios' : '/academia',
       badgeText: 'EN CURSO',
       badgeVariant: 'default' as const,
       accentColor: 'text-cyan-400',
@@ -95,8 +95,8 @@ export default function RootDashboard() {
       isRestMode: false,
       title: nextEvent.title || (isTravel ? 'Próxima Salida' : 'Próxima Materia'),
       description: nextEvent.description || 'Prepárate para tu siguiente compromiso.',
-      buttonText: isTravel ? '📍 Ver viaje hacia Córdoba' : `🚀 Ir a ${nextEvent.title}`,
-      buttonHref: isTravel ? '/' : '/academia',
+      buttonText: isTravel ? '📍 Ver viajes a Córdoba' : `🚀 Ir a ${nextEvent.title}`,
+      buttonHref: isTravel ? '/horarios' : '/academia',
       badgeText: nextEvent.priority === 'critical' ? 'URGENTE' : 'PRÓXIMO',
       badgeVariant: 'default' as const,
       accentColor: 'text-cyan-400',
@@ -120,8 +120,8 @@ export default function RootDashboard() {
       isRestMode: false,
       title: 'Viaje a Córdoba',
       description: `Salida recomendada a las ${recomendacionIda.recomendado.horaSalida} hs`,
-      buttonText: '📍 Ver viaje a Córdoba',
-      buttonHref: '/',
+      buttonText: '📍 Ver viajes a Córdoba',
+      buttonHref: '/horarios',
       badgeText: 'TRANSPORTE',
       badgeVariant: 'default' as const,
       accentColor: 'text-cyan-400',
@@ -335,7 +335,7 @@ export default function RootDashboard() {
 
       {/* 4. Acceso rápido a Viajes & Colectivos */}
       <motion.div variants={itemVariants} className="mt-1">
-        <Link href="/" className="group block">
+        <Link href="/horarios" className="group block">
           <Card className="bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 rounded-2xl p-4 flex items-center justify-between transition-colors shadow-sm">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center shrink-0">
