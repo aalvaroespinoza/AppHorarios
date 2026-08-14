@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Calendar } from 'lucide-react';
 import { useAgenda } from '@/hooks/useAgenda';
 import { useEscenario } from '@/hooks/useEscenario';
 import { useFinanzas } from '@/hooks/useFinanzas';
@@ -11,7 +11,7 @@ import { MiniCalendar } from '@/features/academia/MiniCalendar';
 import { AgendaView } from '@/features/academia/AgendaView';
 import { PAGE_TRANSITION } from '@/lib/animations';
 
-// Helper to get monday of current or offset week
+// Helper para calcular el lunes de la semana actual o con offset
 const getMondayOfOffset = (offset: number) => {
   const dt = new Date();
   const day = dt.getDay();
@@ -55,7 +55,7 @@ export default function AcademiaPage() {
     setDiaSeleccionado(map[day] || 'lunes');
   };
 
-  // Generate current week array
+  // Generar array de la semana
   const weekMonday = getMondayOfOffset(weekOffset);
   const currentWeekDates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(weekMonday);
@@ -80,44 +80,61 @@ export default function AcademiaPage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 relative min-h-[100dvh]"
+      className="p-4 max-w-md mx-auto flex flex-col gap-5 relative min-h-[100dvh] pb-28"
       style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
     >
+      {/* Header con botón Hoy compacto e interactivo */}
+      <header className="flex items-center justify-between mt-1">
+        <div className="flex flex-col">
+          <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-indigo-400 text-[11px] font-black tracking-[0.25em] uppercase drop-shadow-sm">
+            PLANNER & CURSADO
+          </h2>
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+            Agenda 📚
+          </h1>
+        </div>
 
-
-      {/* Header */}
-      <header className="flex flex-col gap-2 mt-2">
-        <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 text-[11px] font-black tracking-[0.25em] uppercase drop-shadow-sm">
-          CENTRO DE CONTROL
-        </h2>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white pr-32 leading-tight">
-          Planner 📚
-        </h1>
+        <div className="flex items-center gap-2">
+          {!esHoy && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.8, x: 8 }}
+              animate={{ opacity: 1, scale: 1, x: 0 }}
+              exit={{ opacity: 0, scale: 0.8, x: 8 }}
+              whileTap={{ scale: 0.93 }}
+              onClick={handleResetWeek}
+              className="flex items-center gap-1 text-xs font-bold text-violet-300 bg-violet-500/15 border border-violet-500/30 px-2.5 py-1.5 rounded-full hover:bg-violet-500/25 transition-all shadow-[0_0_10px_rgba(139,92,246,0.2)] active:scale-95 shrink-0"
+              title="Volver a la fecha de hoy"
+            >
+              <RotateCcw size={11} className="text-violet-400" />
+              <span>Hoy</span>
+            </motion.button>
+          )}
+        </div>
       </header>
 
       {/* Week Navigator */}
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between text-gray-500 dark:text-zinc-400 px-1">
+      <div className="flex flex-col gap-2.5">
+        <div className="flex items-center justify-between text-neutral-400 px-1">
           <div className="flex items-center gap-1">
-            <button onClick={() => setWeekOffset(o => o - 1)} className="p-1 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg">
+            <button onClick={() => setWeekOffset(o => o - 1)} className="p-1 hover:bg-neutral-800 rounded-lg transition-colors">
               <ChevronLeft size={18} />
             </button>
-            <h3 className="text-sm font-semibold capitalize tracking-wide text-gray-700 dark:text-zinc-300">
+            <h3 className="text-xs font-bold capitalize tracking-wide text-neutral-200">
               {monthName} {yearStr}
             </h3>
-            <button onClick={() => setWeekOffset(o => o + 1)} className="p-1 hover:bg-gray-200 dark:hover:bg-zinc-800 rounded-lg">
+            <button onClick={() => setWeekOffset(o => o + 1)} className="p-1 hover:bg-neutral-800 rounded-lg transition-colors">
               <ChevronRight size={18} />
             </button>
           </div>
           {weekOffset !== 0 && (
-            <button onClick={handleResetWeek} className="text-xs font-bold text-blue-400 bg-blue-500/10 px-2 py-1 rounded-md">
+            <button onClick={handleResetWeek} className="text-[10px] font-bold text-violet-400 bg-violet-500/10 px-2 py-0.5 rounded-md">
               ESTA SEMANA
             </button>
           )}
         </div>
 
         {/* Day Selector */}
-        <div ref={scrollContainerRef} className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        <div ref={scrollContainerRef} className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
           {currentWeekDates.map((dayData) => {
             const isSelected = selectedDateISO === dayData.dateISO;
             return (
@@ -125,16 +142,16 @@ export default function AcademiaPage() {
                 key={dayData.dateISO}
                 data-active={isSelected}
                 onClick={() => handleDaySelect(dayData.dateISO, dayData.dayName)}
-                className={`flex flex-col items-center justify-center min-w-[50px] py-2 rounded-2xl transition-all ${
+                className={`flex flex-col items-center justify-center min-w-[48px] py-2 rounded-2xl transition-all ${
                   isSelected 
-                    ? 'bg-gray-900 dark:bg-zinc-100 text-white dark:text-zinc-900 shadow-md' 
-                    : 'bg-gray-100 dark:bg-zinc-800/60 text-gray-600 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-zinc-700/50'
-                } ${dayData.isToday && !isSelected ? 'border-blue-500/50' : ''}`}
+                    ? 'bg-violet-600 text-white shadow-md shadow-violet-600/30' 
+                    : 'bg-neutral-900/60 text-neutral-400 hover:text-white border border-neutral-800'
+                } ${dayData.isToday && !isSelected ? 'border-violet-500/50 text-violet-300' : ''}`}
               >
                 <span className="text-[10px] font-bold uppercase mb-0.5">{dayData.dayName.slice(0, 3)}</span>
-                <span className="text-lg font-black leading-none">{dayData.dayNumber}</span>
+                <span className="text-base font-black leading-none">{dayData.dayNumber}</span>
                 {dayData.isToday && (
-                  <span className={`w-1 h-1 rounded-full mt-1 ${isSelected ? 'bg-blue-600' : 'bg-blue-400'}`} />
+                  <span className={`w-1 h-1 rounded-full mt-1 ${isSelected ? 'bg-white' : 'bg-violet-400'}`} />
                 )}
               </button>
             );
