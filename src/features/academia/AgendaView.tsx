@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Plus, Trash2, CalendarDays, Sparkles, MapPin, Kanban, CheckSquare } from 'lucide-react';
-import type { useAgenda } from '@/hooks/useAgenda';
+import type { useAgenda, AgendaItem } from '@/hooks/useAgenda';
 import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
 
 import { getEdificio, parseMateria } from '@/core/utils/edificio';
