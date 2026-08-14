@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
 import { weatherService } from '@/core/services/weather/weather.service';
 import { DayOfWeek } from '@/core/types/common';
@@ -7,7 +7,6 @@ import { GeminiService } from '@/core/ai/service';
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
-const CRON_SECRET = process.env.CRON_SECRET;
 
 /**
  * Helper para enviar notificaciones push a través de OneSignal REST API.
@@ -17,7 +16,7 @@ async function sendOneSignalPush(title: string, message: string, data?: Record<s
   const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
 
   if (!restApiKey || !appId) {
-    console.warn('[Cron] OneSignal REST API Key o App ID no configurados');
+    console.warn('[CRON] OneSignal REST API Key o App ID no configurados');
     return { success: false, reason: 'unconfigured' };
   }
 
@@ -39,41 +38,34 @@ async function sendOneSignalPush(title: string, message: string, data?: Record<s
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({ status: res.status }));
-      console.error('[Cron] OneSignal push error:', err);
+      console.error('[CRON] OneSignal push error:', err);
       return { success: false, error: err };
     }
 
     const json = await res.json();
     return { success: true, data: json };
   } catch (error) {
-    console.error('[Cron] Excepción enviando OneSignal push:', error);
+    console.error('[CRON] Excepción enviando OneSignal push:', error);
     return { success: false, error };
   }
 }
 
-/**
- * Cron Job para evaluar horarios de viaje, microclima y despachar notificaciones proactivas vía OneSignal.
- */
 export async function GET(request: Request) {
   try {
-    // 1. Verificación de Seguridad con CRON_SECRET
     const authHeader = request.headers.get('authorization');
-    const cronHeader = request.headers.get('x-cron-secret');
 
-    if (CRON_SECRET) {
-      const isAuthorized = 
-        authHeader === `Bearer ${CRON_SECRET}` || 
-        cronHeader === CRON_SECRET;
-
-      if (!isAuthorized) {
-        return NextResponse.json(
-          { success: false, error: 'Unauthorized. Token de seguridad inválido.' },
-          { status: 401 }
-        );
-      }
+    // Validación genérica del token (GitHub Actions debe enviarlo)
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.error("[CRON] Petición rechazada. Token inválido.");
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
-    // 2. Determinar día y hora actual en zona horaria Argentina (Córdoba / Buenos Aires)
+    console.log("[CRON] Ejecución iniciada desde gatillo externo HTTP.");
+
+    /* ---------------------------------------------------------
+       LÓGICA DE NEGOCIO:
+       Consultar horarios, clima y enviar notificación push
+       --------------------------------------------------------- */
     const now = new Date();
     const formatter = new Intl.DateTimeFormat('en-US', {
       timeZone: 'America/Argentina/Cordoba',
@@ -105,7 +97,7 @@ export async function GET(request: Request) {
     let notificationsSent = 0;
     const evaluatedResults: Array<{ sentido: string; diffMin: number; horaSalida: string; notificado: boolean }> = [];
 
-    // 3. Evaluar horarios si no es domingo
+    // Evaluar horarios de cursada y transporte
     if (diaActual !== 'domingo') {
       const diaAcademico = diaActual as DayOfWeek;
       const direcciones: Array<'ida' | 'vuelta'> = ['ida', 'vuelta'];
@@ -122,13 +114,13 @@ export async function GET(request: Request) {
           const minutosSalida = h * 60 + m;
           const diffMin = minutosSalida - currentMinutes;
 
-          // Regla: diferencia menor o igual a 60 minutos y mayor a 30 minutos
+          // Ventana de alerta: entre 30 y 60 minutos antes de la salida
           if (diffMin > 30 && diffMin <= 60) {
             let weatherText = '';
             try {
               const location = sentido === 'ida' ? 'despenaderos' : 'cordoba';
               const weather = await weatherService.getWeather(location);
-              
+
               const hourlyItem = weather.hourly.find(item => {
                 const [, time] = item.datetimeISO.split('T');
                 const [itemH] = (time || '').split(':');
@@ -140,7 +132,7 @@ export async function GET(request: Request) {
                 weatherText = ` 🌧️ Probabilidad de lluvia: ${probLluvia}%.`;
               }
             } catch (weatherErr) {
-              console.warn('[Cron] No se pudo consultar el servicio meteorológico:', weatherErr);
+              console.warn('[CRON] No se pudo consultar el servicio meteorológico:', weatherErr);
             }
 
             const title = sentido === 'ida' ? '🚍 Colectivo hacia Córdoba' : '🚍 Colectivo de regreso';
@@ -170,42 +162,45 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: "Evaluación de notificaciones completada.",
+      message: "Ejecución completada.",
       timestamp: now.toISOString(),
       diaActual,
       horaActualHHMM,
       notificationsSent,
       evaluatedResults
-    });
+    }, { status: 200 });
 
-  } catch (error) {
-    console.error('[Cron] Error en la ejecución del Cron Job:', error);
-    return NextResponse.json(
-      { success: false, error: 'Error interno en la ejecución del Cron Job' },
-      { status: 500 }
-    );
+  } catch (error: any) {
+    // Evita que Vercel rompa la ejecución silenciosamente
+    console.error("[CRON] Error crítico durante la ejecución:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
 /**
- * Endpoint POST para Daily Briefing opcional vía Telegram
+ * Endpoint POST opcional para Daily Briefing
  */
-export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get('authorization');
-  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized. Invalid Bearer token.' }, { status: 401 });
+export async function POST(req: Request) {
+  try {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return new NextResponse('Unauthorized', { status: 401 });
+    }
+
+    if (!botToken || !chatId) {
+      return NextResponse.json(
+        { error: 'Server Misconfiguration: Faltan credenciales de Telegram' },
+        { status: 500 }
+      );
+    }
+
+    ejecutarBriefingDiario(botToken, chatId).catch(console.error);
+
+    return NextResponse.json({ status: 'ok', msg: 'Daily Briefing scheduled' }, { status: 200 });
+  } catch (error: any) {
+    console.error("[CRON] Error en endpoint POST:", error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
-
-  if (!botToken || !chatId) {
-    return NextResponse.json(
-      { error: 'Server Misconfiguration: Faltan credenciales de Telegram' },
-      { status: 500 }
-    );
-  }
-
-  ejecutarBriefingDiario(botToken, chatId).catch(console.error);
-
-  return NextResponse.json({ status: 'ok', msg: 'Daily Briefing scheduled' }, { status: 200 });
 }
 
 async function ejecutarBriefingDiario(token: string, chat: string) {
