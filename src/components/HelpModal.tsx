@@ -115,16 +115,16 @@ export function HelpModal() {
             className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
             onClick={() => setIsOpen(false)}
           >
-            <motion.div
+              <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
-              className="w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 text-white max-h-[85vh] overflow-hidden"
+              className="w-full max-w-md bg-neutral-900/60 backdrop-blur-2xl border border-neutral-800 shadow-[0_0_40px_rgba(0,0,0,0.5)] ring-1 ring-white/10 rounded-3xl p-5 flex flex-col gap-4 text-white max-h-[85vh] overflow-hidden"
               onClick={e => e.stopPropagation()}
             >
               {/* Header Modal */}
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+              <div className="flex items-center justify-between border-b border-neutral-800/80 pb-3">
                 <div className="flex items-center gap-2.5">
                   <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center border border-cyan-500/20">
                     <Sparkles size={16} />
@@ -138,9 +138,9 @@ export function HelpModal() {
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="w-8 h-8 rounded-full bg-neutral-800 text-neutral-400 hover:text-white flex items-center justify-center transition-colors"
+                  className="w-8 h-8 rounded-full text-neutral-400 hover:text-white bg-neutral-800/50 hover:bg-neutral-700 transition-all flex items-center justify-center active:scale-95"
                 >
-                  <X size={16} />
+                  <X size={15} />
                 </button>
               </div>
 

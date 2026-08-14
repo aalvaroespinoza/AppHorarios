@@ -347,20 +347,29 @@ export function KanbanBoard() {
       </div>
 
       {/* Modal Ajustes */}
+      {/* Modal Ajustes */}
       <AnimatePresence>
         {showSettings && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+            onClick={() => setShowSettings(false)}
           >
-            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 text-white">
-              <div className="flex justify-between items-center border-b border-neutral-800 pb-2.5">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="relative w-full max-w-sm bg-neutral-900/60 backdrop-blur-2xl border border-neutral-800 shadow-[0_0_40px_rgba(0,0,0,0.5)] ring-1 ring-white/10 rounded-3xl p-5 flex flex-col gap-4 text-white"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center border-b border-neutral-800/80 pb-2.5">
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
                   <Settings2 size={16} className="text-sky-400" /> Ajustes de Kanban
                 </h2>
-                <button onClick={() => setShowSettings(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                <button onClick={() => setShowSettings(false)} className="w-8 h-8 rounded-full text-neutral-400 hover:text-white bg-neutral-800/50 hover:bg-neutral-700 transition-all flex items-center justify-center active:scale-95">
                   <X size={15} />
                 </button>
               </div>
@@ -377,7 +386,7 @@ export function KanbanBoard() {
                 <RotateCcw size={14} />
                 <span>Limpiar Todo el Tablero</span>
               </Button>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -389,14 +398,22 @@ export function KanbanBoard() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+            onClick={() => setShowHelp(false)}
           >
-            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-3 text-white">
-              <div className="flex justify-between items-center border-b border-neutral-800 pb-2">
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="relative w-full max-w-sm bg-neutral-900/60 backdrop-blur-2xl border border-neutral-800 shadow-[0_0_40px_rgba(0,0,0,0.5)] ring-1 ring-white/10 rounded-3xl p-5 flex flex-col gap-3 text-white"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center border-b border-neutral-800/80 pb-2">
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
                   <HelpCircle size={16} className="text-sky-400" /> ¿Cómo usar el Tablero Kanban?
                 </h2>
-                <button onClick={() => setShowHelp(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                <button onClick={() => setShowHelp(false)} className="w-8 h-8 rounded-full text-neutral-400 hover:text-white bg-neutral-800/50 hover:bg-neutral-700 transition-all flex items-center justify-center active:scale-95">
                   <X size={15} />
                 </button>
               </div>
@@ -410,11 +427,11 @@ export function KanbanBoard() {
 
               <Button
                 onClick={() => setShowHelp(false)}
-                className="w-full mt-2 text-xs font-bold rounded-xl bg-sky-500 text-black hover:bg-sky-400"
+                className="w-full mt-2 text-xs font-bold rounded-xl bg-white text-black hover:bg-neutral-200"
               >
                 Entendido
               </Button>
-            </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
