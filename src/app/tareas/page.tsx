@@ -53,9 +53,10 @@ const DEFAULT_BLOCKS: BlockTask[] = [
   }
 ];
 
-const START_HOUR = 8; // 08:00
-const END_HOUR = 22; // 22:00
-const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 15 horas
+const START_HOUR = 7; // 07:00
+const END_HOUR = 23; // 23:00
+const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 17 horas
+const HOUR_HEIGHT = 64; // 64px exactos por hora
 
 export default function TareasTimeBlockingPage() {
   const [blocks, setBlocks] = useState<BlockTask[]>([]);
@@ -137,31 +138,32 @@ export default function TareasTimeBlockingPage() {
     if (selectedBlock?.id === id) setSelectedBlock(null);
   };
 
-  // Cálculo matemático exacto de posición con 5rem por hora
+  // Cálculo matemático exacto de posición
   const getBlockPosition = (horaInicio: string, horaFin: string) => {
     const [hStart, mStart] = (horaInicio || '08:00').split(':').map(Number);
     const [hEnd, mEnd] = (horaFin || '09:00').split(':').map(Number);
 
-    const startHour = isNaN(hStart) ? 8 : hStart;
+    const startHour = isNaN(hStart) ? START_HOUR : hStart;
     const startMinutes = isNaN(mStart) ? 0 : mStart;
 
     let endHour = isNaN(hEnd) ? startHour + 1 : hEnd;
     let endMinutes = isNaN(mEnd) ? startMinutes : mEnd;
 
-    const durationInHours = Math.max((endHour * 60 + endMinutes - (startHour * 60 + startMinutes)) / 60, 0.5);
+    const startTotalMinutes = (startHour - START_HOUR) * 60 + startMinutes;
+    const endTotalMinutes = (endHour - START_HOUR) * 60 + endMinutes;
+    const durationMinutes = Math.max(endTotalMinutes - startTotalMinutes, 30);
 
-    const top = `calc(${startHour - START_HOUR} * 5rem + ${(startMinutes / 60)} * 5rem)`;
-    const height = `calc(${durationInHours} * 5rem)`;
+    const top = Math.max((startTotalMinutes / 60) * HOUR_HEIGHT, 0);
+    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT - 3, 36);
 
     return { top, height };
   };
 
   // Posición de la línea de tiempo actual
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinutes = now.getMinutes();
-  const showCurrentTimeLine = currentHour >= START_HOUR && currentHour <= END_HOUR;
-  const currentTimeTop = `calc(${currentHour - START_HOUR} * 5rem + ${(currentMinutes / 60)} * 5rem)`;
+  const currentTotalMinutes = (now.getHours() - START_HOUR) * 60 + now.getMinutes();
+  const currentTimeTop = (currentTotalMinutes / 60) * HOUR_HEIGHT;
+  const showCurrentTimeLine = now.getHours() >= START_HOUR && now.getHours() <= END_HOUR;
 
   return (
     <motion.div 
@@ -182,7 +184,7 @@ export default function TareasTimeBlockingPage() {
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               Time-Blocking <Clock size={17} className="text-cyan-400" />
             </h1>
-            <p className="text-[11px] text-neutral-500 font-medium">Grilla visual de 08:00 a 22:00</p>
+            <p className="text-[11px] text-neutral-500 font-medium">Grilla visual de 07:00 a 23:00</p>
           </div>
         </div>
 
@@ -212,71 +214,77 @@ export default function TareasTimeBlockingPage() {
         </div>
       </header>
 
-      {/* Contenedor Padre de Grilla Calibrada (h-20 / 5rem exactos) */}
-      <div className="flex flex-col relative w-full h-[640px] overflow-y-auto mt-1 border border-neutral-800/80 rounded-3xl bg-neutral-950/60 shadow-2xl hide-scrollbar">
-        {/* Filas de Horas fijadas a h-20 (5rem) */}
-        {Array.from({ length: TOTAL_HOURS }).map((_, i) => {
-          const hour = i + START_HOUR;
-          return (
-            <div key={hour} className="flex h-20 border-b border-neutral-800/50 relative">
-              <span className="w-14 text-[11px] text-neutral-500 font-mono pr-3 text-right pt-1.5 select-none shrink-0">
-                {String(hour).padStart(2, '0')}:00
-              </span>
-              <div className="flex-1 relative border-l border-neutral-800/50">
-                {/* Línea de media hora */}
-                <div className="absolute top-1/2 left-0 right-0 border-b border-neutral-800/20 border-dashed pointer-events-none" />
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Línea de hora actual en vivo */}
-        {showCurrentTimeLine && (
-          <div 
-            className="absolute left-14 right-0 z-30 flex items-center pointer-events-none"
-            style={{ top: currentTimeTop }}
-          >
-            <div className="w-2.5 h-2.5 -ml-1.5 rounded-full bg-red-500 ring-4 ring-red-500/20 shadow-md" />
-            <div className="flex-1 h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-          </div>
-        )}
-
-        {/* Bloques de Eventos posicionados con precisión matemática */}
-        <div className="absolute top-0 bottom-0 left-14 right-3 pointer-events-none">
-          {blocks.map((block) => {
-            const { top, height } = getBlockPosition(block.horaInicio, block.horaFin);
-
+      {/* Contenedor Padre de Grilla Calibrada (07:00 a 23:00) */}
+      <div className="relative w-full h-[650px] overflow-y-auto mt-1 border border-neutral-800/80 rounded-3xl bg-neutral-950/60 shadow-2xl hide-scrollbar">
+        <div className="relative w-full" style={{ height: `${TOTAL_HOURS * HOUR_HEIGHT}px` }}>
+          {/* Filas de Horas */}
+          {Array.from({ length: TOTAL_HOURS }).map((_, i) => {
+            const hour = i + START_HOUR;
             return (
-              <Card
-                key={block.id}
-                onClick={() => setSelectedBlock(block)}
-                style={{ top, height }}
-                className={`absolute left-1 right-1 rounded-2xl p-3 border backdrop-blur-md cursor-pointer pointer-events-auto transition-all hover:scale-[1.01] hover:z-20 flex flex-col justify-between shadow-lg overflow-hidden ${
-                  block.completed ? 'opacity-40 line-through bg-neutral-900 border-neutral-800 text-neutral-500' : block.color
-                }`}
+              <div 
+                key={hour} 
+                style={{ top: `${i * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }}
+                className="absolute left-0 right-0 border-b border-neutral-800/50 flex"
               >
-                <div className="flex items-start justify-between gap-2 min-w-0">
-                  <span className={`text-xs font-bold truncate leading-tight ${block.completed ? 'text-neutral-500' : 'text-white'}`}>
-                    {block.title}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleBlock(block.id);
-                    }}
-                    className="p-1 text-neutral-400 hover:text-white shrink-0"
-                  >
-                    {block.completed ? <CheckCircle2 size={15} className="text-emerald-400" /> : <Circle size={15} />}
-                  </button>
+                <span className="w-14 text-[11px] text-neutral-500 font-mono pr-3 text-right pt-1.5 select-none shrink-0">
+                  {String(hour).padStart(2, '0')}:00
+                </span>
+                <div className="flex-1 relative border-l border-neutral-800/50">
+                  {/* Línea de media hora */}
+                  <div className="absolute top-1/2 left-0 right-0 border-b border-neutral-800/20 border-dashed pointer-events-none" />
                 </div>
-
-                <div className="flex items-center justify-between text-[10px] font-mono opacity-80 mt-1">
-                  <span>{block.horaInicio} - {block.horaFin}</span>
-                  <span className="capitalize">{block.priority}</span>
-                </div>
-              </Card>
+              </div>
             );
           })}
+
+          {/* Línea de hora actual en vivo */}
+          {showCurrentTimeLine && (
+            <div 
+              className="absolute left-14 right-0 z-30 flex items-center pointer-events-none"
+              style={{ top: `${currentTimeTop}px` }}
+            >
+              <div className="w-2.5 h-2.5 -ml-1.5 rounded-full bg-red-500 ring-4 ring-red-500/20 shadow-md" />
+              <div className="flex-1 h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+            </div>
+          )}
+
+          {/* Bloques de Eventos posicionados con precisión matemática */}
+          <div className="absolute top-0 bottom-0 left-14 right-3 pointer-events-none">
+            {blocks.map((block) => {
+              const { top, height } = getBlockPosition(block.horaInicio, block.horaFin);
+
+              return (
+                <Card
+                  key={block.id}
+                  onClick={() => setSelectedBlock(block)}
+                  style={{ top: `${top}px`, height: `${height}px` }}
+                  className={`absolute left-1 right-1 rounded-2xl p-3 border backdrop-blur-md cursor-pointer pointer-events-auto transition-all hover:scale-[1.01] hover:z-20 flex flex-col justify-between shadow-lg overflow-hidden ${
+                    block.completed ? 'opacity-40 line-through bg-neutral-900 border-neutral-800 text-neutral-500' : block.color
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <span className={`text-xs font-bold truncate leading-tight ${block.completed ? 'text-neutral-500' : 'text-white'}`}>
+                      {block.title}
+                    </span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleBlock(block.id);
+                      }}
+                      className="p-1 text-neutral-400 hover:text-white shrink-0"
+                    >
+                      {block.completed ? <CheckCircle2 size={15} className="text-emerald-400" /> : <Circle size={15} />}
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between text-[10px] font-mono opacity-80 mt-1">
+                    <span>{block.horaInicio} - {block.horaFin}</span>
+                    <span className="capitalize">{block.priority}</span>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </div>
 

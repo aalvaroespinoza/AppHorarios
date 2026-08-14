@@ -18,9 +18,10 @@ interface AgendaViewProps {
   agendaDelDia: ReturnType<ReturnType<typeof useAgenda>['obtenerAgendaDelDia']>;
 }
 
-const START_HOUR = 8; // 08:00
-const END_HOUR = 22; // 22:00
-const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 15 horas
+const START_HOUR = 7; // 07:00
+const END_HOUR = 23; // 23:00 (cubre hasta las 23:59)
+const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 17 horas completas
+const HOUR_HEIGHT = 64; // 64px exactos por hora
 
 export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agendaDelDia }: AgendaViewProps) {
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
@@ -106,10 +107,10 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
     ...tbEventsFormatted
   ];
 
-  // Helper para calcular posición y altura exacta en 5rem por hora
+  // Cálculo matemático lineal exacto entre tiempo en minutos y píxeles en pantalla
   const getEventPosition = (horaInicio: string, horaFin?: string) => {
     const [hStart, mStart] = (horaInicio || '08:00').split(':').map(Number);
-    const startHour = isNaN(hStart) ? 8 : hStart;
+    const startHour = isNaN(hStart) ? START_HOUR : hStart;
     const startMinutes = isNaN(mStart) ? 0 : mStart;
 
     let endHour = startHour + 1;
@@ -120,20 +121,21 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
       if (!isNaN(mEnd)) endMinutes = mEnd;
     }
 
-    const durationInHours = Math.max((endHour * 60 + endMinutes - (startHour * 60 + startMinutes)) / 60, 0.5);
+    const startTotalMinutes = (startHour - START_HOUR) * 60 + startMinutes;
+    const endTotalMinutes = (endHour - START_HOUR) * 60 + endMinutes;
+    const durationMinutes = Math.max(endTotalMinutes - startTotalMinutes, 30);
 
-    const top = `calc(${startHour - START_HOUR} * 5rem + ${(startMinutes / 60)} * 5rem)`;
-    const height = `calc(${durationInHours} * 5rem)`;
+    const top = Math.max((startTotalMinutes / 60) * HOUR_HEIGHT, 0);
+    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT - 3, 36);
 
     return { top, height };
   };
 
   // Posición de la línea de tiempo actual
   const now = new Date();
-  const currentHour = now.getHours();
-  const currentMinutes = now.getMinutes();
-  const showCurrentTimeLine = esHoy && currentHour >= START_HOUR && currentHour <= END_HOUR;
-  const currentTimeTop = `calc(${currentHour - START_HOUR} * 5rem + ${(currentMinutes / 60)} * 5rem)`;
+  const currentTotalMinutes = (now.getHours() - START_HOUR) * 60 + now.getMinutes();
+  const currentTimeTop = (currentTotalMinutes / 60) * HOUR_HEIGHT;
+  const showCurrentTimeLine = esHoy && now.getHours() >= START_HOUR && now.getHours() <= END_HOUR;
 
   return (
     <section className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 shadow-2xl backdrop-blur-md flex flex-col gap-4">
@@ -256,93 +258,99 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
         </div>
       )}
 
-      {/* Time-Blocking Calendar Grid (Estilo Exacto 5rem / h-20) */}
-      <div className="flex flex-col relative w-full h-[640px] overflow-y-auto mt-2 border-t border-neutral-800 rounded-2xl bg-neutral-950/40 hide-scrollbar">
-        {/* Filas de horas fijadas a h-20 (5rem) */}
-        {Array.from({ length: TOTAL_HOURS }).map((_, i) => {
-          const hour = i + START_HOUR;
-          return (
-            <div key={hour} className="flex h-20 border-b border-neutral-800/50 relative">
-              <span className="w-14 text-[11px] text-neutral-500 font-mono pr-2 text-right pt-1 select-none shrink-0">
-                {String(hour).padStart(2, '0')}:00
-              </span>
-              <div className="flex-1 relative border-l border-neutral-800/50">
-                {/* Línea sutil de media hora */}
-                <div className="absolute top-1/2 left-0 right-0 border-b border-neutral-800/20 border-dashed pointer-events-none" />
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Línea de hora actual en vivo */}
-        {showCurrentTimeLine && (
-          <div 
-            className="absolute left-14 right-0 z-30 flex items-center pointer-events-none"
-            style={{ top: currentTimeTop }}
-          >
-            <div className="w-2.5 h-2.5 -ml-1.5 rounded-full bg-red-500 ring-4 ring-red-500/20 shadow-sm" />
-            <div className="flex-1 h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-          </div>
-        )}
-
-        {/* Contenedor absoluto de Bloques de Eventos sin paddings conflictivos */}
-        <div className="absolute top-0 bottom-0 left-14 right-2 pointer-events-none">
-          {timedEvents.map((item, idx) => {
-            const { top, height } = getEventPosition(item.horaInicio, item.horaFin);
-            const materia = parseMateria(item.titulo || item);
-            const edificioName = getEdificio(materia.aula);
-
+      {/* Time-Blocking Calendar Grid (07:00 a 23:00) */}
+      <div className="relative w-full h-[650px] overflow-y-auto mt-2 border border-neutral-800/80 rounded-2xl bg-neutral-950/40 hide-scrollbar">
+        <div className="relative w-full" style={{ height: `${TOTAL_HOURS * HOUR_HEIGHT}px` }}>
+          {/* Filas de horas fijadas a exactos 64px con top absoluto */}
+          {Array.from({ length: TOTAL_HOURS }).map((_, i) => {
+            const hour = i + START_HOUR;
             return (
-              <motion.div
-                key={item.id || idx}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                onClick={() => setSelectedSubject(item)}
-                style={{ top, height }}
-                className={`absolute left-1 right-1 rounded-xl p-2.5 shadow-md cursor-pointer pointer-events-auto overflow-hidden flex flex-col justify-between border backdrop-blur-sm transition-all hover:scale-[1.01] hover:z-20 ${
-                  item.color || 'bg-cyan-950/40 border-cyan-500/40 text-cyan-200 hover:border-cyan-400'
-                }`}
+              <div 
+                key={hour} 
+                style={{ top: `${i * HOUR_HEIGHT}px`, height: `${HOUR_HEIGHT}px` }} 
+                className="absolute left-0 right-0 border-b border-neutral-800/50 flex"
               >
-                <div className="flex items-start justify-between gap-1 min-w-0">
-                  <div className="min-w-0 flex flex-col">
-                    <span className="font-bold text-xs truncate leading-tight text-white">
-                      {materia.nombre || item.titulo}
-                    </span>
-                    {(materia.aula || edificioName) && (
-                      <span className="text-[10px] text-neutral-300 truncate flex items-center gap-1 mt-0.5 opacity-90">
-                        <MapPin size={10} className="shrink-0" />
-                        {materia.aula ? `Aula ${materia.aula}` : ''} {edificioName ? `• ${edificioName}` : ''}
+                <span className="w-14 text-[11px] text-neutral-500 font-mono pr-2 text-right pt-1.5 select-none shrink-0">
+                  {String(hour).padStart(2, '0')}:00
+                </span>
+                <div className="flex-1 relative border-l border-neutral-800/50">
+                  {/* Línea sutil de media hora */}
+                  <div className="absolute top-1/2 left-0 right-0 border-b border-neutral-800/20 border-dashed pointer-events-none" />
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Línea de hora actual en vivo */}
+          {showCurrentTimeLine && (
+            <div 
+              className="absolute left-14 right-0 z-30 flex items-center pointer-events-none"
+              style={{ top: `${currentTimeTop}px` }}
+            >
+              <div className="w-2.5 h-2.5 -ml-1.5 rounded-full bg-red-500 ring-4 ring-red-500/20 shadow-sm" />
+              <div className="flex-1 h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
+            </div>
+          )}
+
+          {/* Contenedor absoluto de Bloques de Eventos */}
+          <div className="absolute top-0 bottom-0 left-14 right-2 pointer-events-none">
+            {timedEvents.map((item, idx) => {
+              const { top, height } = getEventPosition(item.horaInicio, item.horaFin);
+              const materia = parseMateria(item.titulo || item);
+              const edificioName = getEdificio(materia.aula);
+
+              return (
+                <motion.div
+                  key={item.id || idx}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  onClick={() => setSelectedSubject(item)}
+                  style={{ top: `${top}px`, height: `${height}px` }}
+                  className={`absolute left-1 right-1 rounded-xl p-2.5 shadow-md cursor-pointer pointer-events-auto overflow-hidden flex flex-col justify-between border backdrop-blur-sm transition-all hover:scale-[1.01] hover:z-20 ${
+                    item.color || 'bg-cyan-950/40 border-cyan-500/40 text-cyan-200 hover:border-cyan-400'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-1 min-w-0">
+                    <div className="min-w-0 flex flex-col">
+                      <span className="font-bold text-xs truncate leading-tight text-white">
+                        {materia.nombre || item.titulo}
                       </span>
+                      {(materia.aula || edificioName) && (
+                        <span className="text-[10px] text-neutral-300 truncate flex items-center gap-1 mt-0.5 opacity-90">
+                          <MapPin size={10} className="shrink-0" />
+                          {materia.aula ? `Aula ${materia.aula}` : ''} {edificioName ? `• ${edificioName}` : ''}
+                        </span>
+                      )}
+                    </div>
+
+                    {item.tipo === 'custom' && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          agenda.eliminarEvento(item.id);
+                        }}
+                        className="text-neutral-400 hover:text-red-400 p-1 shrink-0 rounded-md transition-colors"
+                        title="Eliminar bloque"
+                      >
+                        <Trash2 size={13} />
+                      </button>
                     )}
                   </div>
 
-                  {item.tipo === 'custom' && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        agenda.eliminarEvento(item.id);
-                      }}
-                      className="text-neutral-400 hover:text-red-400 p-1 shrink-0 rounded-md transition-colors"
-                      title="Eliminar bloque"
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] font-mono font-medium opacity-80 mt-1">
-                  <span className="bg-black/30 px-1.5 py-0.5 rounded">
-                    {item.horaInicio} - {item.horaFin || 'Fin'}
-                  </span>
-                  {item.modalidad && (
-                    <span className="bg-black/30 px-1.5 py-0.5 rounded capitalize">
-                      {item.modalidad}
+                  <div className="flex items-center justify-between text-[10px] font-mono font-medium opacity-80 mt-1">
+                    <span className="bg-black/30 px-1.5 py-0.5 rounded">
+                      {item.horaInicio} - {item.horaFin || 'Fin'}
                     </span>
-                  )}
-                </div>
-              </motion.div>
-            );
-          })}
+                    {item.modalidad && (
+                      <span className="bg-black/30 px-1.5 py-0.5 rounded capitalize">
+                        {item.modalidad}
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
