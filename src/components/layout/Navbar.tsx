@@ -1,21 +1,54 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Bus, Calendar, LayoutGrid, Bell, BarChart3 } from 'lucide-react';
+import { Home, Bus, Calendar, LayoutGrid, Bell, BarChart3, WifiOff } from 'lucide-react';
 import { TAP_ANIMATION } from '@/lib/animations';
 import { NotificationInbox } from '@/features/notifications/NotificationInbox';
+import { syncEngine } from '@/core/sync/engine';
 
 export function Navbar() {
   const pathname = usePathname();
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isOffline, setIsOffline] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleOnline = () => {
+      setIsOffline(false);
+      syncEngine.processQueue();
+    };
+
+    const handleOffline = () => {
+      setIsOffline(true);
+    };
+
+    setIsOffline(!navigator.onLine);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   return (
     <>
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-950/85 backdrop-blur-lg border-t border-neutral-800 pb-safe">
+        {/* Indicador Minimalista Offline */}
+        {isOffline && (
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
+            <WifiOff size={11} />
+            <span>Modo Offline • Guardando en IDB</span>
+          </div>
+        )}
+
         <div className="flex justify-around items-center h-16 max-w-md mx-auto px-1 relative">
           {/* 1. Viajes */}
           <Link

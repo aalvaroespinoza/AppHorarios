@@ -1,13 +1,12 @@
 import { syncObserver } from './observer';
-import { SyncQueue } from './queue';
-// import { ConflictResolver } from './conflict';
+import { SyncQueue, syncQueue } from './queue';
 
 /**
- * Motor Central de Sincronización.
- * Orquesta la persistencia local (IndexedDB) con la nube (Supabase).
+ * Motor Central de Sincronización Local-First.
+ * Orquesta la persistencia local (IndexedDB) con la nube (Supabase / Backend).
  */
 export class SyncEngine {
-  private queue = new SyncQueue();
+  private queue: SyncQueue = syncQueue;
 
   /**
    * Registra el Service Worker con la API nativa de Background Sync (si está soportada).
@@ -18,8 +17,10 @@ export class SyncEngine {
       try {
         const registration = await navigator.serviceWorker.ready;
         // @ts-ignore - TS a veces no reconoce SyncManager en lib estándar antigua
-        await registration.sync.register('lifeos-sync');
-        console.log('[SyncEngine] Background Sync registrado exitosamente.');
+        if ('sync' in registration && typeof registration.sync.register === 'function') {
+          await registration.sync.register('lifeos-sync');
+          console.log('[SyncEngine] Background Sync registrado exitosamente.');
+        }
       } catch (error) {
         console.error('[SyncEngine] Fallo al registrar Background Sync:', error);
       }
@@ -27,7 +28,26 @@ export class SyncEngine {
   }
 
   /**
-   * Gatilla el ciclo completo de sincronización bidireccional (Push/Pull).
+   * Encola una mutación para sincronización offline en IndexedDB o la envía inmediatamente.
+   */
+  async addToQueue(
+    endpoint: string,
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' = 'POST',
+    body?: any,
+    metadata?: Record<string, any>
+  ) {
+    return this.queue.addToQueue(endpoint, method, body, metadata);
+  }
+
+  /**
+   * Procesa la cola de mutaciones acumuladas en IndexedDB.
+   */
+  async processQueue(): Promise<boolean> {
+    return this.queue.processQueue();
+  }
+
+  /**
+   * Gatilla el ciclo completo de sincronización bidireccional.
    */
   async triggerSync() {
     if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -35,31 +55,7 @@ export class SyncEngine {
       return;
     }
 
-    syncObserver.notify('syncing', 'Sincronizando...');
-
-    const success = await this.queue.processWithRetries(async () => {
-      // 1. PULL: Bajar cambios de Supabase (Infraestructura Futura)
-      await this.pullFromCloud();
-
-      // 2. PUSH: Subir mutaciones de IndexedDB (Infraestructura Futura)
-      await this.pushToCloud();
-    });
-
-    if (success) {
-      syncObserver.notify('idle', 'Datos sincronizados.');
-    } else {
-      syncObserver.notify('error', 'Error al sincronizar.');
-    }
-  }
-
-  // --- Capas a implementar con datos y SDK real en el futuro ---
-
-  private async pullFromCloud() {
-    // Aquí se consultará a Supabase y se llamará a ConflictResolver.resolveLWW()
-  }
-
-  private async pushToCloud() {
-    // Aquí se extraerá la cola del Outbox local usando BaseRepository.getPendingSync()
+    return this.processQueue();
   }
 }
 
