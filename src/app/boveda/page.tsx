@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
-  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen, FileText
+  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen, FileText, ChevronLeft
 } from 'lucide-react';
 import Link from 'next/link';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
@@ -11,60 +11,36 @@ import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 export default function HubPage() {
   const apps = [
     {
-      id: 'datos',
-      title: 'Datos Secretos',
-      href: '/datos-personales',
-      icon: <Lock size={28} className="text-rose-400" />,
-      color: 'from-rose-500/20 to-rose-600/5 border-rose-500/20',
-      description: 'Claves e Info'
+      id: 'viajes',
+      title: 'Viajes & Colectivos',
+      href: '/viajes',
+      icon: <Bus size={28} className="text-blue-400" />,
+      color: 'from-blue-500/20 to-blue-600/5 border-blue-500/20',
+      description: 'Detección de Bus'
     },
     {
-      id: 'resumen',
-      title: 'Resumen Diario',
-      href: '/resumen',
-      icon: <Sun size={28} className="text-yellow-400" />,
-      color: 'from-yellow-500/20 to-yellow-600/5 border-yellow-500/20',
-      description: 'Día a día'
+      id: 'finanzas',
+      title: 'Finanzas',
+      href: '/finanzas',
+      icon: <Wallet size={28} className="text-emerald-400" />,
+      color: 'from-emerald-500/20 to-emerald-600/5 border-emerald-500/20',
+      description: 'Presupuesto y Gastos'
     },
     {
-      id: 'focus',
-      title: 'Focus & Energía',
-      href: '/focus',
-      icon: <Zap size={28} className="text-orange-400" />,
-      color: 'from-orange-500/20 to-orange-600/5 border-orange-500/20',
-      description: 'Rendimiento'
-    },
-    {
-      id: 'tareas',
-      title: 'Tareas',
-      href: '/tareas',
-      icon: <CheckSquare size={28} className="text-indigo-400" />,
-      color: 'from-indigo-500/20 to-indigo-600/5 border-indigo-500/20',
-      description: 'Pendientes'
+      id: 'agenda',
+      title: 'Agenda & Cursado',
+      href: '/academia',
+      icon: <CalendarDays size={28} className="text-purple-400" />,
+      color: 'from-purple-500/20 to-purple-600/5 border-purple-500/20',
+      description: 'Clases y Horarios'
     },
     {
       id: 'kanban',
-      title: 'Kanban',
+      title: 'Tablero Kanban',
       href: '/kanban',
       icon: <LayoutGrid size={28} className="text-sky-400" />,
       color: 'from-sky-500/20 to-sky-600/5 border-sky-500/20',
-      description: 'Tablero'
-    },
-    {
-      id: 'viajes',
-      title: 'Viajes',
-      href: '/',
-      icon: <Bus size={28} className="text-blue-400" />,
-      color: 'from-blue-500/20 to-blue-600/5 border-blue-500/20',
-      description: 'Colectivos'
-    },
-    {
-      id: 'lecturas',
-      title: 'Lecturas',
-      href: '/lecturas',
-      icon: <BookOpen size={28} className="text-cyan-400" />,
-      color: 'from-cyan-500/20 to-cyan-600/5 border-cyan-500/20',
-      description: 'Recursos'
+      description: 'Gestión de Tareas'
     },
     {
       id: 'notas',
@@ -75,28 +51,52 @@ export default function HubPage() {
       description: 'Bloques Notion'
     },
     {
-      id: 'agenda',
-      title: 'Agenda',
-      href: '/academia',
-      icon: <CalendarDays size={28} className="text-emerald-400" />,
-      color: 'from-emerald-500/20 to-emerald-600/5 border-emerald-500/20',
-      description: 'Clases y tareas'
+      id: 'focus',
+      title: 'Focus & Búnker',
+      href: '/focus',
+      icon: <Zap size={28} className="text-amber-400" />,
+      color: 'from-amber-500/20 to-amber-600/5 border-amber-500/20',
+      description: 'Modo Deep Work'
     },
     {
-      id: 'finanzas',
-      title: 'Finanzas',
-      href: '/finanzas',
-      icon: <Wallet size={28} className="text-purple-400" />,
-      color: 'from-purple-500/20 to-purple-600/5 border-purple-500/20',
-      description: 'Gastos'
+      id: 'resumen',
+      title: 'Resumen Diario',
+      href: '/resumen',
+      icon: <Sun size={28} className="text-yellow-400" />,
+      color: 'from-yellow-500/20 to-yellow-600/5 border-yellow-500/20',
+      description: 'Clima y Batería'
+    },
+    {
+      id: 'tareas',
+      title: 'Time-Blocking',
+      href: '/tareas',
+      icon: <CheckSquare size={28} className="text-indigo-400" />,
+      color: 'from-indigo-500/20 to-indigo-600/5 border-indigo-500/20',
+      description: 'Bloques 24 Horas'
+    },
+    {
+      id: 'datos',
+      title: 'Datos Secretos',
+      href: '/datos-personales',
+      icon: <Lock size={28} className="text-rose-400" />,
+      color: 'from-rose-500/20 to-rose-600/5 border-rose-500/20',
+      description: 'Claves e Info'
+    },
+    {
+      id: 'lecturas',
+      title: 'Lecturas',
+      href: '/lecturas',
+      icon: <BookOpen size={28} className="text-cyan-400" />,
+      color: 'from-cyan-500/20 to-cyan-600/5 border-cyan-500/20',
+      description: 'Recursos y Libros'
     },
     {
       id: 'lifeos',
-      title: 'LifeOS',
+      title: 'LifeOS Asistente',
       href: '/lifeos',
-      icon: <Sparkles size={28} className="text-amber-400" />,
-      color: 'from-amber-500/20 to-amber-600/5 border-amber-500/20',
-      description: 'Asistente IA'
+      icon: <Sparkles size={28} className="text-orange-400" />,
+      color: 'from-orange-500/20 to-orange-600/5 border-orange-500/20',
+      description: 'Dictado IA'
     },
     {
       id: 'config',
@@ -106,50 +106,50 @@ export default function HubPage() {
       color: 'from-zinc-500/20 to-zinc-600/5 border-zinc-500/20',
       description: 'Preferencias'
     },
-    {
-      id: 'acerca',
-      title: 'Acerca de',
-      href: '/acerca',
-      icon: <Info size={28} className="text-zinc-400" />,
-      color: 'from-zinc-500/20 to-zinc-600/5 border-zinc-500/20',
-      description: 'App info'
-    }
   ];
 
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-5 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] pb-24 relative bg-gray-50 dark:bg-[#0a0a0c]"
-      style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
+      className="p-5 max-w-md mx-auto flex flex-col gap-5 min-h-[100dvh] pb-28 relative bg-gray-50 dark:bg-[#0a0a0c]"
+      style={{ paddingTop: 'max(1.2rem, env(safe-area-inset-top))' }}
     >
-      {/* Header */}
-      <header className="flex flex-col gap-1.5 mt-2 mb-2">
-        <div className="w-12 h-12 bg-gray-200/50 dark:bg-white/5 rounded-2xl flex items-center justify-center mb-2 border border-gray-300/50 dark:border-white/10 shadow-inner">
-          <LayoutGrid size={24} className="text-gray-700 dark:text-white" />
+      {/* Header con botón atrás hacia Inicio */}
+      <header className="flex items-center justify-between mt-1 mb-1">
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/"
+            className="w-10 h-10 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-full flex items-center justify-center text-gray-500 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm"
+            title="Volver a Inicio"
+          >
+            <ChevronLeft size={20} />
+          </Link>
+          <div>
+            <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white leading-tight">
+              Menú de Apps
+            </h1>
+            <p className="text-xs text-gray-500 dark:text-neutral-400 font-medium">
+              Ecosistema completo de herramientas
+            </p>
+          </div>
         </div>
-        <h1 className="text-3xl font-black tracking-tight text-gray-900 dark:text-white leading-tight">
-          Menú
-        </h1>
-        <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium">
-          Acceso rápido a todas tus herramientas.
-        </p>
       </header>
 
-      {/* Grid de Apps */}
+      {/* Grid de Apps con colores temáticos precisos */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {apps.map((app, i) => (
           <Link key={app.id} href={app.href}>
             <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
+              initial={{ opacity: 0, scale: 0.93 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05, ...SPRING_CONFIG }}
-              className={`flex flex-col p-4 rounded-3xl bg-gradient-to-br ${app.color} border backdrop-blur-xl shadow-sm hover:shadow-md active:scale-95 active:shadow-inner transition-all duration-200 aspect-square justify-center`}
+              transition={{ delay: i * 0.03, ...SPRING_CONFIG }}
+              className={`flex flex-col p-4 rounded-3xl bg-gradient-to-br ${app.color} border backdrop-blur-xl shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 aspect-square justify-center`}
             >
-              <div className="mb-3">
+              <div className="mb-2.5">
                 {app.icon}
               </div>
-              <h2 className="text-base font-bold text-white dark:text-white tracking-tight">{app.title}</h2>
-              <span className="text-[11px] font-semibold text-white/70 dark:text-zinc-400 uppercase tracking-wider mt-0.5">{app.description}</span>
+              <h2 className="text-sm font-bold text-white dark:text-white tracking-tight leading-snug">{app.title}</h2>
+              <span className="text-[10px] font-semibold text-white/70 dark:text-neutral-400 uppercase tracking-wider mt-0.5">{app.description}</span>
             </motion.div>
           </Link>
         ))}
