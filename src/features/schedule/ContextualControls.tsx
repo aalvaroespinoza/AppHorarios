@@ -82,19 +82,17 @@ export default function ContextualControls() {
               key={dia.id}
               data-active={isSelected}
               onClick={() => setDiaSeleccionado(dia.id)}
-              className={`whitespace-nowrap transition-all duration-200 relative ${
+              className={`whitespace-nowrap transition-all duration-200 relative rounded-full px-4 py-2 ${
                 isSelected 
-                  ? 'bg-zinc-800 text-white font-semibold rounded-full px-4 py-2' 
-                  : 'text-zinc-500 font-medium rounded-full px-4 py-2 hover:bg-zinc-800/40'
+                  ? 'bg-zinc-800 text-white font-semibold' 
+                  : 'text-zinc-500 font-medium hover:bg-zinc-800/40'
+              } ${
+                isToday 
+                  ? 'border-b-2 border-emerald-500 !text-emerald-400 font-extrabold bg-emerald-500/10' 
+                  : ''
               }`}
             >
-              {dia.label}
-              {isToday && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500 border border-zinc-900"></span>
-                </span>
-              )}
+              {dia.label} {isToday && "(Hoy)"}
             </button>
           );
         })}
