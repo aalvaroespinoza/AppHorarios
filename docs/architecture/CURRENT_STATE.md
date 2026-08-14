@@ -28,7 +28,7 @@ Fuera de `src/`, existe la carpeta `legacy-local-bot/` que contiene un proyecto 
 
 - **Layout/UI**: `BottomTabBar.tsx` (navegación principal móvil), `NativeCard.tsx`.
 - **Schedule**: `HorarioCard.tsx` (muestra información del colectivo), `ClassTimeline.tsx` (línea de tiempo visual de clases), `ContextualControls.tsx` (filtros contextuales).
-- **Widgets**: `AntiSleepButton.tsx`, `ContadorVivo.tsx`, `PomodoroWidget.tsx`.
+- **Widgets**: `ContadorVivo.tsx`, `PomodoroWidget.tsx`.
 
 ## 4. Páginas y Rutas
 

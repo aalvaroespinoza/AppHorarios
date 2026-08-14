@@ -2,19 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2, Map as MapIcon } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2 } from 'lucide-react';
 import NativeCard from '@/core/components/ui/NativeCard';
-import AntiSleepButton from '@/components/AntiSleepButton';
-import dynamic from 'next/dynamic';
-import { Skeleton } from '@/components/ui/Skeleton';
-const RouteMap = dynamic(() => import('./RouteMap').then((mod) => mod.RouteMap), { 
-  ssr: false,
-  loading: () => <Skeleton className="h-64 w-full" />
-});
 import { calcularHoraLlegada } from '@/core/utils/time';
 import { addMinutes, OFFSET_PARADA_VUELTA_MIN } from '@/lib/engine/recommendation-engine';
 import { useCountdown } from '@/hooks/useCountdown';
-import { LOCATIONS } from '@/data/locations';
 import type { RawScheduleEntry } from '@/types/schedule';
 import type { useBec } from '@/hooks/useBec';
 import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
@@ -42,7 +34,6 @@ export function HorarioCard({
   bec: ReturnType<typeof useBec>;
 }) {
   const [verAlternativas, setVerAlternativas] = useState(false);
-  const [verMapa, setVerMapa] = useState(false);
   
   const [currentRecomendado, setCurrentRecomendado] = useState<RawScheduleEntry | null>(recomendacion.recomendado);
   const [currentAlternativas, setCurrentAlternativas] = useState<RawScheduleEntry[]>(recomendacion.alternativas);
@@ -111,9 +102,6 @@ export function HorarioCard({
   
   const esVuelta = titulo.toLowerCase().includes('vuelta');
   const horaReal = esVuelta && currentRecomendado ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado?.horaSalida;
-  
-  const targetLat = direction === 'ida' ? LOCATIONS.cordobaBusStop!.lat : LOCATIONS.despenaderosBusStop!.lat;
-  const targetLng = direction === 'ida' ? LOCATIONS.cordobaBusStop!.lng : LOCATIONS.despenaderosBusStop!.lng;
 
   const minutosFaltantes = useCountdown(horaReal);
   const parsed = parseMateriaRawText(titulo);
@@ -227,8 +215,6 @@ export function HorarioCard({
         </div>
       )}
       
-      <AntiSleepButton targetLat={targetLat} targetLng={targetLng} />
-      
       {probLluvia !== null && probLluvia > 40 && (
         <div className="bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 px-4 py-2.5 rounded-2xl mb-4 text-sm font-medium flex items-center gap-2">
           <span>🌧️</span>
@@ -276,33 +262,7 @@ export function HorarioCard({
           </AnimatePresence>
         </div>
       )}
-
-      <div className="border-t border-gray-200 dark:border-zinc-800/80 pt-4 mt-2">
-        <motion.button 
-          whileTap={TAP_ANIMATION}
-          onClick={() => setVerMapa(!verMapa)}
-          className="flex items-center justify-between w-full text-sm text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors py-1"
-        >
-          <div className="flex items-center gap-2">
-            <MapIcon size={16} />
-            <span>Ver en el mapa</span>
-          </div>
-          {verMapa ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        </motion.button>
-        <AnimatePresence>
-          {verMapa && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={SPRING_CONFIG}
-              className="mt-4 overflow-hidden"
-            >
-              <RouteMap />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
     </NativeCard>
   );
 }
+

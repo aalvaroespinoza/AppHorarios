@@ -28,7 +28,20 @@ export class ScheduleContextProvider implements ContextProvider {
       } catch(e) {}
     }
 
-    subjectData.subjects.forEach(subject => {
+    let activeSubjects = subjectData.subjects;
+    const storedSubjects = localStorage.getItem('lifeos_subjects');
+    if (storedSubjects) {
+      try {
+        const parsed = JSON.parse(storedSubjects);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          activeSubjects = parsed;
+        }
+      } catch (e) {
+        console.error('Error parsing lifeos_subjects:', e);
+      }
+    }
+
+    activeSubjects.forEach(subject => {
       // Excluir Arquitectura si no la cursa y es ese subject
       if (!cursaArquitectura && subject.name.includes('Arquitectura')) {
         return;

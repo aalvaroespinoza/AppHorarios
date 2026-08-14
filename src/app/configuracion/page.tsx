@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import NativeCard from '@/core/components/ui/NativeCard';
-import { Bell, RefreshCw, Moon, Sun, ChevronLeft, Trash2, Ticket, Info, ChevronRight } from 'lucide-react';
+import { Bell, RefreshCw, Moon, Sun, ChevronLeft, Trash2, Ticket, Info, ChevronRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useBec } from '@/hooks/useBec';
 import { useTheme, ThemeMode } from '@/context/ThemeContext';
@@ -57,6 +57,20 @@ export default function Configuracion() {
         <section className="mb-6">
           <h2 className="text-[13px] uppercase text-gray-500 dark:text-zinc-500 font-medium tracking-wide mb-2 ml-4">General</h2>
           <NativeCard className="p-0 overflow-hidden bg-white dark:bg-zinc-900 border border-gray-200 dark:border-none divide-y divide-gray-100 dark:divide-zinc-800">
+            {/* Link a Gestión de Materias */}
+            <Link href="/configuracion/materias" className="w-full flex items-center justify-between p-3 active:bg-zinc-800/50 transition-colors text-left">
+              <div className="flex items-center gap-3">
+                <div className="bg-purple-500 p-1.5 rounded-[10px] text-white">
+                  <BookOpen size={18} />
+                </div>
+                <div>
+                  <span className="font-medium text-[16px] text-gray-900 dark:text-white block leading-tight">Gestión de Materias</span>
+                  <span className="text-[12px] text-gray-500 dark:text-zinc-400">Personaliza tus horarios, cursos y aulas</span>
+                </div>
+              </div>
+              <ChevronRight size={18} className="text-zinc-500" />
+            </Link>
+
             {/* Link a Notificaciones */}
             <Link href="/configuracion/notificaciones" className="w-full flex items-center justify-between p-3 active:bg-zinc-800/50 transition-colors text-left">
               <div className="flex items-center gap-3">
