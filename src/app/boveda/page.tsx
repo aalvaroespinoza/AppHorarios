@@ -43,6 +43,14 @@ export default function HubPage() {
       description: 'Pendientes'
     },
     {
+      id: 'kanban',
+      title: 'Kanban',
+      href: '/kanban',
+      icon: <LayoutGrid size={28} className="text-sky-400" />,
+      color: 'from-sky-500/20 to-sky-600/5 border-sky-500/20',
+      description: 'Tablero'
+    },
+    {
       id: 'viajes',
       title: 'Viajes',
       href: '/',
