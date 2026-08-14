@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
-  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen, FileText, ChevronLeft
+  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen, FileText, ChevronLeft, HelpCircle
 } from 'lucide-react';
 import Link from 'next/link';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
@@ -91,6 +91,14 @@ export default function HubPage() {
       description: 'Recursos y Libros'
     },
     {
+      id: 'ayuda',
+      title: 'Centro de Ayuda',
+      href: '/ayuda',
+      icon: <HelpCircle size={28} className="text-cyan-400" />,
+      color: 'from-cyan-500/20 to-cyan-600/5 border-cyan-500/20',
+      description: 'Guías y Manual'
+    },
+    {
       id: 'lifeos',
       title: 'LifeOS Asistente',
       href: '/lifeos',
@@ -111,7 +119,7 @@ export default function HubPage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-5 max-w-md mx-auto flex flex-col gap-5 min-h-[100dvh] pb-28 relative bg-gray-50 dark:bg-[#0a0a0c]"
+      className="p-5 max-w-md mx-auto flex flex-col gap-5 min-h-[100dvh] pb-28 relative bg-[#0a0a0c]"
       style={{ paddingTop: 'max(1.2rem, env(safe-area-inset-top))' }}
     >
       {/* Header con botón atrás hacia Inicio */}
@@ -119,23 +127,23 @@ export default function HubPage() {
         <div className="flex items-center gap-3">
           <Link 
             href="/"
-            className="w-10 h-10 bg-white dark:bg-neutral-900 border border-gray-200 dark:border-neutral-800 rounded-full flex items-center justify-center text-gray-500 dark:text-neutral-400 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm"
+            className="w-10 h-10 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors shadow-sm"
             title="Volver a Inicio"
           >
             <ChevronLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-gray-900 dark:text-white leading-tight">
+            <h1 className="text-2xl font-black tracking-tight text-white leading-tight">
               Menú de Apps
             </h1>
-            <p className="text-xs text-gray-500 dark:text-neutral-400 font-medium">
+            <p className="text-xs text-neutral-400 font-medium">
               Ecosistema completo de herramientas
             </p>
           </div>
         </div>
       </header>
 
-      {/* Grid de Apps con colores temáticos precisos */}
+      {/* Grid de Apps */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         {apps.map((app, i) => (
           <Link key={app.id} href={app.href}>
@@ -148,7 +156,7 @@ export default function HubPage() {
               <div className="mb-2.5">
                 {app.icon}
               </div>
-              <h2 className="text-sm font-bold text-white dark:text-white tracking-tight leading-snug">{app.title}</h2>
+              <h2 className="text-sm font-bold text-white tracking-tight leading-snug">{app.title}</h2>
               <span className="text-[10px] font-semibold text-white/70 dark:text-neutral-400 uppercase tracking-wider mt-0.5">{app.description}</span>
             </motion.div>
           </Link>
