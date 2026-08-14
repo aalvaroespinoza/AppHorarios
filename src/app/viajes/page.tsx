@@ -49,6 +49,7 @@ export default function ViajesPage() {
           direction="ida"
           bec={bec}
           isToday={isToday}
+          diaSeleccionado={diaSeleccionado}
         />
         
         <EntertainmentSelector />
@@ -68,6 +69,7 @@ export default function ViajesPage() {
           direction="vuelta"
           bec={bec}
           isToday={isToday}
+          diaSeleccionado={diaSeleccionado}
         />
       </div>
     </motion.div>

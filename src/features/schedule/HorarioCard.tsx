@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2, Clock, Bus, Sparkles } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2, Clock, Bus, Sparkles, RotateCcw } from 'lucide-react';
 import NativeCard from '@/core/components/ui/NativeCard';
 import { calcularHoraLlegada } from '@/core/utils/time';
 import { addMinutes, OFFSET_PARADA_VUELTA_MIN } from '@/lib/engine/recommendation-engine';
 import { useCountdown } from '@/hooks/useCountdown';
+import { useLocalStorageState } from "@/core/hooks/useLocalStorageState";
 import type { RawScheduleEntry } from '@/types/schedule';
 import type { useBec } from '@/hooks/useBec';
 import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
@@ -25,7 +26,8 @@ export function HorarioCard({
   icon: Icon = Bus,
   direction,
   bec,
-  isToday = true
+  isToday = true,
+  diaSeleccionado = 'lunes'
 }: { 
   titulo: string;
   recomendacion: { recomendado: RawScheduleEntry | null; alternativas: RawScheduleEntry[] };
@@ -33,26 +35,49 @@ export function HorarioCard({
   direction: 'ida' | 'vuelta';
   bec: ReturnType<typeof useBec>;
   isToday?: boolean;
+  diaSeleccionado?: string;
 }) {
   const [verAlternativas, setVerAlternativas] = useState(false);
-  const [currentRecomendado, setCurrentRecomendado] = useState<RawScheduleEntry | null>(recomendacion.recomendado);
-  const [currentAlternativas, setCurrentAlternativas] = useState<RawScheduleEntry[]>(recomendacion.alternativas);
+  const [isClientMounted, setIsClientMounted] = useState(false);
 
   useEffect(() => {
-    setCurrentRecomendado(recomendacion.recomendado);
-    setCurrentAlternativas(recomendacion.alternativas);
-  }, [recomendacion]);
+    setIsClientMounted(true);
+  }, []);
+
+  // Clave dinámica que incluye la fecha de hoy, el día seleccionado y el sentido (ida/vuelta)
+  const todayDateStr = new Date().toISOString().split('T')[0];
+  const storageKey = `selected-bus-${todayDateStr}-${diaSeleccionado}-${direction}`;
+
+  // Persistencia local-first del colectivo seleccionado manualmente
+  const [overrideBus, setOverrideBus, isStorageMounted] = useLocalStorageState<RawScheduleEntry | null>(
+    storageKey,
+    null
+  );
 
   const registroHoy = bec.getRegistroHoy();
   const becUsado = isToday && (direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado);
 
-  const handleSwap = (alt: RawScheduleEntry, idx: number) => {
-    if (!currentRecomendado) return;
-    const newAlts = [...currentAlternativas];
-    newAlts[idx] = currentRecomendado;
-    newAlts.sort((a, b) => a.horaSalida.localeCompare(b.horaSalida));
-    setCurrentRecomendado(alt);
-    setCurrentAlternativas(newAlts);
+  // Priorizar el valor manual guardado si existe, de lo contrario usar el cálculo automático
+  const isManualOverride = isClientMounted && overrideBus !== null;
+  const currentRecomendado = isManualOverride ? overrideBus : recomendacion.recomendado;
+
+  // Calcular todas las opciones disponibles excluyendo el actualmente activo
+  const allAvailable = recomendacion.recomendado
+    ? [recomendacion.recomendado, ...recomendacion.alternativas]
+    : recomendacion.alternativas;
+
+  const currentAlternativas = allAvailable.filter(
+    (alt) => !currentRecomendado || alt.horaSalida !== currentRecomendado.horaSalida || alt.empresa !== currentRecomendado.empresa
+  );
+
+  const handleSelectAlternative = (alt: RawScheduleEntry) => {
+    setOverrideBus(alt);
+    setVerAlternativas(false);
+  };
+
+  const handleResetToAutomatic = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setOverrideBus(null);
     setVerAlternativas(false);
   };
 
@@ -94,26 +119,47 @@ export function HorarioCard({
             <Icon size={18} />
           </div>
           <div>
-            <h2 className="font-bold text-sm text-white tracking-tight leading-tight">{titulo}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="font-bold text-sm text-white tracking-tight leading-tight">{titulo}</h2>
+              {isManualOverride && (
+                <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded-md border border-amber-500/20">
+                  Manual
+                </span>
+              )}
+            </div>
             <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
               {currentRecomendado.empresa}
             </span>
           </div>
         </div>
 
-        {/* Botón BEC */}
-        <motion.button 
-          whileTap={TAP_ANIMATION}
-          onClick={toggleTomado}
-          className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border ${
-            becUsado 
-              ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
-              : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border-neutral-800 hover:border-neutral-700'
-          }`}
-        >
-          <CheckCircle2 size={14} className={becUsado ? 'text-emerald-400' : 'text-neutral-500'} />
-          <span>{becUsado ? 'BEC Usado ✓' : 'Marcar BEC'}</span>
-        </motion.button>
+        <div className="flex items-center gap-2">
+          {/* Botón de Restablecer si hay selección manual */}
+          {isManualOverride && (
+            <button
+              onClick={handleResetToAutomatic}
+              className="flex items-center gap-1 text-[11px] font-semibold text-neutral-400 hover:text-cyan-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full hover:border-neutral-700 transition-all active:scale-95"
+              title="Restablecer al colectivo automático recomendado"
+            >
+              <RotateCcw size={12} />
+              <span>Restablecer</span>
+            </button>
+          )}
+
+          {/* Botón BEC */}
+          <motion.button 
+            whileTap={TAP_ANIMATION}
+            onClick={toggleTomado}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border ${
+              becUsado 
+                ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
+                : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+            }`}
+          >
+            <CheckCircle2 size={14} className={becUsado ? 'text-emerald-400' : 'text-neutral-500'} />
+            <span>{becUsado ? 'BEC Usado ✓' : 'Marcar BEC'}</span>
+          </motion.button>
+        </div>
       </div>
 
       {/* Horario Principal y Cuenta Regresiva */}
@@ -205,7 +251,7 @@ export function HorarioCard({
                   <motion.button 
                     whileTap={TAP_ANIMATION}
                     key={idx} 
-                    onClick={() => handleSwap(alt, idx)}
+                    onClick={() => handleSelectAlternative(alt)}
                     className="flex justify-between items-center bg-neutral-900/70 hover:bg-neutral-900 border border-neutral-800 p-2.5 rounded-xl transition-colors text-left group"
                   >
                     <div>
