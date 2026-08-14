@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Bus, Calendar, Wallet, LayoutGrid, Bell } from 'lucide-react';
+import { Home, Bus, Calendar, Wallet, LayoutGrid, Bell, BarChart3 } from 'lucide-react';
 import { TAP_ANIMATION } from '@/lib/animations';
 import { NotificationInbox } from '@/features/notifications/NotificationInbox';
 
@@ -19,7 +19,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: '/viajes', label: 'Viajes', icon: Bus },
   { id: '/academia', label: 'Agenda', icon: Calendar },
   { id: '/', label: 'Inicio', icon: Home, isCenter: true },
-  { id: '/finanzas', label: 'Finanzas', icon: Wallet },
+  { id: '/estadisticas', label: 'Stats', icon: BarChart3 },
   { id: '/boveda', label: 'Menú', icon: LayoutGrid },
 ];
 
