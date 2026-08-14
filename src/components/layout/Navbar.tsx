@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Bus, Calendar, Wallet, LayoutGrid } from 'lucide-react';
+import { Bus, Calendar, Wallet, Zap, LayoutGrid } from 'lucide-react';
 import { TAP_ANIMATION } from '@/lib/animations';
 
 export interface NavItem {
@@ -14,10 +14,10 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { id: '/', label: 'Inicio', icon: Home },
-  { id: '/horarios', label: 'Viajes', icon: Bus },
+  { id: '/', label: 'Viajes', icon: Bus },
   { id: '/academia', label: 'Agenda', icon: Calendar },
   { id: '/finanzas', label: 'Finanzas', icon: Wallet },
+  { id: '/focus', label: 'Foco', icon: Zap },
   { id: '/boveda', label: 'Menú', icon: LayoutGrid },
 ];
 
