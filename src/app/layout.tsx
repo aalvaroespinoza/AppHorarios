@@ -1,7 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import BottomTabBar from "@/components/layout/BottomTabBar";
+import { Navbar } from "@/components/layout/Navbar";
+import PageTransitionWrapper from "@/components/layout/PageTransitionWrapper";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { EscenarioProvider } from "@/context/EscenarioContext";
 import NotificationProvider from "@/components/NotificationProvider";
@@ -72,10 +73,10 @@ export default function RootLayout({
       <body className={`${inter.className} bg-gray-50 text-neutral-900 dark:bg-black dark:text-white min-h-[100dvh] antialiased overflow-x-hidden transition-colors duration-300`}>
         <ThemeProvider>
           <EscenarioProvider>
-            <main className="pb-[calc(5rem+env(safe-area-inset-bottom))] w-full max-w-[100vw] overflow-x-hidden">
+            <PageTransitionWrapper>
               {children}
-            </main>
-            <BottomTabBar />
+            </PageTransitionWrapper>
+            <Navbar />
             <ServiceWorkerRegister />
             <NotificationProvider />
           </EscenarioProvider>

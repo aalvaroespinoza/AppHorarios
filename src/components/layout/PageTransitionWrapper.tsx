@@ -2,25 +2,22 @@
 
 import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PAGE_TRANSITION } from '@/lib/animations';
 
 export default function PageTransitionWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // If a specific page already has PAGE_TRANSITION on its root element, 
-  // wrapping it here will cause a double-animation. However, since we are moving
-  // to a layout-based transition, it's safer to have it centrally. We'll use a 
-  // shorter explicit transition to avoid conflicts if the page has its own.
-  
   return (
     <AnimatePresence mode="wait">
-      <motion.div
+      <motion.main
         key={pathname}
-        {...PAGE_TRANSITION}
-        className="w-full"
+        initial={{ opacity: 0, x: 10 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -10 }}
+        transition={{ duration: 0.2, ease: "easeOut" }}
+        className="w-full max-w-[100vw] overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))]"
       >
         {children}
-      </motion.div>
+      </motion.main>
     </AnimatePresence>
   );
 }
