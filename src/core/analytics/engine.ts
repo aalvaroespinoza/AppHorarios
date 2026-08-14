@@ -18,6 +18,8 @@ export interface AnalyticsSummary {
   focusHours: number;
   totalExpenses: number;
   travelsCount: number;
+  habitsCompletedToday: number;
+  classesAttended: number;
   dailyActivity: { date: string; day: string; count: number }[];
   categoryBreakdown: { category: string; count: number; percentage: number }[];
 }
@@ -195,12 +197,21 @@ export function getStats(daysBack: number = 7): AnalyticsSummary {
     percentage: Math.round((count / (totalCatEvents || 1)) * 100)
   }));
 
+  // Contar hábitos completados hoy y clases asistidas desde eventos reales
+  const todayStr = now.toISOString().split('T')[0];
+  const habitsCompletedToday = events.filter(
+    e => e.eventName === 'habit_completed' && e.timestamp.startsWith(todayStr)
+  ).length;
+  const classesAttended = events.filter(e => e.eventName === 'class_attended').length;
+
   return {
     totalEvents: events.length,
     tasksCompleted,
     focusHours,
     totalExpenses,
     travelsCount,
+    habitsCompletedToday,
+    classesAttended,
     dailyActivity,
     categoryBreakdown
   };

@@ -21,6 +21,7 @@ import { TasksWidgetAsync } from '@/features/hub/TasksWidgetAsync';
 import { FinanceWidgetAsync } from '@/features/hub/FinanceWidgetAsync';
 import { ScheduleWidgetAsync } from '@/features/hub/ScheduleWidgetAsync';
 import { VaultWidgetAsync } from '@/features/hub/VaultWidgetAsync';
+import { DailyLogWidgetAsync } from '@/features/hub/DailyLogWidgetAsync';
 
 interface ImmediateActionConfig {
   isRestMode: boolean;
@@ -219,6 +220,11 @@ export default function InicioHubPage() {
           {/* Widget Bóveda / Menú */}
           <Suspense fallback={<Skeleton className="aspect-square w-full rounded-[28px]" />}>
             <VaultWidgetAsync />
+          </Suspense>
+
+          {/* Widget Check-in Diario */}
+          <Suspense fallback={<Skeleton className="col-span-2 h-28 rounded-[28px]" />}>
+            <DailyLogWidgetAsync />
           </Suspense>
         </div>
       </motion.div>

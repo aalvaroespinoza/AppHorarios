@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseMateriaInfo } from '@/core/utils/materiaParser';
 import { getSubjectColorMapping } from '@/core/utils/edificio';
-import { Clock, MapPin, Sparkles, Bus } from 'lucide-react';
+import { Clock, MapPin, Sparkles, Bus, CheckCircle2 } from 'lucide-react';
+import { trackEvent } from '@/core/analytics/engine';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,31 @@ export function ClassTimeline({
 }: ClassTimelineProps) {
   const items = materiasDelDia || classes || [];
   const [selectedMateria, setSelectedMateria] = useState<any | null>(null);
+  const [attended, setAttended] = useState<Record<string, boolean>>({});
+
+  // Leer asistencias del día actual desde localStorage
+  React.useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const todayKey = new Date().toISOString().split('T')[0];
+      const stored = localStorage.getItem('lifeos_class_attendance');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed._date === todayKey) {
+          setAttended(parsed);
+        }
+      }
+    } catch (e) {}
+  }, []);
+
+  const handleAttendance = (materiaName: string, idx: number) => {
+    const key = `class-${idx}`;
+    if (attended[key]) return;
+    const next = { ...attended, [key]: true, _date: new Date().toISOString().split('T')[0] };
+    setAttended(next);
+    localStorage.setItem('lifeos_class_attendance', JSON.stringify(next));
+    trackEvent('class_attended', 'academic', 1, { materia: materiaName });
+  };
 
   const currentTime = horaActualHHMM || (() => {
     const now = new Date();
@@ -173,15 +199,37 @@ export function ClassTimeline({
                     )}
                   </div>
 
-                  <Button 
-                    className="w-full mt-1 font-semibold text-xs rounded-xl" 
-                    onClick={() => setSelectedMateria(cls)} 
-                    variant="secondary"
-                    size="sm"
-                  >
-                    <Sparkles size={13} className="mr-1.5 text-cyan-400" />
-                    Ver Detalle
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 font-semibold text-xs rounded-xl" 
+                      onClick={() => setSelectedMateria(cls)} 
+                      variant="secondary"
+                      size="sm"
+                    >
+                      <Sparkles size={13} className="mr-1.5 text-cyan-400" />
+                      Ver Detalle
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAttendance(info.nombre, idx);
+                      }}
+                      disabled={!!attended[`class-${idx}`]}
+                      className={`text-xs rounded-xl font-bold shrink-0 transition-all ${
+                        attended[`class-${idx}`]
+                          ? 'text-emerald-400 bg-emerald-500/10 cursor-default'
+                          : 'text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95'
+                      }`}
+                    >
+                      {attended[`class-${idx}`] ? (
+                        <><CheckCircle2 size={14} className="mr-1" /> Asistido</>
+                      ) : (
+                        '✅ Asistencia'
+                      )}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             </div>
