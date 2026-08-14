@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Home, Bus, Calendar, LayoutGrid, Bell } from 'lucide-react';
+import { Home, Bus, Calendar, LayoutGrid, Bell, BarChart3 } from 'lucide-react';
 import { TAP_ANIMATION } from '@/lib/animations';
 import { NotificationInbox } from '@/features/notifications/NotificationInbox';
 
@@ -29,9 +29,9 @@ export function Navbar() {
                   ? 'text-cyan-400 bg-cyan-500/10 shadow-[0_0_10px_rgba(6,182,212,0.25)]'
                   : 'text-neutral-400 group-hover:text-white'
               }`}>
-                <Bus size={19} strokeWidth={pathname?.startsWith('/viajes') ? 2.5 : 1.8} />
+                <Bus size={18} strokeWidth={pathname?.startsWith('/viajes') ? 2.5 : 1.8} />
               </div>
-              <span className={`text-[10px] font-semibold tracking-tight transition-colors ${
+              <span className={`text-[9px] sm:text-[10px] font-semibold tracking-tight transition-colors ${
                 pathname?.startsWith('/viajes') ? 'text-white font-bold' : 'text-neutral-500 group-hover:text-neutral-300'
               }`}>
                 Viajes
@@ -51,9 +51,9 @@ export function Navbar() {
                   ? 'text-cyan-400 bg-cyan-500/10 shadow-[0_0_10px_rgba(6,182,212,0.25)]'
                   : 'text-neutral-400 group-hover:text-white'
               }`}>
-                <Calendar size={19} strokeWidth={pathname?.startsWith('/academia') ? 2.5 : 1.8} />
+                <Calendar size={18} strokeWidth={pathname?.startsWith('/academia') ? 2.5 : 1.8} />
               </div>
-              <span className={`text-[10px] font-semibold tracking-tight transition-colors ${
+              <span className={`text-[9px] sm:text-[10px] font-semibold tracking-tight transition-colors ${
                 pathname?.startsWith('/academia') || pathname?.startsWith('/tareas') ? 'text-white font-bold' : 'text-neutral-500 group-hover:text-neutral-300'
               }`}>
                 Agenda
@@ -73,9 +73,9 @@ export function Navbar() {
                   ? 'text-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-500/40 shadow-[0_0_15px_rgba(6,182,212,0.35)]'
                   : 'text-neutral-400 group-hover:text-white'
               }`}>
-                <Home size={22} strokeWidth={pathname === '/' ? 2.5 : 1.8} />
+                <Home size={20} strokeWidth={pathname === '/' ? 2.5 : 1.8} />
               </div>
-              <span className={`text-[10px] font-semibold tracking-tight transition-colors ${
+              <span className={`text-[9px] sm:text-[10px] font-semibold tracking-tight transition-colors ${
                 pathname === '/' ? 'text-white font-bold' : 'text-neutral-500 group-hover:text-neutral-300'
               }`}>
                 Inicio
@@ -83,7 +83,29 @@ export function Navbar() {
             </motion.div>
           </Link>
 
-          {/* 4. Avisos / Notificaciones (Item normal en flex sin absolute overlap) */}
+          {/* 4. Stats / Estadísticas */}
+          <Link
+            href="/estadisticas"
+            className="relative flex flex-col items-center justify-center flex-1 h-full py-1 group"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
+          >
+            <motion.div whileTap={TAP_ANIMATION} className="flex flex-col items-center gap-0.5">
+              <div className={`p-1.5 rounded-xl transition-all ${
+                pathname?.startsWith('/estadisticas')
+                  ? 'text-emerald-400 bg-emerald-500/10 shadow-[0_0_10px_rgba(16,185,129,0.25)]'
+                  : 'text-neutral-400 group-hover:text-white'
+              }`}>
+                <BarChart3 size={18} strokeWidth={pathname?.startsWith('/estadisticas') ? 2.5 : 1.8} />
+              </div>
+              <span className={`text-[9px] sm:text-[10px] font-semibold tracking-tight transition-colors ${
+                pathname?.startsWith('/estadisticas') ? 'text-white font-bold' : 'text-neutral-500 group-hover:text-neutral-300'
+              }`}>
+                Stats
+              </span>
+            </motion.div>
+          </Link>
+
+          {/* 5. Avisos / Notificaciones */}
           <button
             onClick={() => setIsInboxOpen(true)}
             className="relative flex flex-col items-center justify-center flex-1 h-full py-1 group"
@@ -92,20 +114,20 @@ export function Navbar() {
           >
             <motion.div whileTap={TAP_ANIMATION} className="flex flex-col items-center gap-0.5">
               <div className="p-1.5 rounded-xl text-neutral-400 group-hover:text-white transition-all relative">
-                <Bell size={19} strokeWidth={1.8} />
+                <Bell size={18} strokeWidth={1.8} />
                 {unreadCount > 0 && (
                   <span className="absolute top-0.5 right-0.5 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 text-[8px] font-black text-white shadow-sm ring-2 ring-neutral-950 animate-pulse">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-semibold tracking-tight text-neutral-500 group-hover:text-neutral-300">
+              <span className="text-[9px] sm:text-[10px] font-semibold tracking-tight text-neutral-500 group-hover:text-neutral-300">
                 Avisos
               </span>
             </motion.div>
           </button>
 
-          {/* 5. Menú / Bóveda */}
+          {/* 6. Menú / Bóveda */}
           <Link
             href="/boveda"
             className="relative flex flex-col items-center justify-center flex-1 h-full py-1 group"
@@ -117,9 +139,9 @@ export function Navbar() {
                   ? 'text-cyan-400 bg-cyan-500/10 shadow-[0_0_10px_rgba(6,182,212,0.25)]'
                   : 'text-neutral-400 group-hover:text-white'
               }`}>
-                <LayoutGrid size={19} strokeWidth={pathname?.startsWith('/boveda') ? 2.5 : 1.8} />
+                <LayoutGrid size={18} strokeWidth={pathname?.startsWith('/boveda') ? 2.5 : 1.8} />
               </div>
-              <span className={`text-[10px] font-semibold tracking-tight transition-colors ${
+              <span className={`text-[9px] sm:text-[10px] font-semibold tracking-tight transition-colors ${
                 pathname?.startsWith('/boveda') || pathname?.startsWith('/configuracion') ? 'text-white font-bold' : 'text-neutral-500 group-hover:text-neutral-300'
               }`}>
                 Menú

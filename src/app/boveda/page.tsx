@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
-  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen, FileText, ChevronLeft, HelpCircle
+  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen, FileText, ChevronLeft, HelpCircle, BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
@@ -45,6 +45,14 @@ function BovedaContent() {
       icon: <CalendarDays size={28} className="text-purple-400" />,
       color: 'from-purple-500/20 to-purple-600/5 border-purple-500/20',
       description: 'Clases y Horarios'
+    },
+    {
+      id: 'estadisticas',
+      title: 'Estadísticas & Métricas',
+      href: '/estadisticas',
+      icon: <BarChart3 size={28} className="text-emerald-400" />,
+      color: 'from-emerald-500/20 to-teal-600/5 border-emerald-500/20',
+      description: 'Analytics y Hábitos'
     },
     {
       id: 'kanban',

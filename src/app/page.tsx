@@ -5,7 +5,7 @@ import { motion, Variants } from 'framer-motion';
 import { 
   Bus, Wallet, Calendar, CheckSquare, Zap, MapPin, 
   ArrowUpRight, Sparkles, Moon, SunMedium, 
-  ChevronRight, Kanban, Clock, Shield, ArrowRight, LayoutGrid
+  ChevronRight, Kanban, Clock, Shield, ArrowRight, LayoutGrid, BarChart3
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
@@ -144,7 +144,7 @@ export default function InicioHubPage() {
       animate="visible"
       className="min-h-screen pb-24 px-4 pt-12 flex flex-col gap-6 bg-[#0a0a0c] text-white max-w-md mx-auto"
     >
-      {/* SECCIÓN 1: Header (Contexto) con Async Weather Widget */}
+      {/* SECCIÓN 1: Header (Contexto) con Async Weather Widget y Acceso Directo a Stats */}
       <motion.header variants={itemVariants} className="px-2 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">
@@ -155,9 +155,19 @@ export default function InicioHubPage() {
           </p>
         </div>
 
-        <Suspense fallback={<div className="w-16 h-7 rounded-full bg-neutral-800/80 animate-pulse" />}>
-          <WeatherWidgetAsync />
-        </Suspense>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/estadisticas"
+            className="w-9 h-9 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-emerald-400 hover:border-emerald-500/40 active:scale-95 transition-all shadow-md"
+            title="Ver Estadísticas y Analíticas"
+          >
+            <BarChart3 size={16} />
+          </Link>
+
+          <Suspense fallback={<div className="w-16 h-7 rounded-full bg-neutral-800/80 animate-pulse" />}>
+            <WeatherWidgetAsync />
+          </Suspense>
+        </div>
       </motion.header>
 
       {/* SECCIÓN 2: Hero Card (Acción Inmediata) */}
