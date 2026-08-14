@@ -267,56 +267,46 @@ export default function FinanzasPage() {
         )}
       </AnimatePresence>
 
-      {/* TARJETA 3: Actividad Reciente */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl flex flex-col gap-4">
-        <div className="flex items-center justify-between">
+      {/* TARJETA 3: Movimientos */}
+      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl flex flex-col gap-2">
+        <div className="flex items-center justify-between pb-2 border-b border-neutral-800/60">
           <h2 className="font-bold text-xs uppercase tracking-wider text-neutral-400">
-            Actividad Reciente
+            Últimos Movimientos
           </h2>
           <span className="text-xs text-neutral-500 font-mono">{transacciones.length} registros</span>
         </div>
 
-        <div className="flex flex-col gap-2.5">
+        <div className="flex flex-col">
           {transacciones.length === 0 ? (
-            <div className="bg-neutral-950/40 border border-neutral-800/60 rounded-xl p-5 text-center text-sm text-neutral-500 italic">
+            <div className="py-6 text-center text-sm text-neutral-500 italic">
               No hay movimientos registrados. ¡Toca + para agregar el primero!
             </div>
           ) : (
-            transacciones.slice(0, 8).map((t) => (
-              <div key={t.id} className="relative overflow-hidden rounded-xl">
-                <div className="absolute inset-y-0 right-0 w-16 bg-red-600 flex items-center justify-center z-0">
-                  <Trash2 size={18} className="text-white" />
+            transacciones.slice(0, 10).map((t) => (
+              <div 
+                key={t.id} 
+                className="flex justify-between items-center border-b border-neutral-800/50 py-3 last:border-b-0"
+              >
+                <div className="flex flex-col min-w-0 pr-3">
+                  <span className="text-sm font-semibold text-white truncate">{t.descripcion}</span>
+                  <span className="text-xs text-neutral-500">
+                    {new Date(t.fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} • {t.categoria}
+                  </span>
                 </div>
-                <motion.div 
-                  className="relative z-10 flex items-center justify-between bg-neutral-950/80 border border-neutral-800/80 p-3.5 rounded-xl shadow-sm"
-                  drag="x"
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={{ left: 0.8, right: 0 }}
-                  onDragEnd={(e, info: PanInfo) => {
-                    if (info.offset.x < -60) {
-                      finanzas.eliminarTransaccion(t.id);
-                    }
-                  }}
-                >
-                  <div className="flex items-center gap-3 min-w-0 pr-2">
-                    <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 ${
-                      t.tipo === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-neutral-800 text-red-400'
-                    }`}>
-                      {t.tipo === 'ingreso' ? <ArrowUpRight size={16} /> : <ArrowDownRight size={16} />}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="font-bold text-sm text-white truncate">{t.descripcion}</h3>
-                      <p className="text-xs text-neutral-500 truncate">
-                        {t.categoria} • {new Date(t.fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
-                      </p>
-                    </div>
-                  </div>
-                  <span className={`font-bold text-sm tabular-nums shrink-0 ${
-                    t.tipo === 'ingreso' ? 'text-emerald-400' : 'text-neutral-100'
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className={`font-bold text-sm tabular-nums ${
+                    t.tipo === 'ingreso' ? 'text-emerald-400' : 'text-white'
                   }`}>
                     {t.tipo === 'gasto' ? '-' : '+'}{formatoMoneda(t.monto)}
                   </span>
-                </motion.div>
+                  <button 
+                    onClick={() => finanzas.eliminarTransaccion(t.id)}
+                    className="text-neutral-600 hover:text-red-400 p-1 transition-colors rounded-lg"
+                    title="Eliminar"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
               </div>
             ))
           )}
