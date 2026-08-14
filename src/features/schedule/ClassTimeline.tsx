@@ -65,7 +65,7 @@ export function ClassTimeline({
   }
 
   return (
-    <section className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-5 shadow-xl backdrop-blur-md relative">
+    <section id="seccion-cursado" className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-5 shadow-xl backdrop-blur-md relative scroll-mt-24">
       <div className="flex items-center gap-2 mb-4 text-neutral-400">
         <Clock size={18} className="text-zinc-400" />
         <h2 className="font-bold text-xs uppercase tracking-wider text-zinc-300">Cursado / Horario del día</h2>

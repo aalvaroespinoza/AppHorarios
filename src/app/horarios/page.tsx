@@ -82,7 +82,7 @@ export default function HorariosPage() {
       <div className="p-4 space-y-6 mt-2">
         <ContextualControls />
 
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div id="seccion-cursado" className="animate-in fade-in slide-in-from-bottom-4 duration-500 scroll-mt-24">
           {Object.keys(agrupadosPorEmpresa).length > 0 ? (
             <div className="flex flex-col gap-6">
               {Object.entries(agrupadosPorEmpresa).map(([empresa, horarios]) => (
