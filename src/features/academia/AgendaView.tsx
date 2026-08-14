@@ -18,10 +18,9 @@ interface AgendaViewProps {
   agendaDelDia: ReturnType<ReturnType<typeof useAgenda>['obtenerAgendaDelDia']>;
 }
 
-const START_HOUR = 7; // 07:00
-const END_HOUR = 23; // 23:00
-const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 17 horas
-const HOUR_HEIGHT = 64; // h-16 = 64px
+const START_HOUR = 8; // 08:00
+const END_HOUR = 22; // 22:00
+const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 15 horas
 
 export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agendaDelDia }: AgendaViewProps) {
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
@@ -107,28 +106,34 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
     ...tbEventsFormatted
   ];
 
-  // Helper para calcular posición y altura absoluta en la grilla
+  // Helper para calcular posición y altura exacta en 5rem por hora
   const getEventPosition = (horaInicio: string, horaFin?: string) => {
     const [hStart, mStart] = (horaInicio || '08:00').split(':').map(Number);
-    const startMinutes = (hStart - START_HOUR) * 60 + (mStart || 0);
-    const top = Math.max((startMinutes / 60) * HOUR_HEIGHT, 0);
+    const startHour = isNaN(hStart) ? 8 : hStart;
+    const startMinutes = isNaN(mStart) ? 0 : mStart;
 
-    let durationMinutes = 60;
+    let endHour = startHour + 1;
+    let endMinutes = startMinutes;
     if (horaFin && horaFin.includes(':')) {
       const [hEnd, mEnd] = horaFin.split(':').map(Number);
-      const endMinutes = (hEnd - START_HOUR) * 60 + (mEnd || 0);
-      durationMinutes = Math.max(endMinutes - startMinutes, 30);
+      if (!isNaN(hEnd)) endHour = hEnd;
+      if (!isNaN(mEnd)) endMinutes = mEnd;
     }
 
-    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT - 4, 38);
+    const durationInHours = Math.max((endHour * 60 + endMinutes - (startHour * 60 + startMinutes)) / 60, 0.5);
+
+    const top = `calc(${startHour - START_HOUR} * 5rem + ${(startMinutes / 60)} * 5rem)`;
+    const height = `calc(${durationInHours} * 5rem)`;
+
     return { top, height };
   };
 
   // Posición de la línea de tiempo actual
   const now = new Date();
-  const currentMinutes = (now.getHours() - START_HOUR) * 60 + now.getMinutes();
-  const currentTimeTop = (currentMinutes / 60) * HOUR_HEIGHT;
-  const showCurrentTimeLine = esHoy && now.getHours() >= START_HOUR && now.getHours() <= END_HOUR;
+  const currentHour = now.getHours();
+  const currentMinutes = now.getMinutes();
+  const showCurrentTimeLine = esHoy && currentHour >= START_HOUR && currentHour <= END_HOUR;
+  const currentTimeTop = `calc(${currentHour - START_HOUR} * 5rem + ${(currentMinutes / 60)} * 5rem)`;
 
   return (
     <section className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 shadow-2xl backdrop-blur-md flex flex-col gap-4">
@@ -251,13 +256,13 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
         </div>
       )}
 
-      {/* Time-Blocking Calendar Grid (Estilo Cal.com de 07:00 a 23:00) */}
-      <div className="flex flex-col relative w-full h-[600px] sm:h-[680px] overflow-y-auto mt-2 border-t border-neutral-800 rounded-2xl bg-neutral-950/40 hide-scrollbar">
-        {/* Filas de horas */}
+      {/* Time-Blocking Calendar Grid (Estilo Exacto 5rem / h-20) */}
+      <div className="flex flex-col relative w-full h-[640px] overflow-y-auto mt-2 border-t border-neutral-800 rounded-2xl bg-neutral-950/40 hide-scrollbar">
+        {/* Filas de horas fijadas a h-20 (5rem) */}
         {Array.from({ length: TOTAL_HOURS }).map((_, i) => {
           const hour = i + START_HOUR;
           return (
-            <div key={hour} className="flex h-16 border-b border-neutral-800/50 relative">
+            <div key={hour} className="flex h-20 border-b border-neutral-800/50 relative">
               <span className="w-14 text-[11px] text-neutral-500 font-mono pr-2 text-right pt-1 select-none shrink-0">
                 {String(hour).padStart(2, '0')}:00
               </span>
@@ -273,14 +278,14 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
         {showCurrentTimeLine && (
           <div 
             className="absolute left-14 right-0 z-30 flex items-center pointer-events-none"
-            style={{ top: `${currentTimeTop}px` }}
+            style={{ top: currentTimeTop }}
           >
             <div className="w-2.5 h-2.5 -ml-1.5 rounded-full bg-red-500 ring-4 ring-red-500/20 shadow-sm" />
             <div className="flex-1 h-[2px] bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
           </div>
         )}
 
-        {/* Contenedor absoluto de Bloques de Eventos */}
+        {/* Contenedor absoluto de Bloques de Eventos sin paddings conflictivos */}
         <div className="absolute top-0 bottom-0 left-14 right-2 pointer-events-none">
           {timedEvents.map((item, idx) => {
             const { top, height } = getEventPosition(item.horaInicio, item.horaFin);
@@ -293,7 +298,7 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 onClick={() => setSelectedSubject(item)}
-                style={{ top: `${top + 2}px`, height: `${height}px` }}
+                style={{ top, height }}
                 className={`absolute left-1 right-1 rounded-xl p-2.5 shadow-md cursor-pointer pointer-events-auto overflow-hidden flex flex-col justify-between border backdrop-blur-sm transition-all hover:scale-[1.01] hover:z-20 ${
                   item.color || 'bg-cyan-950/40 border-cyan-500/40 text-cyan-200 hover:border-cyan-400'
                 }`}

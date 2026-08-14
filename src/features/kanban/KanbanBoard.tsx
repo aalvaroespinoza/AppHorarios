@@ -48,36 +48,10 @@ const COLUMNS: ColumnConfig[] = [
   },
 ];
 
-const INITIAL_TASKS: Task[] = [
-  {
-    id: '1',
-    title: 'Repasar apuntes de Física II',
-    description: 'Electrostática y circuitos en serie.',
-    status: 'todo',
-    priority: 'alta',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    title: 'Entrega de TP Arquitectura',
-    description: 'Terminar renders y memoria descriptiva.',
-    status: 'in-progress',
-    priority: 'alta',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    title: 'Cargar saldo en Red Bus',
-    description: 'Asegurar saldo para la semana de cursado.',
-    status: 'done',
-    priority: 'baja',
-    createdAt: new Date().toISOString(),
-  },
-];
-
 export function KanbanBoard() {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [quickTitle, setQuickTitle] = useState('');
   const [addingToColumn, setAddingToColumn] = useState<TaskStatus | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
@@ -91,8 +65,10 @@ export function KanbanBoard() {
       try {
         setTasks(JSON.parse(stored));
       } catch (e) {
-        setTasks(INITIAL_TASKS);
+        setTasks([]);
       }
+    } else {
+      setTasks([]);
     }
   }, []);
 
@@ -104,9 +80,21 @@ export function KanbanBoard() {
   };
 
   const handleResetBoard = () => {
-    if (!window.confirm('¿Reiniciar el tablero Kanban a las tareas por defecto?')) return;
-    saveTasks(INITIAL_TASKS);
+    if (!window.confirm('¿Limpiar todas las tarjetas del tablero Kanban?')) return;
+    saveTasks([]);
     setShowSettings(false);
+  };
+
+  const handleQuickAdd = () => {
+    if (!quickTitle.trim()) return;
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: quickTitle.trim(),
+      status: 'todo',
+      createdAt: new Date().toISOString(),
+    };
+    saveTasks([newTask, ...tasks]);
+    setQuickTitle('');
   };
 
   const moveTask = (taskId: string, direction: 'prev' | 'next') => {
@@ -149,7 +137,7 @@ export function KanbanBoard() {
   };
 
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div className="w-full flex flex-col gap-3">
       {/* Header Info y Botones de Control */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
@@ -172,11 +160,32 @@ export function KanbanBoard() {
           <button
             onClick={() => setShowSettings(true)}
             className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-            title="Ajustes y Reinicio"
+            title="Ajustes y Limpieza"
           >
             <Settings2 size={15} />
           </button>
         </div>
+      </div>
+
+      {/* Input Rápido Superior para Añadir Tarea */}
+      <div className="flex gap-2 mb-2">
+        <input
+          type="text"
+          value={quickTitle}
+          onChange={(e) => setQuickTitle(e.target.value)}
+          placeholder="Nueva tarea..."
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleQuickAdd();
+          }}
+          className="flex-1 bg-neutral-900/80 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-cyan-500 transition-colors"
+        />
+        <Button 
+          onClick={handleQuickAdd}
+          disabled={!quickTitle.trim()}
+          className="bg-cyan-500 hover:bg-cyan-400 disabled:opacity-40 text-black font-bold text-xs rounded-xl px-4 h-auto py-2.5 shadow-md shadow-cyan-500/20"
+        >
+          Agregar
+        </Button>
       </div>
 
       {/* Columnas Horizontales con Scroll Móvil (iPhone 15 Optimized) */}
@@ -357,7 +366,7 @@ export function KanbanBoard() {
               </div>
 
               <p className="text-xs text-neutral-400 leading-relaxed">
-                Podés reiniciar las tarjetas del tablero a los valores iniciales para limpiar tareas de prueba.
+                Podés limpiar todas las tarjetas del tablero para iniciar desde cero.
               </p>
 
               <Button
@@ -366,7 +375,7 @@ export function KanbanBoard() {
                 className="w-full text-xs font-bold rounded-xl flex items-center justify-center gap-2"
               >
                 <RotateCcw size={14} />
-                <span>Reiniciar Tablero por Defecto</span>
+                <span>Limpiar Todo el Tablero</span>
               </Button>
             </div>
           </motion.div>
@@ -393,8 +402,9 @@ export function KanbanBoard() {
               </div>
 
               <ul className="text-xs text-neutral-300 space-y-2 leading-relaxed">
+                <li>• <strong>Agregar rápido</strong>: Escribí en el campo superior y tocá Agregar o Enter.</li>
                 <li>• <strong>Columnas</strong>: Por Hacer, En Progreso y Completado.</li>
-                <li>• <strong>Mover Tarjetas</strong>: Usá las flechas inferiores de cada tarjeta para avanzar o retroceder de estado.</li>
+                <li>• <strong>Mover Tarjetas</strong>: Usá las flechas inferiores de cada tarjeta para cambiar de estado.</li>
                 <li>• <strong>Sincronización</strong>: Las tareas en progreso aparecen automáticamente en tu Agenda diaria.</li>
               </ul>
 
@@ -411,3 +421,5 @@ export function KanbanBoard() {
     </div>
   );
 }
+
+export default KanbanBoard;
