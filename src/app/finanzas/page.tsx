@@ -94,13 +94,10 @@ export default function FinanzasPage() {
   const handleGuardarDeuda = () => {
     if (!splitPersona || !splitMonto || isNaN(Number(splitMonto))) return;
     cuentasClaras.agregarDeuda({
-      id: Date.now().toString(),
       persona: splitPersona,
       monto: Number(splitMonto),
       descripcion: splitDesc || 'Gasto compartido',
-      tipo: splitTipo,
-      fecha: new Date().toISOString(),
-      saldada: false
+      tipo: splitTipo
     });
     setSplitPersona('');
     setSplitMonto('');
