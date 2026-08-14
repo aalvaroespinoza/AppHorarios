@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useSubjects } from '@/hooks/useSubjects';
 import { parseMateriaInfo } from '@/core/utils/edificio';
 import { trackEvent } from '@/core/analytics/engine';
+import { AgendaStatsCard } from '@/features/agenda/AgendaStatsCard';
 import { PAGE_TRANSITION, SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
 import type { Task as KanbanTask } from '@/types/task';
 
@@ -348,6 +349,9 @@ export default function TareasTimeBlockingPage() {
           );
         })}
       </div>
+
+      {/* SECCIÓN 1.5: Tarjeta Interactiva de Stats & Rendimiento */}
+      <AgendaStatsCard />
 
       {/* SECCIÓN 2: Schedule List Unificado */}
       <div className="flex flex-col gap-4 mt-2 px-1 pb-24">

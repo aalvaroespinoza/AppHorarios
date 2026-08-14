@@ -9,6 +9,7 @@ import { useFinanzas } from '@/hooks/useFinanzas';
 import type { DayOfWeek } from '@/core/types/common';
 import { MiniCalendar } from '@/features/academia/MiniCalendar';
 import { AgendaView } from '@/features/academia/AgendaView';
+import { AgendaStatsCard } from '@/features/agenda/AgendaStatsCard';
 import { Button } from '@/components/ui/button';
 import { PAGE_TRANSITION } from '@/lib/animations';
 
@@ -182,6 +183,9 @@ export default function AcademiaPage() {
 
       {/* Mini Calendario de Exámenes y Fechas Críticas */}
       <MiniCalendar />
+
+      {/* Tarjeta Interactiva de Stats & Rendimiento */}
+      <AgendaStatsCard />
 
       {/* Grid de la Agenda Diaria con Timeline */}
       <AgendaView
