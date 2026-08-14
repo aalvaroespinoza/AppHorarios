@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
-  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen
+  Settings, Info, LayoutGrid, Sun, Zap, CheckSquare, Lock, BookOpen, FileText
 } from 'lucide-react';
 import Link from 'next/link';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
@@ -65,6 +65,14 @@ export default function HubPage() {
       icon: <BookOpen size={28} className="text-cyan-400" />,
       color: 'from-cyan-500/20 to-cyan-600/5 border-cyan-500/20',
       description: 'Recursos'
+    },
+    {
+      id: 'notas',
+      title: 'Notas & Bóveda',
+      href: '/notas',
+      icon: <FileText size={28} className="text-teal-400" />,
+      color: 'from-teal-500/20 to-teal-600/5 border-teal-500/20',
+      description: 'Bloques Notion'
     },
     {
       id: 'agenda',
