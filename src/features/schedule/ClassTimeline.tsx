@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from 'react';
-import { parseMateriaInfo, getSubjectColorMapping } from '@/core/utils/edificio';
-import { MateriaDetailModal } from '@/components/MateriaDetailModal';
+import { motion, AnimatePresence } from 'framer-motion';
+import { parseMateriaInfo } from '@/core/utils/materiaParser';
+import { getSubjectColorMapping } from '@/core/utils/edificio';
 import { Clock } from 'lucide-react';
 
 export interface ClassItem {
@@ -38,7 +39,7 @@ export function ClassTimeline({
   activeIndex
 }: ClassTimelineProps) {
   const items = materiasDelDia || classes || [];
-  const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
+  const [selectedMateria, setSelectedMateria] = useState<any | null>(null);
 
   const currentTime = horaActualHHMM || (() => {
     const now = new Date();
@@ -102,8 +103,8 @@ export function ClassTimeline({
               />
 
               <div
-                onClick={() => setSelectedSubject(cls)}
-                className={`group relative z-10 p-4 rounded-2xl border transition-all cursor-pointer active:scale-98 ${
+                onClick={() => setSelectedMateria(cls)}
+                className={`group relative z-10 p-4 rounded-2xl border cursor-pointer active:scale-[0.98] transition-transform ${
                   isCurrentClass
                     ? `bg-gradient-to-r ${mapping.gradient} ${mapping.border} shadow-lg ${mapping.shadow}`
                     : `bg-neutral-900/80 border-neutral-800 ${mapping.bgHover}`
@@ -114,7 +115,7 @@ export function ClassTimeline({
                     <h3 className={`font-bold text-base leading-tight transition-colors ${isCurrentClass ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
                       {info.nombre}
                     </h3>
-                    {info.aula !== 'N/A' && (
+                    {info.aula !== '-' && info.aula !== 'N/A' && (
                       <div className="flex items-center gap-1.5 text-xs opacity-80 mt-1">
                         <span className={`px-2 py-0.5 rounded-md font-medium ${mapping.bg} ${mapping.text}`}>
                           Aula {info.aula}
@@ -144,10 +145,55 @@ export function ClassTimeline({
         })}
       </div>
 
-      <MateriaDetailModal 
-        materia={selectedSubject} 
-        onClose={() => setSelectedSubject(null)} 
-      />
+      <AnimatePresence>
+        {selectedMateria && (() => {
+          const info = parseMateriaInfo(selectedMateria.nombre || selectedMateria.title || selectedMateria.rawText || "");
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4"
+              onClick={() => setSelectedMateria(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-5 text-white"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
+                  <span className="text-xs font-bold text-purple-400 uppercase tracking-widest">Detalle de Cursado</span>
+                  <button onClick={() => setSelectedMateria(null)} className="text-neutral-500 hover:text-white bg-neutral-800 rounded-full w-8 h-8 flex items-center justify-center">✕</button>
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-bold leading-tight">{info.nombre}</h3>
+                  <p className="text-sm text-neutral-400 mt-2">
+                    ⏰ Horario: <span className="text-white font-medium">{selectedMateria.horaInicio || selectedMateria.timeStart || "00:00"} a {selectedMateria.horaFin || selectedMateria.timeEnd || "00:00"} hs</span>
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="bg-neutral-800/50 rounded-2xl p-4 flex flex-col border border-neutral-700/50">
+                    <span className="text-[11px] text-neutral-400 uppercase font-semibold">Curso</span>
+                    <span className="text-lg font-bold text-purple-300 mt-0.5">{info.curso}</span>
+                  </div>
+                  <div className="bg-neutral-800/50 rounded-2xl p-4 flex flex-col border border-neutral-700/50">
+                    <span className="text-[11px] text-neutral-400 uppercase font-semibold">Aula</span>
+                    <span className="text-lg font-bold text-emerald-300 mt-0.5">{info.aula}</span>
+                  </div>
+                  <div className="col-span-2 bg-neutral-800/50 rounded-2xl p-4 flex flex-col border border-neutral-700/50">
+                    <span className="text-[11px] text-neutral-400 uppercase font-semibold">Edificio</span>
+                    <span className="text-base font-bold text-amber-300 mt-0.5">📍 {info.edificio}</span>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
     </section>
   );
 }
