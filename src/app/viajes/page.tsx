@@ -36,6 +36,7 @@ export default function ViajesPage() {
     >
       <ScheduleHeader 
         diaCapitalizado={diaCapitalizado} 
+        diaSeleccionado={diaSeleccionado}
         setDiaSeleccionado={setDiaSeleccionado} 
       />
 
