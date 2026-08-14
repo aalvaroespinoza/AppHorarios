@@ -8,7 +8,6 @@ import {
   ChevronRight, Kanban, Clock, Shield, ArrowRight, LayoutGrid, CloudSun
 } from 'lucide-react';
 import Link from 'next/link';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useContextEngine } from '@/core/hooks/useContextEngine';
@@ -60,9 +59,6 @@ export default function InicioHubPage() {
       .catch(() => setCurrentTemp(null));
   }, []);
 
-  // Saludo dinámico según la hora
-  const currentHour = new Date().getHours();
-  const saludo = currentHour < 12 ? 'Buenos días' : currentHour < 20 ? 'Buenas tardes' : 'Buenas noches';
   const fechaHoy = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
   const fechaCapitalizada = fechaHoy.charAt(0).toUpperCase() + fechaHoy.slice(1);
 
@@ -87,11 +83,11 @@ export default function InicioHubPage() {
       isRestMode: false,
       title: currentEvent.title || 'Evento en Curso',
       description: currentEvent.description || 'Actividad en desarrollo ahora mismo.',
-      buttonText: currentEvent.category === 'travel' ? '🚍 Ver Detalle del Viaje' : `🚀 Continuar con ${currentEvent.title}`,
+      buttonText: currentEvent.category === 'travel' ? 'Ver Detalle del Viaje' : `Continuar con ${currentEvent.title}`,
       buttonHref: currentEvent.category === 'travel' ? '/viajes' : '/academia',
       badgeText: 'EN CURSO',
       badgeVariant: 'default',
-      accentColor: 'text-cyan-400',
+      accentColor: 'text-emerald-400',
       icon: Sparkles,
     };
   } else if (nextEvent) {
@@ -100,7 +96,7 @@ export default function InicioHubPage() {
       isRestMode: false,
       title: nextEvent.title || (isTravel ? 'Próxima Salida' : 'Próxima Materia'),
       description: nextEvent.description || 'Prepárate para tu siguiente compromiso.',
-      buttonText: isTravel ? '📍 Ver viaje a Córdoba' : `🚀 Ir a ${nextEvent.title}`,
+      buttonText: isTravel ? 'Ver Viaje a Córdoba' : `Ir a ${nextEvent.title}`,
       buttonHref: isTravel ? '/viajes' : '/academia',
       badgeText: nextEvent.priority === 'critical' ? 'URGENTE' : 'PRÓXIMO',
       badgeVariant: 'default',
@@ -113,7 +109,7 @@ export default function InicioHubPage() {
       isRestMode: false,
       title: primeraClase.nombre || 'Clase de Hoy',
       description: `Aula ${primeraClase.aula || 'Central'} • ${primeraClase.horaInicio || '08:00'} hs`,
-      buttonText: `🚀 Continuar con ${primeraClase.nombre || 'Cursado'}`,
+      buttonText: `Continuar con ${primeraClase.nombre || 'Cursado'}`,
       buttonHref: '/academia',
       badgeText: 'HOY',
       badgeVariant: 'secondary',
@@ -125,7 +121,7 @@ export default function InicioHubPage() {
       isRestMode: false,
       title: 'Viaje hacia Córdoba',
       description: `Salida recomendada a las ${recomendacionIda.recomendado.horaSalida} hs`,
-      buttonText: '📍 Ver viaje a Córdoba',
+      buttonText: 'Ver Viaje a Córdoba',
       buttonHref: '/viajes',
       badgeText: 'TRANSPORTE',
       badgeVariant: 'default',
@@ -148,7 +144,7 @@ export default function InicioHubPage() {
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
+        staggerChildren: 0.06,
         delayChildren: 0.02
       }
     }
@@ -164,202 +160,142 @@ export default function InicioHubPage() {
   };
 
   return (
-    <motion.div
+    <motion.main
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="p-4 max-w-md mx-auto flex flex-col gap-4 min-h-[100dvh] bg-[#0a0a0c] text-white pb-28"
-      style={{ paddingTop: 'max(1.2rem, env(safe-area-inset-top))' }}
+      className="min-h-screen pb-24 px-4 pt-12 flex flex-col gap-6 bg-[#0a0a0c] text-white max-w-md mx-auto"
     >
-      {/* 1. Header de Contexto */}
-      <motion.header variants={itemVariants} className="flex flex-col gap-1 mt-1">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-500">
-            {fechaCapitalizada}
-          </span>
-          {/* Píldora de Clima: Conecta directamente al Resumen Diario */}
-          <Link 
-            href="/resumen" 
-            className="flex items-center gap-1.5 bg-neutral-900/50 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 px-3 py-1 rounded-full text-xs font-semibold text-neutral-300 transition-colors shadow-sm"
-            title="Ver reporte meteorológico"
-          >
-            <CloudSun size={13} className="text-cyan-400" />
-            <span>Despeñaderos</span>
-            {currentTemp !== null && (
-              <span className="text-neutral-200 font-bold ml-0.5">• {currentTemp}°</span>
-            )}
-          </Link>
+      {/* SECCIÓN 1: Header (Contexto) */}
+      <motion.header variants={itemVariants} className="px-2 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">
+            Hola, Alvaro
+          </h1>
+          <p className="text-sm text-neutral-400 mt-1">
+            Resumen de hoy • {fechaCapitalizada}
+          </p>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white mt-1">
-          {saludo}, Alvaro 👋
-        </h1>
+        <Link
+          href="/resumen"
+          className="flex items-center gap-1.5 bg-neutral-900/40 border border-neutral-800/60 backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-semibold text-neutral-300 hover:border-neutral-700 transition-colors shadow-sm"
+          title="Ver reporte meteorológico"
+        >
+          <CloudSun size={14} className="text-cyan-400" />
+          <span>{currentTemp !== null ? `${currentTemp}°` : 'Clima'}</span>
+        </Link>
       </motion.header>
 
-      {/* 2. Acceso al Menú de Aplicaciones (Tarjeta Central Estricta) */}
+      {/* SECCIÓN 2: Hero Card (Acción Inmediata) */}
       <motion.div variants={itemVariants}>
-        <Link href="/boveda" className="group block w-full">
-          <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-3.5 transition-all shadow-sm active:scale-[0.99]">
-            <div className="flex items-center justify-between gap-3 min-w-0">
-              <div className="flex items-center gap-3 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-xl bg-neutral-800/80 text-cyan-400 flex items-center justify-center shrink-0 border border-neutral-700/50">
-                  <LayoutGrid size={18} />
-                </div>
-                <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-sm font-bold text-white group-hover:text-cyan-300 transition-colors truncate">
-                    Menú de Aplicaciones
-                  </span>
-                  <span className="text-[11px] text-neutral-400 truncate">
-                    Bóveda, Kanban, Notas y Herramientas
-                  </span>
-                </div>
-              </div>
-              <ChevronRight size={18} className="text-neutral-500 group-hover:text-white transition-colors shrink-0" />
-            </div>
-          </Card>
-        </Link>
-      </motion.div>
-
-      {/* 3. Card de Acción Inmediata (Hero Action) */}
-      <motion.div variants={itemVariants}>
-        <Card className={`w-full flex flex-col overflow-hidden rounded-3xl border p-5 shadow-xl backdrop-blur-xl transition-all ${
-          immediateAction.isRestMode
-            ? 'bg-neutral-900/50 border-neutral-800'
-            : 'bg-neutral-900/50 border-cyan-500/30'
-        }`}>
-          <div className="flex items-start justify-between gap-3 mb-2">
-            <div className="flex items-center gap-2">
-              <immediateAction.icon size={18} className={immediateAction.accentColor} />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
-                Acción Inmediata
+        <div className="w-full bg-neutral-900/40 border border-neutral-800/60 rounded-[32px] p-6 backdrop-blur-xl flex flex-col justify-between relative overflow-hidden gap-4 shadow-xl">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className={`w-2.5 h-2.5 rounded-full ${immediateAction.isRestMode ? 'bg-neutral-500' : 'bg-emerald-500 animate-pulse'}`} />
+              <span className="text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+                {immediateAction.badgeText || 'Acción Prioritaria'}
               </span>
             </div>
-            <Badge 
-              variant={immediateAction.badgeVariant}
-              className={`text-[10px] font-extrabold uppercase tracking-wider ${
-                immediateAction.badgeText === 'URGENTE' || immediateAction.badgeText === 'EN CURSO'
-                  ? 'bg-cyan-500 text-black'
-                  : 'border-neutral-700 text-neutral-300'
-              }`}
-            >
-              {immediateAction.badgeText}
+            <Badge variant="outline" className="text-[10px] uppercase font-bold border-neutral-800 text-neutral-400">
+              {immediateAction.isRestMode ? 'Descanso' : 'En Vivo'}
             </Badge>
           </div>
 
-          <div className="flex flex-col gap-0.5 mb-4 min-w-0">
-            <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug truncate">
+          <div className="flex flex-col gap-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight truncate">
               {immediateAction.title}
             </h2>
-            <p className="text-xs text-neutral-400 leading-relaxed line-clamp-2">
+            <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
               {immediateAction.description}
             </p>
           </div>
 
-          <Link href={immediateAction.buttonHref} className="w-full block">
+          <Link href={immediateAction.buttonHref} className="w-full block mt-1">
             <Button
-              className={`w-full min-h-[48px] rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-md active:scale-[0.98] transition-transform ${
-                immediateAction.isRestMode
-                  ? 'bg-neutral-800 hover:bg-neutral-700 text-white border border-neutral-700/50'
-                  : 'bg-cyan-500 hover:bg-cyan-400 text-black shadow-cyan-500/20'
-              }`}
+              className="w-full h-12 rounded-[20px] font-bold text-xs sm:text-sm bg-white hover:bg-neutral-200 text-black flex items-center justify-center gap-2 shadow-lg transition-transform active:scale-[0.98]"
             >
               <span className="truncate">{immediateAction.buttonText}</span>
               <ArrowRight size={16} className="shrink-0" />
             </Button>
           </Link>
-        </Card>
+        </div>
       </motion.div>
 
-      {/* 4. Grilla de Resumen Armónica (2x2) */}
-      <motion.div variants={itemVariants} className="flex flex-col gap-2.5 mt-1">
-        <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 px-1">
+      {/* SECCIÓN 3: Bento Grid (Módulos Secundarios) */}
+      <motion.div variants={itemVariants} className="flex flex-col gap-3">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 px-2">
           Módulos Principales
         </span>
 
-        <div className="grid grid-cols-2 gap-3">
-          {/* Card Viajes */}
-          <Link href="/viajes" className="group">
-            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
-              <div className="flex items-center justify-between mb-2">
-                <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
-                  <Bus size={16} />
-                </div>
-                <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-sky-400 transition-colors" />
+        <div className="grid grid-cols-2 gap-4">
+          {/* Tarjeta Finanzas */}
+          <Link href="/finanzas" className="block group">
+            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">💸</span>
+                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
-                  Viajes
-                </span>
-                <span className="text-sm font-bold text-white truncate block">
-                  {recomendacionIda?.recomendado ? `${recomendacionIda.recomendado.horaSalida} hs` : 'Ver salidas'}
-                </span>
-              </div>
-            </Card>
-          </Link>
-
-          {/* Card Finanzas */}
-          <Link href="/finanzas" className="group">
-            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
-              <div className="flex items-center justify-between mb-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                  <Wallet size={16} />
-                </div>
-                <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-emerald-400 transition-colors" />
-              </div>
-              <div className="min-w-0">
-                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
-                  Finanzas
-                </span>
-                <span className="text-base font-extrabold text-white tracking-tight truncate block">
+                <p className="text-xs text-neutral-500 font-medium mb-1">Presupuesto</p>
+                <p className="text-lg font-bold text-white truncate">
                   {formatoMoneda(finanzas.balanceTotal || 0)}
-                </span>
+                </p>
               </div>
-            </Card>
+            </div>
           </Link>
 
-          {/* Card Agenda */}
-          <Link href="/academia" className="group">
-            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
-              <div className="flex items-center justify-between mb-2">
-                <div className="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-400 flex items-center justify-center">
-                  <Calendar size={16} />
-                </div>
-                <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-violet-400 transition-colors" />
+          {/* Tarjeta Kanban / Tareas */}
+          <Link href="/kanban" className="block group">
+            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">📋</span>
+                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
-                  Agenda
-                </span>
-                <span className="text-sm font-bold text-white truncate block">
-                  {materiasDelDia && materiasDelDia.length > 0
-                    ? `${materiasDelDia.length} ${materiasDelDia.length === 1 ? 'materia' : 'materias'}`
-                    : 'Sin cursado'}
-                </span>
+                <p className="text-xs text-neutral-500 font-medium mb-1">En Curso</p>
+                <p className="text-lg font-bold text-white truncate">
+                  {inProgressTasksCount} {inProgressTasksCount === 1 ? 'Tarea' : 'Tareas'}
+                </p>
               </div>
-            </Card>
+            </div>
           </Link>
 
-          {/* Card Kanban */}
-          <Link href="/kanban" className="group">
-            <Card className="w-full flex flex-col overflow-hidden bg-neutral-900/50 hover:bg-neutral-900/80 border border-neutral-800 backdrop-blur-xl hover:border-neutral-700 rounded-2xl p-4 justify-between h-full transition-all shadow-sm active:scale-95">
-              <div className="flex items-center justify-between mb-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-                  <Kanban size={16} />
-                </div>
-                <ArrowUpRight size={14} className="text-neutral-600 group-hover:text-amber-400 transition-colors" />
+          {/* Tarjeta Agenda / Cursado */}
+          <Link href="/academia" className="block group">
+            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">📚</span>
+                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
               </div>
               <div className="min-w-0">
-                <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block mb-0.5">
-                  Kanban
-                </span>
-                <span className="text-base font-bold text-white tracking-tight truncate block">
-                  {inProgressTasksCount} <span className="text-xs text-neutral-400 font-normal">en curso</span>
-                </span>
+                <p className="text-xs text-neutral-500 font-medium mb-1">Cursado Hoy</p>
+                <p className="text-lg font-bold text-white truncate">
+                  {materiasDelDia && materiasDelDia.length > 0 
+                    ? `${materiasDelDia.length} ${materiasDelDia.length === 1 ? 'materia' : 'materias'}` 
+                    : 'Sin clases'}
+                </p>
               </div>
-            </Card>
+            </div>
+          </Link>
+
+          {/* Tarjeta Bóveda / Menú */}
+          <Link href="/boveda" className="block group">
+            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
+              <div className="flex items-center justify-between">
+                <span className="text-2xl">🗄️</span>
+                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-neutral-500 font-medium mb-1">Bóveda</p>
+                <p className="text-lg font-bold text-white truncate">
+                  Menú de Apps
+                </p>
+              </div>
+            </div>
           </Link>
         </div>
       </motion.div>
-    </motion.div>
+    </motion.main>
   );
 }
