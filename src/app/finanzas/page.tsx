@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PAGE_TRANSITION, TAP_ANIMATION } from '@/lib/animations';
+import { FinanceChart } from '@/features/finanzas/FinanceChart';
 
 const CATEGORIAS_DEFAULT = ['Comida', 'Facu', 'Suscripciones', 'Ocio', 'Transporte', 'Otros'];
 
@@ -154,6 +155,23 @@ export default function FinanzasPage() {
           </Button>
         </div>
       </header>
+
+      {/* Card Resumen Semanal con Motor Analítico Visual */}
+      <Card className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-5 backdrop-blur-md shadow-xl flex flex-col gap-3">
+        <div className="flex items-center justify-between border-b border-neutral-800/60 pb-2.5">
+          <div className="flex items-center gap-2">
+            <Sparkles size={15} className="text-emerald-400" />
+            <h2 className="text-xs font-bold uppercase tracking-wider text-neutral-300">Resumen Semanal</h2>
+          </div>
+          <Badge variant="outline" className="text-[10px] uppercase font-bold border-neutral-800 text-neutral-400">
+            Últimos 7 Días
+          </Badge>
+        </div>
+        <FinanceChart 
+          transacciones={transacciones} 
+          presupuestoSemanal={presupuestoVal} 
+        />
+      </Card>
 
       {/* Card de Presupuesto y Balance */}
       <Card className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-5 backdrop-blur-md shadow-xl flex flex-col gap-3">
