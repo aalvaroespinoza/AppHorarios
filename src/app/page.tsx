@@ -52,6 +52,7 @@ export default function Hoy() {
           icon={Bus} 
           direction="ida"
           bec={bec}
+          isToday={isToday}
         />
         
         <EntertainmentSelector />
@@ -70,6 +71,7 @@ export default function Hoy() {
           icon={Bus} 
           direction="vuelta"
           bec={bec}
+          isToday={isToday}
         />
       </div>
     </motion.div>

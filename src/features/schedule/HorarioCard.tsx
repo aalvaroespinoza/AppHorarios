@@ -25,13 +25,15 @@ export function HorarioCard({
   recomendacion, 
   icon: Icon,
   direction,
-  bec
+  bec,
+  isToday = true
 }: { 
   titulo: string;
   recomendacion: { recomendado: RawScheduleEntry | null; alternativas: RawScheduleEntry[] };
   icon: React.ElementType;
   direction: 'ida' | 'vuelta';
   bec: ReturnType<typeof useBec>;
+  isToday?: boolean;
 }) {
   const [verAlternativas, setVerAlternativas] = useState(false);
   
@@ -44,7 +46,7 @@ export function HorarioCard({
   }, [recomendacion]);
 
   const registroHoy = bec.getRegistroHoy();
-  const becUsado = direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado;
+  const becUsado = isToday && (direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado);
 
   const handleSwap = (alt: RawScheduleEntry, idx: number) => {
     if (!currentRecomendado) return;
