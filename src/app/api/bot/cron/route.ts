@@ -1,107 +1,198 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Telegraf } from 'telegraf';
-import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '../../../../lib/engine/recommendation-engine';
+import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
+import { weatherService } from '@/core/services/weather/weather.service';
 import { DayOfWeek } from '@/core/types/common';
+import { supabaseServerAdmin } from '@/lib/server/supabase';
+import { GeminiService } from '@/core/ai/service';
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
 const CRON_SECRET = process.env.CRON_SECRET;
 
-// Helper estático
-const getDiaActual = (d: Date): DayOfWeek | 'domingo' => {
-  const map: Record<number, DayOfWeek | 'domingo'> = {
-    0: 'domingo', 1: 'lunes', 2: 'martes', 3: 'miercoles',
-    4: 'jueves', 5: 'viernes', 6: 'sabado'
-  };
-  return map[d.getDay()];
-};
+/**
+ * Helper para enviar notificaciones push a través de OneSignal REST API.
+ */
+async function sendOneSignalPush(title: string, message: string, data?: Record<string, unknown>) {
+  const restApiKey = process.env.ONESIGNAL_REST_API_KEY;
+  const appId = process.env.NEXT_PUBLIC_ONESIGNAL_APP_ID;
 
-export async function GET(req: NextRequest) {
-  // 1. Verificación de Seguridad Serverless
-  // Protegemos el endpoint para que nadie pueda ejecutarlo y mandar mensajes spam
-  const authHeader = req.headers.get('authorization');
-
-  if (authHeader !== `Bearer ${CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized. Invalid Bearer token.' }, { status: 401 });
+  if (!restApiKey || !appId) {
+    console.warn('[Cron] OneSignal REST API Key o App ID no configurados');
+    return { success: false, reason: 'unconfigured' };
   }
-
-  // 2. Verificación de entorno
-  if (!botToken || !chatId) {
-    return NextResponse.json(
-      { error: 'Server Misconfiguration: Faltan credenciales de Telegram' },
-      { status: 500 }
-    );
-  }
-
-  const ahora = new Date();
-  ahora.setHours(ahora.getHours() - 3); // Ajuste UTC-3 para Argentina
-
-  const dia = getDiaActual(ahora);
-  if (dia === 'domingo' || dia === 'lunes' || dia === 'sabado') {
-    return NextResponse.json({ status: 'ok', sent: false, reason: `Es ${dia}, sin clases presenciales.` });
-  }
-
-  const diaAcademico = dia as DayOfWeek;
-  let mensajeEnviado = false;
-  const bot = new Telegraf(botToken);
-  
-  // Convertimos la hora actual a minutos
-  const hStr = ahora.getHours().toString().padStart(2, '0');
-  const mStr = ahora.getMinutes().toString().padStart(2, '0');
-  const horaActualHHMM = `${hStr}:${mStr}`;
-  const minutosActuales = ahora.getHours() * 60 + ahora.getMinutes();
-
-  // Función interna para evaluar y despachar
-  const evaluarYNotificar = async (tipo: 'ida' | 'vuelta') => {
-    // Por defecto el bot asume que cursa Arquitectura (true) y duerme en Cba (true)
-    const rec = calcularColectivos(diaAcademico, tipo, true, true, horaActualHHMM);
-    if (rec.recomendado) {
-      const horaReal = tipo === 'vuelta' ? addMinutes(rec.recomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : rec.recomendado.horaSalida;
-      const [h, m] = horaReal.split(':').map(Number);
-      const minutosSalida = h * 60 + m;
-      const diff = minutosSalida - minutosActuales;
-
-      // 3. Regla de negocio: Exactamente 15 minutos de diferencia
-      if (diff === 15) {
-        let msg = `🏃‍♂️ ¡Atención! En 15 min pasa el *${rec.recomendado.empresa}* por tu parada (Ministerio) a las *${horaReal}*. ¡Andá saliendo! (Salió de Terminal a las ${rec.recomendado.horaSalida})`;
-        if (tipo === 'ida') {
-          msg = `🧉 ¡Buen día! Prepará el termo y el mate que en 15 minutos tenés que salir para tomar el *${rec.recomendado.empresa}* de las *${rec.recomendado.horaSalida}*`;
-        }
-        
-        await bot.telegram.sendMessage(
-          chatId,
-          msg,
-          { parse_mode: 'Markdown' }
-        );
-        mensajeEnviado = true;
-      }
-    }
-  };
 
   try {
-    // 4. Chequeamos la ida y la vuelta
-    await evaluarYNotificar('ida');
-    await evaluarYNotificar('vuelta');
-
-    // 5. Retornamos respuesta limpia
-    return NextResponse.json({ 
-      status: 'ok', 
-      sent: mensajeEnviado,
-      timestamp: ahora.toISOString()
+    const res = await fetch('https://onesignal.com/api/v1/notifications', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Basic ${restApiKey}`,
+      },
+      body: JSON.stringify({
+        app_id: appId,
+        included_segments: ['Subscribed Users'],
+        headings: { es: title, en: title },
+        contents: { es: message, en: message },
+        data: data || {},
+      }),
     });
 
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ status: res.status }));
+      console.error('[Cron] OneSignal push error:', err);
+      return { success: false, error: err };
+    }
+
+    const json = await res.json();
+    return { success: true, data: json };
   } catch (error) {
-    console.error('Error enviando la alerta Push en Telegram:', error);
-    return NextResponse.json({ status: 'error', sent: false }, { status: 500 });
+    console.error('[Cron] Excepción enviando OneSignal push:', error);
+    return { success: false, error };
   }
 }
 
-import { supabaseServerAdmin } from '@/lib/server/supabase';
-import { GeminiService } from '@/core/ai/service';
+/**
+ * Cron Job para evaluar horarios de viaje, microclima y despachar notificaciones proactivas vía OneSignal.
+ */
+export async function GET(request: Request) {
+  try {
+    // 1. Verificación de Seguridad con CRON_SECRET
+    const authHeader = request.headers.get('authorization');
+    const cronHeader = request.headers.get('x-cron-secret');
 
+    if (CRON_SECRET) {
+      const isAuthorized = 
+        authHeader === `Bearer ${CRON_SECRET}` || 
+        cronHeader === CRON_SECRET;
+
+      if (!isAuthorized) {
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized. Token de seguridad inválido.' },
+          { status: 401 }
+        );
+      }
+    }
+
+    // 2. Determinar día y hora actual en zona horaria Argentina (Córdoba / Buenos Aires)
+    const now = new Date();
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Argentina/Cordoba',
+      hour12: false,
+      hour: '2-digit',
+      minute: '2-digit',
+      weekday: 'long'
+    });
+
+    const dayNames: Record<string, DayOfWeek | 'domingo'> = {
+      sunday: 'domingo',
+      monday: 'lunes',
+      tuesday: 'martes',
+      wednesday: 'miercoles',
+      thursday: 'jueves',
+      friday: 'viernes',
+      saturday: 'sabado'
+    };
+
+    const parts = formatter.formatToParts(now);
+    const weekdayPart = parts.find(p => p.type === 'weekday')?.value.toLowerCase() || 'monday';
+    const hourPart = parts.find(p => p.type === 'hour')?.value || '00';
+    const minutePart = parts.find(p => p.type === 'minute')?.value || '00';
+
+    const diaActual = dayNames[weekdayPart] || 'lunes';
+    const horaActualHHMM = `${hourPart.padStart(2, '0')}:${minutePart.padStart(2, '0')}`;
+    const currentMinutes = parseInt(hourPart, 10) * 60 + parseInt(minutePart, 10);
+
+    let notificationsSent = 0;
+    const evaluatedResults: Array<{ sentido: string; diffMin: number; horaSalida: string; notificado: boolean }> = [];
+
+    // 3. Evaluar horarios si no es domingo
+    if (diaActual !== 'domingo') {
+      const diaAcademico = diaActual as DayOfWeek;
+      const direcciones: Array<'ida' | 'vuelta'> = ['ida', 'vuelta'];
+
+      for (const sentido of direcciones) {
+        const rec = calcularColectivos(diaAcademico, sentido, true, true, horaActualHHMM);
+
+        if (rec.recomendado) {
+          const horaReal = sentido === 'vuelta'
+            ? addMinutes(rec.recomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN)
+            : rec.recomendado.horaSalida;
+
+          const [h, m] = horaReal.split(':').map(Number);
+          const minutosSalida = h * 60 + m;
+          const diffMin = minutosSalida - currentMinutes;
+
+          // Regla: diferencia menor o igual a 60 minutos y mayor a 30 minutos
+          if (diffMin > 30 && diffMin <= 60) {
+            let weatherText = '';
+            try {
+              const location = sentido === 'ida' ? 'despenaderos' : 'cordoba';
+              const weather = await weatherService.getWeather(location);
+              
+              const hourlyItem = weather.hourly.find(item => {
+                const [, time] = item.datetimeISO.split('T');
+                const [itemH] = (time || '').split(':');
+                return parseInt(itemH, 10) === h;
+              });
+
+              const probLluvia = hourlyItem?.precipitationProbability ?? weather.current.precipitation ?? 0;
+              if (probLluvia > 30) {
+                weatherText = ` 🌧️ Probabilidad de lluvia: ${probLluvia}%.`;
+              }
+            } catch (weatherErr) {
+              console.warn('[Cron] No se pudo consultar el servicio meteorológico:', weatherErr);
+            }
+
+            const title = sentido === 'ida' ? '🚍 Colectivo hacia Córdoba' : '🚍 Colectivo de regreso';
+            const message = `En ${diffMin} min sale el colectivo ${rec.recomendado.empresa} (${horaReal} hs).${weatherText}`;
+
+            const pushResult = await sendOneSignalPush(title, message, {
+              type: 'travel_reminder',
+              sentido,
+              horaSalida: horaReal,
+              empresa: rec.recomendado.empresa
+            });
+
+            if (pushResult.success) {
+              notificationsSent++;
+            }
+
+            evaluatedResults.push({
+              sentido,
+              diffMin,
+              horaSalida: horaReal,
+              notificado: pushResult.success
+            });
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Evaluación de notificaciones completada.",
+      timestamp: now.toISOString(),
+      diaActual,
+      horaActualHHMM,
+      notificationsSent,
+      evaluatedResults
+    });
+
+  } catch (error) {
+    console.error('[Cron] Error en la ejecución del Cron Job:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno en la ejecución del Cron Job' },
+      { status: 500 }
+    );
+  }
+}
+
+/**
+ * Endpoint POST para Daily Briefing opcional vía Telegram
+ */
 export async function POST(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
-  if (authHeader !== `Bearer ${CRON_SECRET}`) {
+  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized. Invalid Bearer token.' }, { status: 401 });
   }
 
@@ -112,7 +203,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Ejecutamos el briefing en background para que devuelva 200 rápido y no dé timeout en Vercel
   ejecutarBriefingDiario(botToken, chatId).catch(console.error);
 
   return NextResponse.json({ status: 'ok', msg: 'Daily Briefing scheduled' }, { status: 200 });
@@ -127,7 +217,6 @@ async function ejecutarBriefingDiario(token: string, chat: string) {
     const ayerStr = ayer.toISOString().split('T')[0];
     const hoyStr = hoy.toISOString().split('T')[0];
 
-    // Fetch asíncrono en paralelo de las 3 tablas que se nos solicitan
     const [gastosRes, eventosRes, bateriaRes] = await Promise.all([
       supabaseServerAdmin.from('transacciones').select('*').eq('tipo', 'gasto').gte('fecha', ayerStr).lte('fecha', hoyStr),
       supabaseServerAdmin.from('agenda').select('*').eq('fecha', hoyStr),
@@ -140,14 +229,12 @@ Eventos de hoy: ${JSON.stringify(eventosRes.data || [])}
 Última Batería Mental: ${JSON.stringify(bateriaRes.data || [])}
 `;
 
-    // Redacción vía Gemini
     const geminiText = await GeminiService.askText(
       'gemini-3.5-flash',
       'Eres LifeOS. Redacta un saludo de buenos días ultra corto (2 líneas) resumiendo hoy según estos datos crudos. Sé directo.',
       promptData
     );
 
-    // Enviar a Telegram
     const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const tgBody = {
       chat_id: chat,
@@ -175,4 +262,3 @@ Eventos de hoy: ${JSON.stringify(eventosRes.data || [])}
     console.error('Error en ejecutarBriefingDiario:', error);
   }
 }
-

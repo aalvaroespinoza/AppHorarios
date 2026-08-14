@@ -125,7 +125,8 @@ export function useTodaySchedule() {
             claseTime: materiasDelDia[0].horaInicio,
             colectivoTime: rec.horaSalida,
             leaveHomeTime: (rec as any).saleDeCasa || rec.horaSalida,
-            empresa: rec.empresa
+            empresa: rec.empresa,
+            materia: materiasDelDia[0].nombre
           }).catch(console.error);
         }
 
@@ -137,7 +138,8 @@ export function useTodaySchedule() {
             colectivoTime: rec.horaSalida,
             leaveHomeTime: rec.horaSalida,
             empresa: rec.empresa,
-            destino: 'Alta Gracia'
+            destino: 'Alta Gracia',
+            materia: materiasDelDia[materiasDelDia.length - 1].nombre
           }).catch(console.error);
         }
       });
