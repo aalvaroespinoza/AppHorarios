@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { Task, TaskStatus } from '@/types/task';
 import { TAP_ANIMATION, SPRING_CONFIG } from '@/lib/animations';
+import { trackEvent } from '@/core/analytics/engine';
 
 interface ColumnConfig {
   id: TaskStatus;
@@ -108,6 +109,11 @@ export function KanbanBoard() {
       } else if (direction === 'prev') {
         if (task.status === 'done') nextStatus = 'in-progress';
         else if (task.status === 'in-progress') nextStatus = 'todo';
+      }
+
+      // Registrar evento real cuando una tarea se marca como completada
+      if (nextStatus === 'done' && task.status !== 'done') {
+        trackEvent('task_completed', 'task', 1);
       }
 
       return { ...task, status: nextStatus };

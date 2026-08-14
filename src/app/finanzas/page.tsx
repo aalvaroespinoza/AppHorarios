@@ -14,6 +14,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PAGE_TRANSITION, TAP_ANIMATION } from '@/lib/animations';
 import { FinanceChart } from '@/features/finanzas/FinanceChart';
+import { trackEvent } from '@/core/analytics/engine';
 
 const CATEGORIAS_DEFAULT = ['Comida', 'Facu', 'Suscripciones', 'Ocio', 'Transporte', 'Otros'];
 
@@ -79,14 +80,21 @@ export default function FinanzasPage() {
 
   const handleGuardar = () => {
     if (!monto || isNaN(Number(monto))) return;
+    const montoNum = Number(monto);
     finanzas.agregarTransaccion({
       id: Date.now().toString(),
-      monto: Number(monto),
+      monto: montoNum,
       tipo,
       categoria,
       descripcion,
       fecha: new Date().toISOString()
     });
+    // Registrar evento real en el motor analítico
+    trackEvent(
+      tipo === 'gasto' ? 'expense_added' : 'income_added',
+      'finance',
+      montoNum
+    );
     setMonto('');
     setDescripcion('');
     setShowAddForm(false);

@@ -69,20 +69,6 @@ export function FinanceChart({ transacciones, presupuestoSemanal = 150000 }: Fin
       };
     });
 
-    // Si todos los gastos son 0, damos una base visual estética
-    const totalGastos = mapped.reduce((acc, curr) => acc + curr.gasto, 0);
-    if (totalGastos === 0) {
-      return [
-        { dia: 'Lun', gasto: 4500, isToday: false },
-        { dia: 'Mar', gasto: 8200, isToday: false },
-        { dia: 'Mié', gasto: 6100, isToday: false },
-        { dia: 'Jue', gasto: 11400, isToday: true },
-        { dia: 'Vie', gasto: 7300, isToday: false },
-        { dia: 'Sáb', gasto: 3200, isToday: false },
-        { dia: 'Dom', gasto: 1500, isToday: false },
-      ];
-    }
-
     return mapped;
   }, [transacciones]);
 
