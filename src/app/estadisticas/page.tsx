@@ -17,6 +17,7 @@ import {
   Cell 
 } from 'recharts';
 import { getStats, AnalyticsSummary } from '@/core/analytics/engine';
+import { HabitHeatmap } from '@/features/insights/components/HabitHeatmap';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { PAGE_TRANSITION, TAP_ANIMATION } from '@/lib/animations';
 
@@ -140,6 +141,11 @@ export default function EstadisticasPage() {
             Viajes BEC
           </div>
         </div>
+      </section>
+
+      {/* SECCIÓN 1.5: Mapa de Calor de Hábitos y Constancia (GitHub style) */}
+      <section className="px-1">
+        <HabitHeatmap />
       </section>
 
       {/* SECCIÓN 2: Activity Chart (Umami Minimalist Graph) */}

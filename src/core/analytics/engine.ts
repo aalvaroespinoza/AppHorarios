@@ -24,6 +24,11 @@ export interface AnalyticsSummary {
   categoryBreakdown: { category: string; count: number; percentage: number }[];
 }
 
+export interface HeatmapDay {
+  date: string; // 'YYYY-MM-DD'
+  count: number;
+}
+
 const STORAGE_KEY = 'lifeos_analytics_events';
 
 /**
@@ -149,6 +154,47 @@ export function getTravelsCount(): number {
     }
   } catch (e) {}
   return 0;
+}
+
+/**
+ * Obtiene la serie diaria de eventos para el mapa de calor (Heatmap)
+ */
+export function getHeatmapData(days: number = 105): HeatmapDay[] {
+  const events = getEvents();
+  const now = new Date();
+  const result: HeatmapDay[] = [];
+
+  // Sumar también registros de check-in diario si existen
+  const dailyLogsMap: Record<string, number> = {};
+  if (typeof window !== 'undefined') {
+    try {
+      const dailyLogRaw = localStorage.getItem('lifeos_daily_log');
+      if (dailyLogRaw) {
+        const log = JSON.parse(dailyLogRaw);
+        if (log && log.date && log.habits) {
+          const completedCount = Object.values(log.habits).filter(Boolean).length;
+          dailyLogsMap[log.date] = (dailyLogsMap[log.date] || 0) + completedCount;
+        }
+      }
+    } catch (e) {}
+  }
+
+  // Iterar los últimos N días
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(now.getDate() - i);
+    const dateStr = d.toISOString().split('T')[0];
+
+    const eventCount = events.filter(e => e.timestamp && e.timestamp.startsWith(dateStr)).length;
+    const dailyLogCount = dailyLogsMap[dateStr] || 0;
+
+    result.push({
+      date: dateStr,
+      count: eventCount + dailyLogCount
+    });
+  }
+
+  return result;
 }
 
 /**
