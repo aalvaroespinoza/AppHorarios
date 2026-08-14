@@ -65,14 +65,26 @@ export default function RootDashboard() {
   const nextEvent = contextSnapshot?.nextActionableEvent;
   const currentEvent = contextSnapshot?.currentEvents?.[0];
 
-  let immediateAction = {
+  interface ImmediateActionConfig {
+    isRestMode: boolean;
+    title: string;
+    description: string;
+    buttonText: string;
+    buttonHref: string;
+    badgeText: string;
+    badgeVariant: 'default' | 'secondary' | 'destructive' | 'outline';
+    accentColor: string;
+    icon: React.ComponentType<{ size?: number; className?: string }>;
+  }
+
+  let immediateAction: ImmediateActionConfig = {
     isRestMode: false,
     title: 'Modo Descanso',
     description: 'Sin cursado ni viajes urgentes para este momento.',
     buttonText: '🛡️ Activar Modo Búnker',
     buttonHref: '/focus',
     badgeText: 'Libre',
-    badgeVariant: 'secondary' as const,
+    badgeVariant: 'secondary',
     accentColor: 'text-neutral-400',
     icon: Moon,
   };
@@ -85,7 +97,7 @@ export default function RootDashboard() {
       buttonText: currentEvent.category === 'travel' ? '🚍 Ver Detalle del Viaje' : `🚀 Continuar con ${currentEvent.title}`,
       buttonHref: currentEvent.category === 'travel' ? '/horarios' : '/academia',
       badgeText: 'EN CURSO',
-      badgeVariant: 'default' as const,
+      badgeVariant: 'default',
       accentColor: 'text-cyan-400',
       icon: Sparkles,
     };
@@ -98,7 +110,7 @@ export default function RootDashboard() {
       buttonText: isTravel ? '📍 Ver viajes a Córdoba' : `🚀 Ir a ${nextEvent.title}`,
       buttonHref: isTravel ? '/horarios' : '/academia',
       badgeText: nextEvent.priority === 'critical' ? 'URGENTE' : 'PRÓXIMO',
-      badgeVariant: 'default' as const,
+      badgeVariant: 'default',
       accentColor: 'text-cyan-400',
       icon: isTravel ? Bus : Sparkles,
     };
@@ -106,12 +118,12 @@ export default function RootDashboard() {
     const primeraClase = materiasDelDia[0];
     immediateAction = {
       isRestMode: false,
-      title: primeraClase.nombre || primeraClase.name || 'Clase de Hoy',
+      title: primeraClase.nombre || 'Clase de Hoy',
       description: `Aula ${primeraClase.aula || 'Central'} • ${primeraClase.horaInicio || '08:00'} hs`,
       buttonText: `🚀 Continuar con ${primeraClase.nombre || 'Cursado'}`,
       buttonHref: '/academia',
       badgeText: 'HOY',
-      badgeVariant: 'secondary' as const,
+      badgeVariant: 'secondary',
       accentColor: 'text-emerald-400',
       icon: Sparkles,
     };
@@ -123,7 +135,7 @@ export default function RootDashboard() {
       buttonText: '📍 Ver viajes a Córdoba',
       buttonHref: '/horarios',
       badgeText: 'TRANSPORTE',
-      badgeVariant: 'default' as const,
+      badgeVariant: 'default',
       accentColor: 'text-cyan-400',
       icon: Bus,
     };
