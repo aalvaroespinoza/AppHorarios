@@ -92,7 +92,7 @@ export default function AcademiaPage() {
   const diaNombreCapitalizado = currentDayData.dayOfWeekName.charAt(0).toUpperCase() + currentDayData.dayOfWeekName.slice(1);
   const esHoy = selectedDateISO === todayISO;
 
-  const agendaDelDia = agenda.obtenerAgendaDelDia(currentDayData.dayOfWeekName, selectedDateISO);
+  const agendaDelDia = agenda.obtenerAgendaDelDia(selectedDateISO);
 
   const monthName = monday.toLocaleDateString('es-AR', { month: 'long' });
   const yearStr = monday.getFullYear();
@@ -181,7 +181,7 @@ export default function AcademiaPage() {
       </div>
 
       {/* Mini Calendario de Exámenes y Fechas Críticas */}
-      <MiniCalendar fechaSeleccionadaISO={selectedDateISO} />
+      <MiniCalendar />
 
       {/* Grid de la Agenda Diaria con Timeline */}
       <AgendaView
