@@ -2,15 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, CheckSquare, ListTodo, Plus, Square, Trash2, Calendar, Circle, Sparkles, X } from 'lucide-react';
+import { ChevronLeft, Plus, Trash2, CheckCircle2, Circle, Clock, Sparkles, X, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import NativeCard from '@/core/components/ui/NativeCard';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { createClient } from '@/lib/supabase/client';
 import dayjs from 'dayjs';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 
 interface TaskEvent {
   id: string;
+  horaInicio?: string;
+  horaFin?: string;
   parsed_data: {
     type: string;
     payload?: {
@@ -18,19 +22,30 @@ interface TaskEvent {
       titulo?: string;
       date?: string;
       datetimeISO?: string;
+      horaInicio?: string;
+      horaFin?: string;
       priority?: string;
+      category?: string;
     }
   };
   status: string; // 'processed' | 'completed'
 }
 
+const START_HOUR = 8;
+const END_HOUR = 22;
+const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 15 horas (80px cada una = 1200px)
+const HOUR_HEIGHT = 80;
+
 export default function TareasPage() {
   const [tasks, setTasks] = useState<TaskEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskStart, setNewTaskStart] = useState('10:00');
+  const [newTaskDuration, setNewTaskDuration] = useState('60');
   const [isCreating, setIsCreating] = useState(false);
-  const [isSuggesting, setIsSuggesting] = useState(false);
-  const [suggestions, setSuggestions] = useState<{id: string, reason: string}[] | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskEvent | null>(null);
+
   const supabase = createClient();
 
   useEffect(() => {
@@ -80,11 +95,13 @@ export default function TareasPage() {
     }
   };
 
-  const handleDeleteTask = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm('¿Eliminar esta tarea permanentemente?')) return;
+  const handleDeleteTask = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm('¿Eliminar esta tarea de la agenda?')) return;
 
     setTasks(prev => prev.filter(t => t.id !== id));
+    if (selectedTask?.id === id) setSelectedTask(null);
+
     try {
       const { error } = await supabase
         .from('raw_events')
@@ -102,6 +119,13 @@ export default function TareasPage() {
     if (!newTaskTitle.trim()) return;
 
     setIsCreating(true);
+
+    const [h, m] = newTaskStart.split(':').map(Number);
+    const startDate = new Date();
+    startDate.setHours(h, m, 0, 0);
+    startDate.setMinutes(startDate.getMinutes() + parseInt(newTaskDuration));
+    const horaFin = `${String(startDate.getHours()).padStart(2, '0')}:${String(startDate.getMinutes()).padStart(2, '0')}`;
+
     try {
       const newTask = {
         raw_text: newTaskTitle,
@@ -111,8 +135,11 @@ export default function TareasPage() {
           type: 'TASK',
           payload: {
             title: newTaskTitle.trim(),
+            horaInicio: newTaskStart,
+            horaFin: horaFin,
             priority: 'media',
-            source: 'manual'
+            source: 'manual',
+            datetimeISO: new Date().toISOString()
           }
         }
       };
@@ -126,6 +153,7 @@ export default function TareasPage() {
       if (error) throw error;
       setTasks(prev => [data, ...prev]);
       setNewTaskTitle('');
+      setShowAddModal(false);
     } catch (err) {
       console.error('Error creating task:', err);
       alert('Error al crear la tarea');
@@ -134,258 +162,303 @@ export default function TareasPage() {
     }
   };
 
-  const handleSuggestOrder = async () => {
-    const pendingTasks = tasks.filter(t => t.status !== 'completed');
-    if (pendingTasks.length === 0) return;
-    setIsSuggesting(true);
-    try {
-      const payloadTasks = pendingTasks.map(t => ({
-        id: t.id,
-        title: t.parsed_data.payload?.title || t.parsed_data.payload?.titulo || 'Sin título',
-        priority: t.parsed_data.payload?.priority,
-        date: t.parsed_data.payload?.datetimeISO || t.parsed_data.payload?.date
-      }));
+  // Posición de la línea de tiempo actual
+  const now = new Date();
+  const currentMinutes = (now.getHours() - START_HOUR) * 60 + now.getMinutes();
+  const currentTimeTop = (currentMinutes / 60) * HOUR_HEIGHT;
+  const showCurrentTimeLine = now.getHours() >= START_HOUR && now.getHours() <= END_HOUR;
 
-      const res = await fetch('/api/tareas/suggest', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tasks: payloadTasks })
-      });
+  // Extraer y procesar tareas activas
+  const activeTasks = tasks.map((tarea, idx) => {
+    const payload = tarea.parsed_data?.payload;
+    const title = payload?.title || payload?.titulo || 'Tarea programada';
+    const priority = payload?.priority?.toLowerCase() || 'media';
+    const isCompleted = tarea.status === 'completed';
 
-      const data = await res.json();
-      if (data.suggestions) {
-        setSuggestions(data.suggestions);
+    // Determinar hora de inicio y fin
+    let horaInicio = payload?.horaInicio;
+    let horaFin = payload?.horaFin;
+
+    if (!horaInicio) {
+      const dStr = payload?.datetimeISO || payload?.date;
+      if (dStr && dayjs(dStr).isValid()) {
+        horaInicio = dayjs(dStr).format('HH:mm');
+        horaFin = dayjs(dStr).add(1, 'hour').format('HH:mm');
+      } else {
+        // Horas default escalonadas
+        const defaultH = 8 + (idx * 2) % 13;
+        horaInicio = `${String(defaultH).padStart(2, '0')}:00`;
+        horaFin = `${String(defaultH + 1).padStart(2, '0')}:30`;
       }
-    } catch (err) {
-      console.error('Error suggesting order:', err);
-      alert('Error al obtener sugerencias de Gemini');
-    } finally {
-      setIsSuggesting(false);
     }
-  };
 
-  const pendingTasks = tasks.filter(t => t.status !== 'completed');
-  const completedTasks = tasks.filter(t => t.status === 'completed');
-
-  // Agrupación por fechas para pendientes
-  const groupedPending = {
-    hoy: [] as TaskEvent[],
-    semana: [] as TaskEvent[],
-    futuro: [] as TaskEvent[],
-    sin_fecha: [] as TaskEvent[],
-  };
-
-  const now = dayjs();
-  pendingTasks.forEach(t => {
-    const payload = t.parsed_data?.payload;
-    const dateStr = payload?.datetimeISO || payload?.date;
-    if (!dateStr) {
-      groupedPending.sin_fecha.push(t);
-      return;
+    if (!horaFin) {
+      const [h, m] = horaInicio.split(':').map(Number);
+      horaFin = `${String((h + 1) % 24).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
     }
-    const d = dayjs(dateStr);
-    if (!d.isValid()) {
-      groupedPending.sin_fecha.push(t);
-    } else if (d.format('YYYY-MM-DD') === now.format('YYYY-MM-DD')) {
-      groupedPending.hoy.push(t);
-    } else if (d.isBefore(now.add(7, 'day')) && d.isAfter(now.startOf('day'))) {
-      groupedPending.semana.push(t);
-    } else {
-      groupedPending.futuro.push(t);
-    }
+
+    // Cálculo dinámico según la fórmula requerida
+    const start = new Date(`1970-01-01T${horaInicio}:00`);
+    const end = new Date(`1970-01-01T${horaFin}:00`);
+    const top = (start.getHours() - 8) * 80 + (start.getMinutes() / 60) * 80;
+    const height = Math.max(((end.getTime() - start.getTime()) / (1000 * 60 * 60)) * 80, 56);
+
+    return {
+      ...tarea,
+      title,
+      horaInicio,
+      horaFin,
+      priority,
+      isCompleted,
+      top,
+      height
+    };
   });
-
-  const renderTask = (t: TaskEvent, isCompleted: boolean) => {
-    const payload = t.parsed_data?.payload;
-    const title = payload?.title || payload?.titulo || 'Sin título';
-    const date = payload?.datetimeISO || payload?.date;
-    const priority = payload?.priority?.toLowerCase() || 'baja';
-    
-    let priorityColor = 'bg-transparent';
-    if (priority === 'alta') priorityColor = 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]';
-    else if (priority === 'media') priorityColor = 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]';
-
-    return (
-      <NativeCard 
-        key={t.id}
-        onClick={() => toggleTask(t.id, t.status)}
-        className={`border p-4 transition-colors cursor-pointer group flex items-start gap-3 ${
-          isCompleted 
-            ? 'bg-gray-50 dark:bg-zinc-900/20 border-gray-200 dark:border-zinc-800/50 opacity-60 hover:opacity-80' 
-            : 'bg-white dark:bg-zinc-900/60 border-gray-200 dark:border-zinc-800 hover:border-gray-300 dark:hover:border-zinc-700'
-        }`}
-      >
-        <div className={`mt-0.5 transition-colors ${isCompleted ? 'text-emerald-500' : 'text-zinc-500 group-hover:text-indigo-400'}`}>
-          {isCompleted ? <CheckSquare size={22} /> : <Square size={22} />}
-        </div>
-        <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <h3 className={`text-base font-semibold truncate ${isCompleted ? 'text-gray-400 dark:text-zinc-400 line-through' : 'text-gray-900 dark:text-zinc-100'}`}>
-              {title}
-            </h3>
-            {!isCompleted && priority !== 'baja' && priorityColor !== 'bg-transparent' && (
-              <div className={`w-2 h-2 rounded-full shrink-0 ${priorityColor}`} title={`Prioridad: ${priority}`} />
-            )}
-          </div>
-          {date && (
-            <p className={`text-xs font-medium flex items-center gap-1 ${isCompleted ? 'text-gray-400 dark:text-zinc-600 line-through' : 'text-gray-500 dark:text-zinc-500'}`}>
-              <Calendar size={12} /> {dayjs(date).format('DD MMM, HH:mm')}
-            </p>
-          )}
-        </div>
-        <button 
-          onClick={(e) => handleDeleteTask(t.id, e)}
-          className="w-8 h-8 rounded-full flex items-center justify-center text-zinc-600 hover:bg-red-500/10 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
-          title="Eliminar tarea"
-        >
-          <Trash2 size={16} />
-        </button>
-      </NativeCard>
-    );
-  };
-
-  const renderGroup = (title: string, tasksList: TaskEvent[], icon: React.ReactNode) => {
-    if (tasksList.length === 0) return null;
-    return (
-      <div className="flex flex-col gap-3 mb-6">
-        <h3 className="text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-500 uppercase px-1 flex items-center gap-2">
-          {icon} {title} <span className="ml-auto bg-gray-100 dark:bg-zinc-800 text-gray-500 dark:text-zinc-400 px-2 py-0.5 rounded-full text-[10px]">{tasksList.length}</span>
-        </h3>
-        {tasksList.map(t => renderTask(t, false))}
-      </div>
-    );
-  };
 
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] relative bg-gray-50 dark:bg-[#0a0a0c] text-gray-900 dark:text-white pb-24"
-      style={{ paddingTop: 'max(1.5rem, env(safe-area-inset-top))' }}
+      className="p-4 max-w-md mx-auto flex flex-col gap-5 min-h-[100dvh] relative bg-[#0a0a0c] text-white pb-24"
+      style={{ paddingTop: 'max(1.2rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
-      <header className="flex items-center gap-3 mt-2">
-        <Link 
-          href="/boveda"
-          className="w-10 h-10 bg-white dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800 rounded-full flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors shadow-sm"
-        >
-          <ChevronLeft size={20} />
-        </Link>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
-            Tareas
-          </h1>
+      <header className="flex items-center justify-between mt-1">
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/boveda"
+            className="w-10 h-10 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors shadow-sm"
+          >
+            <ChevronLeft size={20} />
+          </Link>
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              Time-Blocking <Clock size={18} className="text-cyan-400" />
+            </h1>
+            <p className="text-xs text-neutral-500 font-medium">Agenda visual de 08:00 a 22:00</p>
+          </div>
         </div>
-        <Link href="/lifeos" className="w-10 h-10 bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 rounded-full flex items-center justify-center hover:bg-indigo-500/20 transition-colors active:scale-95 shadow-sm">
-          <Plus size={20} />
-        </Link>
+
+        <Button
+          onClick={() => setShowAddModal(true)}
+          size="sm"
+          className="rounded-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold flex items-center gap-1.5 shadow-lg shadow-cyan-500/20"
+        >
+          <Plus size={16} />
+          <span>Bloque</span>
+        </Button>
       </header>
 
-      {/* Formulario de Creación Rápida */}
-      <form onSubmit={handleCreateTask} className="flex items-center gap-2">
-        <input 
-          type="text"
-          value={newTaskTitle}
-          onChange={(e) => setNewTaskTitle(e.target.value)}
-          placeholder="Añadir una tarea rápida..."
-          disabled={isCreating}
-          className="flex-1 bg-gray-100 dark:bg-zinc-900/60 border border-gray-200 dark:border-zinc-800 rounded-2xl px-4 py-3 text-sm text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 transition-colors"
-        />
-        <button 
-          type="submit"
-          disabled={!newTaskTitle.trim() || isCreating}
-          className="w-12 h-12 bg-indigo-600 text-white rounded-2xl flex items-center justify-center disabled:opacity-50 disabled:bg-zinc-800 active:scale-95 transition-all shadow-sm"
-        >
-          {isCreating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Plus size={20} />}
-        </button>
-      </form>
-
-      {loading ? (
-        <div className="flex justify-center p-10">
-          <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-        </div>
-      ) : (
-        <div className="flex flex-col mt-2">
-          {pendingTasks.length > 0 ? (
-            <>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-xs text-gray-500 dark:text-zinc-500 font-medium">{pendingTasks.length} tareas pendientes</span>
-                {!suggestions && pendingTasks.length > 1 && (
-                  <button
-                    onClick={handleSuggestOrder}
-                    disabled={isSuggesting}
-                    className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 bg-indigo-500/10 hover:bg-indigo-500/20 px-3 py-1.5 rounded-full transition-colors active:scale-95 disabled:opacity-50"
-                  >
-                    {isSuggesting ? <div className="w-3 h-3 border-2 border-indigo-400 border-t-transparent rounded-full animate-spin" /> : <Sparkles size={12} />}
-                    Sugerir orden
-                  </button>
-                )}
+      {/* Modal / Formulario Nuevo Bloque */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+          >
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
+                  <Sparkles size={16} className="text-cyan-400" /> Nuevo Bloque de Tiempo
+                </h2>
+                <button onClick={() => setShowAddModal(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={16} />
+                </button>
               </div>
 
-              {/* Panel de Sugerencias */}
-              <AnimatePresence>
-                {suggestions && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0, y: -20 }}
-                    animate={{ opacity: 1, height: 'auto', y: 0 }}
-                    exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                    transition={SPRING_CONFIG}
-                    className="overflow-hidden"
-                  >
-                    <NativeCard className="bg-gradient-to-br from-indigo-900/40 to-indigo-900/10 border border-indigo-500/30 p-4 mb-6 relative flex flex-col gap-3">
-                      <button 
-                        onClick={() => setSuggestions(null)}
-                        className="absolute top-3 right-3 text-indigo-400 hover:text-white transition-colors"
-                      >
-                        <X size={18} />
-                      </button>
-                      <h2 className="text-sm font-bold tracking-widest text-indigo-400 uppercase flex items-center gap-2">
-                        <Sparkles size={16} /> Orden de ataque (Gemini)
-                      </h2>
-                      <div className="flex flex-col gap-2">
-                        {suggestions.map((s, index) => {
-                          const t = pendingTasks.find(pt => pt.id === s.id);
-                          if (!t) return null;
-                          const title = t.parsed_data?.payload?.title || t.parsed_data?.payload?.titulo || 'Sin título';
-                          return (
-                            <div key={s.id} className="flex flex-col bg-black/20 rounded-lg p-3 border border-indigo-500/10">
-                              <div className="flex items-center gap-2">
-                                <span className="text-indigo-400 font-bold text-xs">{index + 1}.</span>
-                                <h4 className="text-sm font-bold text-white truncate">{title}</h4>
-                              </div>
-                              <p className="text-xs text-indigo-200/70 mt-1 pl-5">{s.reason}</p>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </NativeCard>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <form onSubmit={handleCreateTask} className="flex flex-col gap-3">
+                <input 
+                  type="text"
+                  value={newTaskTitle}
+                  onChange={(e) => setNewTaskTitle(e.target.value)}
+                  placeholder="Título del bloque (Ej: Estudiar Física)..."
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500"
+                  autoFocus
+                />
 
-              {renderGroup('Hoy', groupedPending.hoy, <Circle size={10} className="fill-indigo-500 text-indigo-500" />)}
-              {renderGroup('Esta Semana', groupedPending.semana, <Circle size={10} className="fill-emerald-500 text-emerald-500" />)}
-              {renderGroup('Más Adelante', groupedPending.futuro, <Circle size={10} className="fill-zinc-500 text-zinc-500" />)}
-              {renderGroup('Sin Fecha', groupedPending.sin_fecha, <Circle size={10} className="fill-zinc-600 text-zinc-600" />)}
-            </>
-          ) : (
-            <NativeCard className="bg-gray-50 dark:bg-zinc-900/40 border border-gray-200 dark:border-zinc-800/60 border-dashed p-8 flex flex-col items-center justify-center text-center gap-3 mb-6">
-              <ListTodo size={36} className="text-gray-300 dark:text-zinc-600 mb-1" />
-              <p className="text-sm text-gray-500 dark:text-zinc-400 font-medium">
-                No hay tareas pendientes. Agrega una arriba o díctale a LifeOS.
-              </p>
-            </NativeCard>
-          )}
+                <div className="flex gap-2">
+                  <div className="flex-1 flex flex-col gap-1">
+                    <label className="text-[11px] text-neutral-400 font-semibold px-1">Hora Inicio</label>
+                    <input 
+                      type="time"
+                      value={newTaskStart}
+                      onChange={(e) => setNewTaskStart(e.target.value)}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 [color-scheme:dark]"
+                    />
+                  </div>
 
-          {completedTasks.length > 0 && (
-            <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-gray-200 dark:border-zinc-800/50">
-              <h2 className="text-sm font-bold tracking-widest text-zinc-500 uppercase px-1 flex items-center gap-2 mb-2">
-                <CheckSquare size={16} /> Completadas ({completedTasks.length})
-              </h2>
-              {completedTasks.map(t => renderTask(t, true))}
+                  <div className="flex-1 flex flex-col gap-1">
+                    <label className="text-[11px] text-neutral-400 font-semibold px-1">Duración</label>
+                    <select
+                      value={newTaskDuration}
+                      onChange={(e) => setNewTaskDuration(e.target.value)}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
+                    >
+                      <option value="30">30 min</option>
+                      <option value="45">45 min</option>
+                      <option value="60">1 hora</option>
+                      <option value="90">1.5 horas</option>
+                      <option value="120">2 horas</option>
+                    </select>
+                  </div>
+                </div>
+
+                <Button 
+                  type="submit" 
+                  disabled={!newTaskTitle.trim() || isCreating}
+                  className="w-full mt-2 font-bold bg-cyan-500 hover:bg-cyan-400 text-black rounded-xl"
+                >
+                  {isCreating ? 'Guardando...' : 'Crear Bloque'}
+                </Button>
+              </form>
             </div>
-          )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Contenedor Padre de Grilla Horaria (1200px de altura = 15 horas x 80px) */}
+      <div className="relative w-full h-[1200px] mt-4 border-t border-neutral-800 rounded-3xl bg-neutral-950/40 overflow-hidden shadow-2xl">
+        {/* Columna lateral de horas fijas de 08:00 a 22:00 */}
+        <div className="absolute inset-0 flex flex-col pointer-events-none">
+          {Array.from({ length: TOTAL_HOURS }).map((_, i) => {
+            const hour = i + START_HOUR;
+            return (
+              <div key={hour} className="flex h-[80px] border-b border-neutral-800/50 relative">
+                <span className="w-14 text-xs text-neutral-500 font-mono pr-3 text-right pt-2 select-none shrink-0">
+                  {String(hour).padStart(2, '0')}:00
+                </span>
+                <div className="flex-1 relative border-l border-neutral-800/50">
+                  {/* Marca de media hora */}
+                  <div className="absolute top-1/2 left-0 right-0 border-b border-neutral-800/20 border-dashed" />
+                </div>
+              </div>
+            );
+          })}
         </div>
-      )}
+
+        {/* Línea de hora actual en vivo */}
+        {showCurrentTimeLine && (
+          <div 
+            className="absolute left-14 right-0 z-30 flex items-center pointer-events-none"
+            style={{ top: `${currentTimeTop}px` }}
+          >
+            <div className="w-3 h-3 -ml-1.5 rounded-full bg-red-500 ring-4 ring-red-500/20 shadow-md" />
+            <div className="flex-1 h-[2px] bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.9)]" />
+          </div>
+        )}
+
+        {/* Bloques de Tareas / Materias posicionados de forma absoluta */}
+        <div className="absolute inset-0 pointer-events-none">
+          {activeTasks.map((task) => (
+            <Card
+              key={task.id}
+              onClick={() => setSelectedTask(task)}
+              style={{
+                top: `${task.top + 2}px`,
+                height: `${task.height - 4}px`
+              }}
+              className={`absolute left-16 right-4 z-20 pointer-events-auto cursor-pointer p-3 border rounded-2xl flex flex-col justify-between transition-all backdrop-blur-md shadow-md active:scale-[0.98] ${
+                task.isCompleted
+                  ? 'bg-neutral-900/40 border-neutral-800/60 opacity-60'
+                  : task.priority === 'alta'
+                    ? 'bg-red-950/30 border-red-500/40 hover:border-red-400'
+                    : 'bg-cyan-950/30 border-cyan-500/40 hover:border-cyan-400'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTask(task.id, task.status);
+                    }}
+                    className={`shrink-0 transition-colors ${task.isCompleted ? 'text-emerald-400' : 'text-neutral-500 hover:text-cyan-400'}`}
+                  >
+                    {task.isCompleted ? <CheckCircle2 size={16} /> : <Circle size={16} />}
+                  </button>
+                  <CardTitle className={`text-xs sm:text-sm font-bold truncate leading-tight ${task.isCompleted ? 'line-through text-neutral-500' : 'text-white'}`}>
+                    {task.title}
+                  </CardTitle>
+                </div>
+
+                <Badge 
+                  variant="outline" 
+                  className={`text-[10px] shrink-0 font-mono font-semibold px-2 py-0.5 ${
+                    task.priority === 'alta' ? 'border-red-500/40 text-red-400 bg-red-500/10' : 'border-cyan-500/40 text-cyan-300 bg-cyan-500/10'
+                  }`}
+                >
+                  {task.horaInicio} - {task.horaFin}
+                </Badge>
+              </div>
+
+              {task.height > 65 && (
+                <div className="flex items-center justify-between text-[11px] text-neutral-400 mt-1">
+                  <span className="truncate">Prioridad: {task.priority}</span>
+                  <button
+                    onClick={(e) => handleDeleteTask(task.id, e)}
+                    className="text-neutral-500 hover:text-red-400 p-1 transition-colors"
+                  >
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Modal Detalle de Bloque */}
+      <AnimatePresence>
+        {selectedTask && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+            onClick={() => setSelectedTask(null)}
+          >
+            <div 
+              onClick={e => e.stopPropagation()}
+              className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-white"
+            >
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
+                <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Detalle del Bloque</span>
+                <button onClick={() => setSelectedTask(null)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-bold text-white leading-snug">{selectedTask.parsed_data?.payload?.title || 'Bloque'}</h3>
+                <p className="text-xs text-neutral-400 mt-2 font-mono">
+                  ⏰ {selectedTask.horaInicio} a {selectedTask.horaFin} hs
+                </p>
+              </div>
+
+              <div className="flex gap-2 mt-2">
+                <Button
+                  onClick={() => {
+                    toggleTask(selectedTask.id, selectedTask.status);
+                    setSelectedTask(null);
+                  }}
+                  variant="secondary"
+                  className="flex-1 text-xs font-bold rounded-xl"
+                >
+                  {selectedTask.status === 'completed' ? 'Marcar Pendiente' : 'Marcar Completada'}
+                </Button>
+                <Button
+                  onClick={() => handleDeleteTask(selectedTask.id)}
+                  variant="destructive"
+                  className="text-xs font-bold rounded-xl"
+                >
+                  Eliminar
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
