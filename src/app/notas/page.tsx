@@ -88,8 +88,6 @@ export default function NotasPage() {
     if (activeNote?.id === noteId) setActiveNote(null);
   };
 
-  if (!isMounted) return null;
-
   // Si hay una nota activa, renderizar el NoteEditor
   if (activeNote) {
     return (

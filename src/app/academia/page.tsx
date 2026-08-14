@@ -74,9 +74,7 @@ export default function AcademiaPage() {
   const monthName = weekMonday.toLocaleString('es-AR', { month: 'long' });
   const yearStr = weekMonday.getFullYear();
 
-  if (!isMounted) return null;
-
-  const agendaDelDia = agenda.obtenerAgendaDelDia(selectedDateISO);
+  const agendaDelDia = isMounted ? agenda.obtenerAgendaDelDia(selectedDateISO) : [];
   const esHoy = selectedDateISO === todayISO;
 
   return (

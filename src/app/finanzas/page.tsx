@@ -27,9 +27,7 @@ export default function FinanzasPage() {
   const [splitDesc, setSplitDesc] = useState('');
   const [splitTipo, setSplitTipo] = useState<TipoDeuda>('me_debe');
 
-  if (!finanzas.isMounted || !cuentasClaras.isMounted) return null;
-
-  const { balanceTotal, gastosDelMes, transacciones } = finanzas;
+  const { balanceTotal = 0, gastosDelMes = 0, transacciones = [] } = finanzas;
 
   const formatoMoneda = (valor: number) => {
     return new Intl.NumberFormat('es-AR', {

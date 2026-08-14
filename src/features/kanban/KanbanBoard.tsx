@@ -73,7 +73,7 @@ const INITIAL_TASKS: Task[] = [
 ];
 
 export function KanbanBoard() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
   const [isMounted, setIsMounted] = useState(false);
   const [addingToColumn, setAddingToColumn] = useState<TaskStatus | null>(null);
   const [newTitle, setNewTitle] = useState('');
@@ -88,8 +88,6 @@ export function KanbanBoard() {
       } catch (e) {
         setTasks(INITIAL_TASKS);
       }
-    } else {
-      setTasks(INITIAL_TASKS);
     }
   }, []);
 
@@ -138,8 +136,6 @@ export function KanbanBoard() {
     setNewDesc('');
     setAddingToColumn(null);
   };
-
-  if (!isMounted) return null;
 
   return (
     <div className="w-full flex flex-col gap-4">

@@ -51,10 +51,6 @@ export default function RootDashboard() {
       .catch(() => setCurrentTemp(null));
   }, []);
 
-  if (!isMounted) {
-    return <div className="min-h-[100dvh] bg-[#0a0a0c]" />;
-  }
-
   // Saludo dinámico según la hora
   const currentHour = new Date().getHours();
   const saludo = currentHour < 12 ? 'Buenos días' : currentHour < 20 ? 'Buenas tardes' : 'Buenas noches';
