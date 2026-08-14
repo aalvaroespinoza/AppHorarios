@@ -1,8 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEscenario } from '@/hooks/useEscenario';
+import { getDiaActual } from '@/context/EscenarioContext';
 import { DayOfWeek } from '@/core/types/common';
 import { Building2, Bed } from 'lucide-react';
 import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
@@ -28,6 +29,9 @@ export default function ContextualControls() {
   } = useEscenario();
 
   const scrollContainerRef = React.useRef<HTMLDivElement>(null);
+  
+  // Memoize today's date so it only calculates once per render
+  const todayId = useMemo(() => getDiaActual(), []);
 
   // Auto-centrar el día seleccionado
   React.useEffect(() => {
@@ -72,18 +76,25 @@ export default function ContextualControls() {
       >
         {DIAS_SEMANA.map((dia) => {
           const isSelected = diaSeleccionado === dia.id;
+          const isToday = todayId === dia.id;
           return (
             <button
               key={dia.id}
               data-active={isSelected}
               onClick={() => setDiaSeleccionado(dia.id)}
-              className={`whitespace-nowrap transition-all duration-200 ${
+              className={`whitespace-nowrap transition-all duration-200 relative ${
                 isSelected 
                   ? 'bg-zinc-800 text-white font-semibold rounded-full px-4 py-2' 
                   : 'text-zinc-500 font-medium rounded-full px-4 py-2 hover:bg-zinc-800/40'
               }`}
             >
               {dia.label}
+              {isToday && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500 border border-zinc-900"></span>
+                </span>
+              )}
             </button>
           );
         })}

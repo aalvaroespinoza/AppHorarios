@@ -20,7 +20,7 @@ export interface EscenarioContextProps {
   isMounted: boolean;
 }
 
-const getDiaActual = (): DayOfWeek => {
+export const getDiaActual = (): DayOfWeek => {
   const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
   const diaIndex = new Date().getDay();
   if (diaIndex === 0) return 'lunes'; // Si es domingo, por defecto mostramos lunes
@@ -38,7 +38,10 @@ export const EscenarioContext = createContext<EscenarioContextProps | undefined>
 const STORAGE_KEY = 'appHorarios_escenario';
 
 export function EscenarioProvider({ children }: { children: ReactNode }) {
-  const [escenario, setEscenario] = useState<EscenarioUsuario>(defaultEscenario);
+  const [escenario, setEscenario] = useState<EscenarioUsuario>(() => ({
+    ...defaultEscenario,
+    diaSeleccionado: getDiaActual()
+  }));
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -48,7 +51,7 @@ export function EscenarioProvider({ children }: { children: ReactNode }) {
         const storedEscenario = await idb.get<Partial<EscenarioUsuario>>(STORAGE_KEY);
         if (!isCancelled && storedEscenario) {
           const cleanEscenario: Partial<EscenarioUsuario> = {};
-          if (storedEscenario.diaSeleccionado) cleanEscenario.diaSeleccionado = storedEscenario.diaSeleccionado;
+          // REMOVED: do not load diaSeleccionado from storage to always default to today
           if (typeof storedEscenario.cursaArquitectura === 'boolean') cleanEscenario.cursaArquitectura = storedEscenario.cursaArquitectura;
           if (typeof storedEscenario.duermeEnCordoba === 'boolean') cleanEscenario.duermeEnCordoba = storedEscenario.duermeEnCordoba;
           
