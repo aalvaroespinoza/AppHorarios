@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Bell, X, CheckCheck, Trash2, Bus, 
-  CheckSquare, Wallet, Calendar, AlertCircle, Sparkles, ChevronRight 
+  CheckSquare, Wallet, Calendar, AlertCircle, Sparkles, ChevronRight, CheckCircle2 
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useTodaySchedule } from '@/hooks/useTodaySchedule';
 
 export interface SystemNotification {
   id: string;
@@ -20,45 +21,6 @@ export interface SystemNotification {
   link?: string;
 }
 
-const DEFAULT_NOTIFICATIONS: SystemNotification[] = [
-  {
-    id: 'notif-1',
-    title: 'Próxima Salida de Colectivo',
-    description: 'Tu colectivo hacia Córdoba sale a las 07:10 hs desde Despeñaderos.',
-    time: 'Hace 15 min',
-    read: false,
-    category: 'travel',
-    link: '/viajes'
-  },
-  {
-    id: 'notif-2',
-    title: 'Tarea en Curso',
-    description: 'Tenés pendiente completar la revisión del proyecto final.',
-    time: 'Hace 1 hora',
-    read: false,
-    category: 'task',
-    link: '/kanban'
-  },
-  {
-    id: 'notif-3',
-    title: 'Presupuesto Semanal',
-    description: 'Se ha registrado el balance y límite de gastos para la semana.',
-    time: 'Hoy, 09:30',
-    read: true,
-    category: 'finance',
-    link: '/finanzas'
-  },
-  {
-    id: 'notif-4',
-    title: 'Cursado de Hoy',
-    description: 'Física II en Aula 320 a las 11:20 hs.',
-    time: 'Hoy, 08:00',
-    read: true,
-    category: 'academic',
-    link: '/viajes#seccion-cursado'
-  }
-];
-
 interface NotificationInboxProps {
   isOpen: boolean;
   onClose: () => void;
@@ -66,54 +28,164 @@ interface NotificationInboxProps {
 }
 
 export function NotificationInbox({ isOpen, onClose, onUnreadCountChange }: NotificationInboxProps) {
-  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+  const {
+    materiasDelDia,
+    isToday,
+    horaActualHHMM,
+    recomendacionIda,
+    recomendacionVuelta
+  } = useTodaySchedule();
+
+  const [readIds, setReadIds] = useState<string[]>([]);
+  const [clearedIds, setClearedIds] = useState<string[]>([]);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('lifeos_notifications');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setNotifications(parsed);
-          updateUnreadCount(parsed);
-          return;
-        } catch (e) {}
-      }
-      setNotifications(DEFAULT_NOTIFICATIONS);
-      updateUnreadCount(DEFAULT_NOTIFICATIONS);
-      localStorage.setItem('lifeos_notifications', JSON.stringify(DEFAULT_NOTIFICATIONS));
+      try {
+        const storedRead = localStorage.getItem('lifeos_read_notifications');
+        if (storedRead) setReadIds(JSON.parse(storedRead));
+        
+        const storedCleared = localStorage.getItem('lifeos_cleared_notifications');
+        if (storedCleared) setClearedIds(JSON.parse(storedCleared));
+      } catch (e) {}
     }
   }, []);
 
-  const updateUnreadCount = (list: SystemNotification[]) => {
-    const unread = list.filter(n => !n.read).length;
+  // Generar notificaciones dinámicas y reales basadas en el contexto del usuario
+  const activeNotifications: SystemNotification[] = useMemo(() => {
+    if (!isMounted) return [];
+    const list: SystemNotification[] = [];
+    const [currentH, currentM] = (horaActualHHMM || "00:00").split(':').map(Number);
+    const currentMinutes = (isNaN(currentH) ? 0 : currentH) * 60 + (isNaN(currentM) ? 0 : currentM);
+
+    // 1. Notificación de Viaje de Ida (si faltan menos de 2 horas)
+    if (recomendacionIda?.recomendado && isToday) {
+      const [salidaH, salidaM] = recomendacionIda.recomendado.horaSalida.split(':').map(Number);
+      const salidaMinutes = salidaH * 60 + salidaM;
+      const diff = salidaMinutes - currentMinutes;
+
+      if (diff > 0 && diff <= 120) {
+        list.push({
+          id: `notif-bus-ida-${recomendacionIda.recomendado.horaSalida}`,
+          title: 'Próxima Salida de Colectivo',
+          description: `Tu colectivo de ${recomendacionIda.recomendado.empresa} sale a las ${recomendacionIda.recomendado.horaSalida} hs hacia Córdoba (${diff} min restantes).`,
+          time: diff <= 15 ? 'Ahora' : `En ${diff} min`,
+          read: false,
+          category: 'travel',
+          link: '/viajes'
+        });
+      }
+    }
+
+    // 2. Notificación de Clases del Día (próxima hora o en curso)
+    if (materiasDelDia && materiasDelDia.length > 0 && isToday) {
+      materiasDelDia.forEach((materia, idx) => {
+        const horaInicio = materia.horaInicio || "08:00";
+        const [matH, matM] = horaInicio.split(':').map(Number);
+        const matMinutes = matH * 60 + matM;
+        const diff = matMinutes - currentMinutes;
+
+        if (diff > -45 && diff <= 90) {
+          list.push({
+            id: `notif-class-${materia.id || idx}`,
+            title: diff <= 0 ? 'Clase en Curso' : 'Próxima Materia',
+            description: `${materia.nombre} • Aula ${materia.aula || 'Campus'} (${horaInicio} hs).`,
+            time: diff <= 0 ? 'En curso' : `En ${diff} min`,
+            read: false,
+            category: 'academic',
+            link: '/viajes#seccion-cursado'
+          });
+        }
+      });
+    }
+
+    // 3. Notificación de Viaje de Vuelta (si faltan menos de 2 horas)
+    if (recomendacionVuelta?.recomendado && isToday) {
+      const [vueltaH, vueltaM] = recomendacionVuelta.recomendado.horaSalida.split(':').map(Number);
+      const vueltaMinutes = vueltaH * 60 + vueltaM;
+      const diff = vueltaMinutes - currentMinutes;
+
+      if (diff > 0 && diff <= 120) {
+        list.push({
+          id: `notif-bus-vuelta-${recomendacionVuelta.recomendado.horaSalida}`,
+          title: 'Regreso a Despeñaderos',
+          description: `Colectivo de ${recomendacionVuelta.recomendado.empresa} sale a las ${recomendacionVuelta.recomendado.horaSalida} hs hacia Despeñaderos.`,
+          time: `En ${diff} min`,
+          read: false,
+          category: 'travel',
+          link: '/viajes'
+        });
+      }
+    }
+
+    // 4. Notificación de Tareas del Kanban pendientes
+    if (typeof window !== 'undefined') {
+      try {
+        const storedKanban = localStorage.getItem('lifeos_kanban_tasks');
+        if (storedKanban) {
+          const kanban = JSON.parse(storedKanban);
+          const pending = kanban.filter((t: any) => t.status === 'todo' || t.status === 'in-progress');
+          if (pending.length > 0) {
+            list.push({
+              id: 'notif-kanban-pending',
+              title: `${pending.length} ${pending.length === 1 ? 'Tarea pendiente' : 'Tareas pendientes'}`,
+              description: `Tenés actividades pendientes en tu tablero: "${pending[0].title}"${pending.length > 1 ? ` y ${pending.length - 1} más.` : '.'}`,
+              time: 'Hoy',
+              read: false,
+              category: 'task',
+              link: '/kanban'
+            });
+          }
+        }
+      } catch (e) {}
+    }
+
+    // Filtrar las notificaciones que el usuario vació
+    const nonCleared = list.filter(n => !clearedIds.includes(n.id));
+
+    // Marcar como leídas según readIds
+    return nonCleared.map(n => ({
+      ...n,
+      read: readIds.includes(n.id)
+    }));
+  }, [materiasDelDia, isToday, horaActualHHMM, recomendacionIda, recomendacionVuelta, isMounted, readIds, clearedIds]);
+
+  // Actualizar contador no leídos hacia el Navbar
+  useEffect(() => {
+    const unread = activeNotifications.filter(n => !n.read).length;
     if (onUnreadCountChange) {
       onUnreadCountChange(unread);
     }
-  };
+  }, [activeNotifications, onUnreadCountChange]);
 
-  const saveNotifications = (updated: SystemNotification[]) => {
-    setNotifications(updated);
-    updateUnreadCount(updated);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lifeos_notifications', JSON.stringify(updated));
+  const handleMarkAsRead = (id: string) => {
+    if (!readIds.includes(id)) {
+      const next = [...readIds, id];
+      setReadIds(next);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('lifeos_read_notifications', JSON.stringify(next));
+      }
     }
   };
 
-  const handleMarkAsRead = (id: string) => {
-    const updated = notifications.map(n => n.id === id ? { ...n, read: true } : n);
-    saveNotifications(updated);
-  };
-
   const handleMarkAllAsRead = () => {
-    const updated = notifications.map(n => ({ ...n, read: true }));
-    saveNotifications(updated);
+    const allIds = activeNotifications.map(n => n.id);
+    const next = Array.from(new Set([...readIds, ...allIds]));
+    setReadIds(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lifeos_read_notifications', JSON.stringify(next));
+    }
   };
 
   const handleClearAll = () => {
-    saveNotifications([]);
+    const allIds = activeNotifications.map(n => n.id);
+    const next = Array.from(new Set([...clearedIds, ...allIds]));
+    setClearedIds(next);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lifeos_cleared_notifications', JSON.stringify(next));
+    }
   };
 
   const getCategoryIcon = (category: SystemNotification['category']) => {
@@ -131,7 +203,7 @@ export function NotificationInbox({ isOpen, onClose, onUnreadCountChange }: Noti
     }
   };
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = activeNotifications.filter(n => !n.read).length;
 
   if (!isMounted) return null;
 
@@ -150,7 +222,7 @@ export function NotificationInbox({ isOpen, onClose, onUnreadCountChange }: Noti
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 28, stiffness: 350 }}
-            className="w-full max-w-md bg-neutral-900/70 backdrop-blur-2xl border-t sm:border border-neutral-800 shadow-[0_0_40px_rgba(0,0,0,0.6)] ring-1 ring-white/10 rounded-t-[32px] sm:rounded-3xl p-5 flex flex-col gap-4 text-white max-h-[85vh] overflow-hidden"
+            className="w-full max-w-md bg-neutral-900/80 backdrop-blur-2xl border-t sm:border border-neutral-800 shadow-[0_0_40px_rgba(0,0,0,0.6)] ring-1 ring-white/10 rounded-t-[32px] sm:rounded-3xl p-5 flex flex-col gap-4 text-white max-h-[85vh] overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Grabber para iOS Sheet */}
@@ -195,15 +267,16 @@ export function NotificationInbox({ isOpen, onClose, onUnreadCountChange }: Noti
               </div>
             </div>
 
-            {/* Lista de Notificaciones */}
+            {/* Lista de Notificaciones Dinámicas Reales */}
             <div className="flex-1 overflow-y-auto flex flex-col divide-y divide-neutral-800/80 pr-1 hide-scrollbar">
-              {notifications.length === 0 ? (
+              {activeNotifications.length === 0 ? (
                 <div className="py-16 flex flex-col items-center justify-center text-center text-neutral-500 gap-2">
-                  <Bell size={32} className="opacity-30" />
-                  <p className="text-xs font-medium">No hay notificaciones pendientes</p>
+                  <CheckCircle2 size={32} className="text-emerald-500/50" />
+                  <p className="text-xs font-semibold text-neutral-300">Todo al día</p>
+                  <p className="text-[11px] text-neutral-500">No hay notificaciones nuevas</p>
                 </div>
               ) : (
-                notifications.map((notif) => {
+                activeNotifications.map((notif) => {
                   const content = (
                     <div 
                       key={notif.id}
@@ -236,7 +309,7 @@ export function NotificationInbox({ isOpen, onClose, onUnreadCountChange }: Noti
                         </p>
                       </div>
 
-                      {/* Punto azul/esmeralda indicador de no leído */}
+                      {/* Punto cyan indicador de no leído */}
                       {!notif.read && (
                         <div className="w-2 h-2 rounded-full bg-cyan-400 shrink-0 mt-1.5 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
                       )}
@@ -255,7 +328,7 @@ export function NotificationInbox({ isOpen, onClose, onUnreadCountChange }: Noti
             </div>
 
             {/* Footer con opción de limpiar */}
-            {notifications.length > 0 && (
+            {activeNotifications.length > 0 && (
               <div className="pt-2 border-t border-neutral-800/80 flex items-center justify-between">
                 <button
                   onClick={handleClearAll}
@@ -265,7 +338,7 @@ export function NotificationInbox({ isOpen, onClose, onUnreadCountChange }: Noti
                   <span>Vaciar bandeja</span>
                 </button>
                 <span className="text-[10px] text-neutral-500 font-mono">
-                  {notifications.length} {notifications.length === 1 ? 'aviso' : 'avisos'}
+                  {activeNotifications.length} {activeNotifications.length === 1 ? 'aviso' : 'avisos'}
                 </span>
               </div>
             )}
