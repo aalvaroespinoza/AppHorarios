@@ -300,7 +300,7 @@ export function KanbanBoard() {
                           {/* Acciones de Movimiento */}
                           <div className="flex items-center justify-between pt-2 border-t border-neutral-800/50 mt-1">
                             <span className="text-[9px] text-neutral-500 font-mono">
-                              {new Date(task.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
+                              {task.createdAt ? new Date(task.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) : 'Hoy'}
                             </span>
 
                             <div className="flex gap-1">

@@ -92,16 +92,17 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
   ];
 
   // Eventos con hora (clases + bloques de time-blocking de hoy)
-  const tbEventsFormatted = esHoy ? timeblockingBlocks.map(b => ({
+  const tbEventsFormatted: AgendaItem[] = esHoy ? timeblockingBlocks.map(b => ({
     id: b.id,
     titulo: b.title,
     horaInicio: b.horaInicio,
     horaFin: b.horaFin,
     color: b.color || 'bg-cyan-950/40 border-cyan-500/40 text-cyan-200',
-    tipo: 'timeblocking'
+    tipo: 'custom' as const,
+    modalidad: undefined
   })) : [];
 
-  const timedEvents = [
+  const timedEvents: AgendaItem[] = [
     ...agendaDelDia.filter(item => item.horaInicio && item.horaInicio.includes(':')),
     ...tbEventsFormatted
   ];

@@ -209,7 +209,7 @@ export default function NotasPage() {
                       {firstSnippet}
                     </p>
                     <span className="text-[10px] text-neutral-500 font-mono mt-2">
-                      {new Date(note.updatedAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} • {note.blocks.length} bloques
+                      {note.updatedAt ? new Date(note.updatedAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' }) : 'Reciente'} • {note.blocks.length} bloques
                     </span>
                   </div>
 
