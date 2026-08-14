@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from 'react';
-import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import { ChevronLeft, Plus, Wallet, ArrowDownRight, ArrowUpRight, Trash2, X, Users, Sparkles } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  ChevronLeft, Plus, Wallet, ArrowDownRight, ArrowUpRight, 
+  Trash2, X, Users, Sparkles, MoreVertical, Settings2, RotateCcw, HelpCircle, Check 
+} from 'lucide-react';
 import Link from 'next/link';
 import { useFinanzas } from '@/hooks/useFinanzas';
 import { useCuentasClaras, TipoDeuda } from '@/hooks/useCuentasClaras';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { PAGE_TRANSITION, TAP_ANIMATION } from '@/lib/animations';
 
-const CATEGORIAS = ['Comida', 'Facu', 'Suscripciones', 'Ocio', 'Transporte', 'Otros'];
+const CATEGORIAS_DEFAULT = ['Comida', 'Facu', 'Suscripciones', 'Ocio', 'Transporte', 'Otros'];
 
 export default function FinanzasPage() {
   const finanzas = useFinanzas();
@@ -20,12 +26,39 @@ export default function FinanzasPage() {
   const [tipo, setTipo] = useState<'ingreso' | 'gasto'>('gasto');
   const [showAddForm, setShowAddForm] = useState(false);
 
+  // Modales de Ajustes y Ayuda
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [customPresupuesto, setCustomPresupuesto] = useState('150000');
+  const [alertaPorcentaje, setAlertaPorcentaje] = useState('80');
+
   // Modal Split / Cuentas Claras
   const [showSplit, setShowSplit] = useState(false);
   const [splitPersona, setSplitPersona] = useState('');
   const [splitMonto, setSplitMonto] = useState('');
   const [splitDesc, setSplitDesc] = useState('');
   const [splitTipo, setSplitTipo] = useState<TipoDeuda>('me_debe');
+
+  useEffect(() => {
+    const savedPresupuesto = localStorage.getItem('lifeos_finanzas_presupuesto');
+    if (savedPresupuesto) setCustomPresupuesto(savedPresupuesto);
+    const savedAlerta = localStorage.getItem('lifeos_finanzas_alerta');
+    if (savedAlerta) setAlertaPorcentaje(savedAlerta);
+  }, []);
+
+  const handleSaveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    localStorage.setItem('lifeos_finanzas_presupuesto', customPresupuesto);
+    localStorage.setItem('lifeos_finanzas_alerta', alertaPorcentaje);
+    setShowSettings(false);
+  };
+
+  const handleResetData = () => {
+    if (!window.confirm('¿Reiniciar todas las transacciones financieras a valores limpios?')) return;
+    localStorage.removeItem('lifeos_transacciones');
+    localStorage.removeItem('lifeos_cuentas_claras');
+    window.location.reload();
+  };
 
   const { balanceTotal = 0, gastosDelMes = 0, transacciones = [] } = finanzas;
 
@@ -37,392 +70,406 @@ export default function FinanzasPage() {
     }).format(valor);
   };
 
-  // Cálculos de métricas Maybe-style
-  let totalIngresosMes = 0;
-  const ahora = new Date();
-  const mesActual = ahora.getMonth();
-  const anioActual = ahora.getFullYear();
-
-  transacciones.forEach(t => {
-    const fechaT = new Date(t.fecha);
-    if (fechaT.getMonth() === mesActual && fechaT.getFullYear() === anioActual) {
-      if (t.tipo === 'ingreso') {
-        totalIngresosMes += Number(t.monto);
-      }
-    }
-  });
-
-  const presupuesto = totalIngresosMes > 0 ? totalIngresosMes : (gastosDelMes > 0 ? gastosDelMes * 1.25 : 100000);
+  const presupuestoVal = Number(customPresupuesto) || 150000;
   const gasto = gastosDelMes;
-  const saldoDisponible = Math.max(presupuesto - gasto, 0);
-  const porcentaje = Math.min(Math.round((gasto / (presupuesto || 1)) * 100), 100);
+  const saldoDisponible = Math.max(presupuestoVal - gasto, 0);
+  const porcentaje = Math.min(Math.round((gasto / (presupuestoVal || 1)) * 100), 100);
+  const esAlertaSuperada = porcentaje >= Number(alertaPorcentaje);
 
   const handleGuardar = () => {
     if (!monto || isNaN(Number(monto))) return;
-
     finanzas.agregarTransaccion({
       id: Date.now().toString(),
-      tipo,
       monto: Number(monto),
-      categoria: tipo === 'ingreso' ? 'Ingreso' : categoria,
-      descripcion: descripcion || (tipo === 'ingreso' ? 'Ingreso' : categoria),
-      fecha: new Date().toISOString(),
+      tipo,
+      categoria,
+      descripcion,
+      fecha: new Date().toISOString()
     });
-
     setMonto('');
     setDescripcion('');
     setShowAddForm(false);
   };
 
-  const handleGuardarSplit = () => {
-    if (!splitMonto || isNaN(Number(splitMonto)) || !splitPersona) return;
+  const handleGuardarDeuda = () => {
+    if (!splitPersona || !splitMonto || isNaN(Number(splitMonto))) return;
     cuentasClaras.agregarDeuda({
+      id: Date.now().toString(),
       persona: splitPersona,
       monto: Number(splitMonto),
-      descripcion: splitDesc,
-      tipo: splitTipo
+      descripcion: splitDesc || 'Gasto compartido',
+      tipo: splitTipo,
+      fecha: new Date().toISOString(),
+      saldada: false
     });
     setSplitPersona('');
     setSplitMonto('');
     setSplitDesc('');
+    setShowSplit(false);
   };
 
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] bg-[#0a0a0c] text-white pb-28"
-      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+      className="p-4 max-w-md mx-auto flex flex-col gap-4 min-h-[100dvh] bg-[#0a0a0c] text-white pb-28"
+      style={{ paddingTop: 'max(1.2rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
-      <header className="flex items-center justify-between gap-3 mt-2">
+      <header className="flex items-center justify-between mt-1">
         <div className="flex items-center gap-3">
           <Link 
-            href="/academia"
+            href="/boveda"
             className="w-10 h-10 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors shadow-sm"
           >
             <ChevronLeft size={20} />
           </Link>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Finanzas <Wallet size={18} className="text-cyan-400" />
+              Finanzas <Wallet size={17} className="text-emerald-400" />
             </h1>
-            <p className="text-xs text-neutral-500 font-medium">Dashboard estilo Maybe</p>
+            <p className="text-[11px] text-neutral-500 font-medium">Control de gastos y deudas</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <motion.button
-            whileTap={TAP_ANIMATION}
-            onClick={() => setShowSplit(true)}
-            className="px-3 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-[11px] font-bold text-neutral-400 hover:text-white flex items-center gap-1.5 transition-colors"
+        {/* Acciones de Cabecera */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setShowHelp(true)}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+            title="Ayuda"
           >
-            <Users size={14} className="text-purple-400" />
-            <span>Split</span>
-          </motion.button>
-
-          <motion.button
-            whileTap={TAP_ANIMATION}
+            <HelpCircle size={15} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+            title="Ajustes de Presupuesto"
+          >
+            <Settings2 size={15} />
+          </button>
+          <Button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="w-9 h-9 rounded-full bg-cyan-500 hover:bg-cyan-400 text-black flex items-center justify-center font-bold shadow-lg shadow-cyan-500/20 transition-all"
+            size="sm"
+            className="rounded-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold flex items-center gap-1 px-3 shadow-md shadow-emerald-500/20"
           >
-            <Plus size={18} />
-          </motion.button>
+            <Plus size={15} />
+            <span>Gasto</span>
+          </Button>
         </div>
       </header>
 
-      {/* TARJETA 1: Resumen Principal */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col gap-4">
-        <div className="absolute -top-12 -right-12 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-        
-        <div>
-          <span className="text-xs font-semibold uppercase tracking-widest text-neutral-400 flex items-center gap-1.5 mb-2">
-            <Sparkles size={14} className="text-cyan-400" /> Presupuesto Disponible
-          </span>
-          <div className="text-5xl font-extrabold tracking-tight text-white leading-none">
-            {formatoMoneda(saldoDisponible)}
+      {/* Card de Presupuesto y Balance */}
+      <Card className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-5 backdrop-blur-md shadow-xl flex flex-col gap-3">
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Disponible del Mes</span>
+            <div className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-0.5 font-sans">
+              {formatoMoneda(saldoDisponible)}
+            </div>
           </div>
+          <Badge className={`text-xs font-bold ${esAlertaSuperada ? 'bg-red-500/20 text-red-300 border-red-500/40' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'}`}>
+            {porcentaje}% Gastado
+          </Badge>
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-neutral-800 text-xs text-neutral-400 font-medium">
-          <span>Balance Total: <strong className="text-white">{formatoMoneda(balanceTotal)}</strong></span>
-          <span>Cuentas Claras: <strong className={cuentasClaras.balanceNeto >= 0 ? 'text-emerald-400' : 'text-red-400'}>{cuentasClaras.balanceNeto >= 0 ? '+' : ''}{formatoMoneda(cuentasClaras.balanceNeto)}</strong></span>
-        </div>
-      </div>
-
-      {/* TARJETA 2: Barra de Consumo */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl flex flex-col gap-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-            Consumo de Presupuesto
-          </span>
-          <span className="text-xs font-extrabold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded-md border border-cyan-500/20">
-            {porcentaje}%
-          </span>
-        </div>
-
-        {/* Barra de progreso requerida */}
-        <div className="w-full bg-neutral-800 rounded-full h-3 mt-4 overflow-hidden">
+        {/* Barra de progreso de presupuesto */}
+        <div className="w-full bg-neutral-800/80 h-2.5 rounded-full overflow-hidden">
           <div 
-            className="bg-cyan-500 h-full rounded-full transition-all duration-500" 
-            style={{ width: `${Math.min((gasto / (presupuesto || 1)) * 100, 100)}%` }}
-          ></div>
+            className={`h-full rounded-full transition-all duration-500 ${esAlertaSuperada ? 'bg-red-500' : 'bg-emerald-500'}`}
+            style={{ width: `${porcentaje}%` }}
+          />
         </div>
 
-        <div className="flex items-center justify-between text-xs text-neutral-400 mt-2 font-medium">
+        <div className="flex justify-between text-xs text-neutral-400 font-medium pt-1 border-t border-neutral-800/60">
           <span>Gastado: <strong className="text-white">{formatoMoneda(gasto)}</strong></span>
-          <span>Límite: <strong className="text-neutral-300">{formatoMoneda(presupuesto)}</strong></span>
+          <span>Meta: <strong className="text-neutral-300">{formatoMoneda(presupuestoVal)}</strong></span>
         </div>
+      </Card>
+
+      {/* Botones Rápidos (Dividir Cuentas / Agregar) */}
+      <div className="grid grid-cols-2 gap-2.5">
+        <Button
+          onClick={() => setShowSplit(true)}
+          variant="outline"
+          className="rounded-2xl border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:text-white flex items-center justify-center gap-2 py-3 h-auto"
+        >
+          <Users size={16} className="text-cyan-400" />
+          <span className="text-xs font-bold">Cuentas Claras</span>
+        </Button>
+        <Button
+          onClick={() => {
+            setTipo('ingreso');
+            setShowAddForm(true);
+          }}
+          variant="outline"
+          className="rounded-2xl border-neutral-800 bg-neutral-900/60 text-neutral-300 hover:text-white flex items-center justify-center gap-2 py-3 h-auto"
+        >
+          <ArrowDownRight size={16} className="text-emerald-400" />
+          <span className="text-xs font-bold">+ Ingreso</span>
+        </Button>
       </div>
 
-      {/* Formulario Rápido (Desplegable) */}
+      {/* Formulario Agregar Transacción */}
       <AnimatePresence>
         {showAddForm && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl"
+            className="bg-neutral-900 border border-neutral-800 rounded-3xl p-4 flex flex-col gap-3 shadow-xl overflow-hidden"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-bold text-sm uppercase tracking-wider text-neutral-300">Nueva Transacción</h2>
-              <button onClick={() => setShowAddForm(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
-                <X size={16} />
+            <div className="flex justify-between items-center pb-2 border-b border-neutral-800">
+              <span className="text-xs font-bold text-white uppercase tracking-wider">
+                {tipo === 'gasto' ? '💸 Registrar Gasto' : '💰 Registrar Ingreso'}
+              </span>
+              <button onClick={() => setShowAddForm(false)} className="text-neutral-500 hover:text-white">
+                <X size={15} />
               </button>
             </div>
-            
-            <div className="flex gap-2 mb-4 bg-neutral-950 p-1 rounded-xl border border-neutral-800">
-              <button 
+
+            <div className="flex gap-2">
+              <button
                 onClick={() => setTipo('gasto')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                  tipo === 'gasto' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'text-neutral-500 hover:text-neutral-300'
-                }`}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-colors ${tipo === 'gasto' ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-neutral-950 text-neutral-500'}`}
               >
                 Gasto
               </button>
-              <button 
+              <button
                 onClick={() => setTipo('ingreso')}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
-                  tipo === 'ingreso' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'text-neutral-500 hover:text-neutral-300'
-                }`}
+                className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-colors ${tipo === 'ingreso' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-neutral-950 text-neutral-500'}`}
               >
                 Ingreso
               </button>
             </div>
 
-            <div className="flex flex-col gap-3">
-              <div className="relative">
-                <span className="absolute left-4 top-3 text-neutral-500 font-bold">$</span>
-                <input 
-                  type="text"
-                  inputMode="decimal"
-                  pattern="[0-9]*"
-                  placeholder="0.00"
-                  value={monto}
-                  onChange={(e) => setMonto(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-8 pr-4 py-3 text-lg font-bold text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                />
-              </div>
+            <input 
+              type="number"
+              value={monto}
+              onChange={(e) => setMonto(e.target.value)}
+              placeholder="Monto ARS (ej: 4500)"
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+              autoFocus
+            />
 
-              {tipo === 'gasto' && (
-                <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                  {CATEGORIAS.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setCategoria(cat)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap ${
-                        categoria === cat 
-                          ? 'bg-white text-black font-bold' 
-                          : 'bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-700'
-                      }`}
-                    >
-                      {cat}
-                    </button>
-                  ))}
-                </div>
-              )}
-
+            <div className="flex gap-2">
+              <select
+                value={categoria}
+                onChange={(e) => setCategoria(e.target.value)}
+                className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+              >
+                {CATEGORIAS_DEFAULT.map(c => (
+                  <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
               <input 
                 type="text"
-                placeholder={tipo === 'gasto' ? 'Descripción (Ej: Café, Supermercado)' : 'Descripción (Ej: Sueldo, Venta)'}
                 value={descripcion}
                 onChange={(e) => setDescripcion(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                placeholder="Descripción (opcional)"
+                className="flex-[2] bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
               />
+            </div>
 
-              <button 
-                onClick={handleGuardar}
-                className={`w-full mt-2 rounded-xl py-3 text-sm font-bold transition-all flex items-center justify-center gap-2 active:scale-[0.98] ${
-                  tipo === 'gasto' 
-                    ? 'bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-900/30' 
-                    : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/30'
-                }`}
-              >
-                <Plus size={18} />
-                Guardar {tipo === 'gasto' ? 'Gasto' : 'Ingreso'}
-              </button>
+            <Button
+              onClick={handleGuardar}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-xl mt-1"
+            >
+              Guardar Movimiento
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Historial de Movimientos */}
+      <div className="flex flex-col gap-2 mt-1">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-500 px-1">
+          Últimos Movimientos
+        </span>
+
+        <div className="flex flex-col gap-2">
+          {transacciones.slice(0, 8).map(t => (
+            <div key={t.id} className="bg-neutral-900/50 border border-neutral-800/80 rounded-2xl p-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${t.tipo === 'ingreso' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                  {t.tipo === 'ingreso' ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-white">{t.descripcion || t.categoria}</h4>
+                  <span className="text-[10px] text-neutral-500 font-medium">{t.categoria}</span>
+                </div>
+              </div>
+
+              <span className={`text-xs font-bold font-mono ${t.tipo === 'ingreso' ? 'text-emerald-400' : 'text-neutral-200'}`}>
+                {t.tipo === 'ingreso' ? '+' : '-'}{formatoMoneda(Number(t.monto))}
+              </span>
+            </div>
+          ))}
+
+          {transacciones.length === 0 && (
+            <p className="text-xs text-neutral-500 text-center py-6">Sin movimientos registrados este mes.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Modal Ajustes */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+          >
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 text-white">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-2.5">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Settings2 size={16} className="text-emerald-400" /> Ajustes Financieros
+                </h2>
+                <button onClick={() => setShowSettings(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={15} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveSettings} className="flex flex-col gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-neutral-400 font-semibold">Presupuesto Mensual (ARS)</label>
+                  <input 
+                    type="number"
+                    value={customPresupuesto}
+                    onChange={(e) => setCustomPresupuesto(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="text-[10px] text-neutral-400 font-semibold">Alerta de Gasto (% Límite)</label>
+                  <input 
+                    type="number"
+                    value={alertaPorcentaje}
+                    onChange={(e) => setAlertaPorcentaje(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+
+                <Button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs rounded-xl mt-1">
+                  Guardar Preferencias
+                </Button>
+              </form>
+
+              <div className="pt-2 border-t border-neutral-800">
+                <Button
+                  onClick={handleResetData}
+                  variant="destructive"
+                  className="w-full text-xs font-bold rounded-xl flex items-center justify-center gap-2"
+                >
+                  <RotateCcw size={14} />
+                  <span>Reiniciar Base de Datos Financiera</span>
+                </Button>
+              </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* TARJETA 3: Movimientos */}
-      <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-xl flex flex-col gap-2">
-        <div className="flex items-center justify-between pb-2 border-b border-neutral-800/60">
-          <h2 className="font-bold text-xs uppercase tracking-wider text-neutral-400">
-            Últimos Movimientos
-          </h2>
-          <span className="text-xs text-neutral-500 font-mono">{transacciones.length} registros</span>
-        </div>
-
-        <div className="flex flex-col">
-          {transacciones.length === 0 ? (
-            <div className="py-6 text-center text-sm text-neutral-500 italic">
-              No hay movimientos registrados. ¡Toca + para agregar el primero!
-            </div>
-          ) : (
-            transacciones.slice(0, 10).map((t) => (
-              <div 
-                key={t.id} 
-                className="flex justify-between items-center border-b border-neutral-800/50 py-3 last:border-b-0"
-              >
-                <div className="flex flex-col min-w-0 pr-3">
-                  <span className="text-sm font-semibold text-white truncate">{t.descripcion}</span>
-                  <span className="text-xs text-neutral-500">
-                    {new Date(t.fecha).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })} • {t.categoria}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className={`font-bold text-sm tabular-nums ${
-                    t.tipo === 'ingreso' ? 'text-emerald-400' : 'text-white'
-                  }`}>
-                    {t.tipo === 'gasto' ? '-' : '+'}{formatoMoneda(t.monto)}
-                  </span>
-                  <button 
-                    onClick={() => finanzas.eliminarTransaccion(t.id)}
-                    className="text-neutral-600 hover:text-red-400 p-1 transition-colors rounded-lg"
-                    title="Eliminar"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
+      {/* Modal Ayuda */}
+      <AnimatePresence>
+        {showHelp && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+          >
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-3 text-white">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-2">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <HelpCircle size={16} className="text-emerald-400" /> Guía de Finanzas
+                </h2>
+                <button onClick={() => setShowHelp(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={15} />
+                </button>
               </div>
-            ))
-          )}
-        </div>
-      </div>
 
-      {/* Modal Cuentas Claras (Micro-Split) */}
+              <ul className="text-xs text-neutral-300 space-y-2 leading-relaxed">
+                <li>• <strong>Presupuesto Dinámico</strong>: Configura tu meta mensual en ajustes para ver cuánto saldo te queda día a día.</li>
+                <li>• <strong>Cuentas Claras</strong>: Registra gastos compartidos y deudas con amigos o compañeros sin perder la cuenta.</li>
+                <li>• <strong>100% Privado</strong>: Todos tus datos se almacenan de manera local y encriptada.</li>
+              </ul>
+
+              <Button
+                onClick={() => setShowHelp(false)}
+                className="w-full mt-2 text-xs font-bold rounded-xl bg-emerald-500 text-black hover:bg-emerald-400"
+              >
+                Entendido
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Split Cuentas Claras */}
       <AnimatePresence>
         {showSplit && (
           <motion.div 
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
           >
-            <div className="relative w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl flex flex-col gap-5 max-h-[85vh] overflow-hidden">
-              <div className="flex justify-between items-center border-b border-neutral-800 pb-3">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  Cuentas Claras <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full font-bold">Split</span>
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-3 text-white">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-2">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Users size={16} className="text-cyan-400" /> Registrar Gasto Compartido
                 </h2>
-                <button onClick={() => setShowSplit(false)} className="text-neutral-500 hover:text-white p-1.5 bg-neutral-800 rounded-full">
-                  <X size={16} />
+                <button onClick={() => setShowSplit(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={15} />
                 </button>
               </div>
 
-              {/* Balance Neto */}
-              <div className={`p-4 rounded-xl flex flex-col items-center justify-center text-center ${
-                cuentasClaras.balanceNeto >= 0 ? 'bg-emerald-950/30 border border-emerald-500/30' : 'bg-red-950/30 border border-red-500/30'
-              }`}>
-                <p className="text-neutral-400 text-xs font-semibold uppercase tracking-widest mb-1">Balance Neto</p>
-                <p className={`text-2xl font-black ${cuentasClaras.balanceNeto >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {cuentasClaras.balanceNeto >= 0 ? 'Te deben ' : 'Debés '}{formatoMoneda(Math.abs(cuentasClaras.balanceNeto))}
-                </p>
-              </div>
-
-              {/* Formulario Exprés */}
-              <div className="flex flex-col gap-2.5">
-                <div className="flex gap-2">
-                  <input 
-                    placeholder="Persona (Ej: Juan)" 
-                    value={splitPersona}
-                    onChange={e => setSplitPersona(e.target.value)}
-                    className="flex-1 bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500" 
-                  />
-                  <div className="relative w-28">
-                    <span className="absolute left-2.5 top-2 text-neutral-500 font-bold text-sm">$</span>
-                    <input 
-                      placeholder="0.00" 
-                      inputMode="decimal"
-                      pattern="[0-9]*"
-                      value={splitMonto}
-                      onChange={e => setSplitMonto(e.target.value)}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-6 pr-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500 font-bold tabular-nums" 
-                    />
-                  </div>
-                </div>
+              <div className="flex flex-col gap-2">
                 <input 
-                  placeholder="Descripción (Ej: Pizza, Regalo)" 
-                  value={splitDesc}
-                  onChange={e => setSplitDesc(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-cyan-500" 
+                  type="text"
+                  value={splitPersona}
+                  onChange={(e) => setSplitPersona(e.target.value)}
+                  placeholder="Persona / Amigo (ej: Juan)"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
                 />
+                <input 
+                  type="number"
+                  value={splitMonto}
+                  onChange={(e) => setSplitMonto(e.target.value)}
+                  placeholder="Monto ARS"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                />
+                <input 
+                  type="text"
+                  value={splitDesc}
+                  onChange={(e) => setSplitDesc(e.target.value)}
+                  placeholder="Motivo (ej: Asado, Pizza)"
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
+                />
+
                 <div className="flex gap-2 mt-1">
-                  <button 
+                  <button
                     onClick={() => setSplitTipo('me_debe')}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      splitTipo === 'me_debe' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-neutral-950 text-neutral-500 border border-neutral-800'
-                    }`}
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-colors ${splitTipo === 'me_debe' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' : 'bg-neutral-950 text-neutral-500'}`}
                   >
                     Me debe
                   </button>
-                  <button 
+                  <button
                     onClick={() => setSplitTipo('le_debo')}
-                    className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
-                      splitTipo === 'le_debo' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-neutral-950 text-neutral-500 border border-neutral-800'
-                    }`}
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-bold transition-colors ${splitTipo === 'le_debo' ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-neutral-950 text-neutral-500'}`}
                   >
                     Le debo
                   </button>
                 </div>
-                <button 
-                  onClick={handleGuardarSplit}
-                  className="w-full mt-2 py-3 bg-white hover:bg-neutral-200 text-black text-xs uppercase font-extrabold tracking-wider rounded-xl shadow-lg active:scale-[0.98] transition-transform"
-                >
-                  Agregar Registro
-                </button>
-              </div>
 
-              {/* Listado */}
-              <div className="flex-1 overflow-y-auto no-scrollbar flex flex-col gap-2 border-t border-neutral-800 pt-3 pb-1">
-                {cuentasClaras.deudas.length === 0 ? (
-                  <p className="text-neutral-500 text-xs text-center italic py-2">Todo saldado. Cuentas claras, conservan la amistad. 🍻</p>
-                ) : (
-                  cuentasClaras.deudas.map(d => (
-                    <div key={d.id} className="flex items-center justify-between bg-neutral-950/60 p-3 rounded-xl border border-neutral-800/80">
-                      <div className="min-w-0 pr-2">
-                        <p className="text-sm font-bold text-white flex items-center gap-1.5 flex-wrap">
-                          <span className="truncate max-w-[100px]">{d.persona}</span>
-                          <span className={`text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-md font-bold shrink-0 ${
-                            d.tipo === 'me_debe' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'
-                          }`}>
-                            {d.tipo === 'me_debe' ? 'te debe' : 'le debés'}
-                          </span>
-                        </p>
-                        {d.descripcion && <p className="text-xs text-neutral-400 truncate mt-0.5">{d.descripcion}</p>}
-                      </div>
-                      <div className="flex items-center gap-3 shrink-0">
-                        <span className="font-bold text-sm tabular-nums text-white">{formatoMoneda(d.monto)}</span>
-                        <button 
-                          onClick={() => cuentasClaras.saldarDeuda(d.id)}
-                          className="bg-neutral-800 hover:bg-neutral-700 active:scale-95 transition-transform text-white text-[10px] uppercase font-bold tracking-wider px-2.5 py-1.5 rounded-lg border border-neutral-700/50"
-                        >
-                          Saldar
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                )}
+                <Button
+                  onClick={handleGuardarDeuda}
+                  className="w-full mt-2 font-bold bg-cyan-500 hover:bg-cyan-400 text-black text-xs rounded-xl"
+                >
+                  Guardar en Cuentas Claras
+                </Button>
               </div>
             </div>
           </motion.div>
