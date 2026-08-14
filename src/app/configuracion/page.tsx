@@ -327,7 +327,7 @@ export default function Configuracion() {
 
         {/* Footer info */}
         <div className="mt-4 text-center flex flex-col gap-1 text-neutral-600 pb-6">
-          <p className="text-xs font-bold tracking-wide text-neutral-500">LifeOS • AppHorarios v2.0</p>
+          <p className="text-xs font-bold tracking-wide text-neutral-500">LifeOS • AppHorarios v2.1</p>
           <p className="text-[11px]">Sistema Local-First para iPhone & Web</p>
         </div>
       </div>
