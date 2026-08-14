@@ -189,10 +189,11 @@ export function WeatherWidget() {
                   <Droplets size={13} className={isRainRisk ? 'text-blue-500 font-bold' : ''} /> 
                   {currentRainProb}%
                 </span>
-                <span className="flex items-center gap-1">
-                  <Wind size={13} /> {Math.round(weather.current.windSpeed)} km/h
-                </span>
-                {isOffline && <WifiOff size={13} className="text-amber-400" title="Datos en caché" />}
+                {isOffline && (
+                  <span title="Datos en caché" className="inline-flex items-center">
+                    <WifiOff size={13} className="text-amber-400" />
+                  </span>
+                )}
               </div>
             )}
           </motion.div>
