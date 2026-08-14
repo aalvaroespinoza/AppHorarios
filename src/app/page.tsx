@@ -1,21 +1,26 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense } from 'react';
 import { motion, Variants } from 'framer-motion';
 import { 
   Bus, Wallet, Calendar, CheckSquare, Zap, MapPin, 
   ArrowUpRight, Sparkles, Moon, SunMedium, 
-  ChevronRight, Kanban, Clock, Shield, ArrowRight, LayoutGrid, CloudSun
+  ChevronRight, Kanban, Clock, Shield, ArrowRight, LayoutGrid
 } from 'lucide-react';
 import Link from 'next/link';
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useContextEngine } from '@/core/hooks/useContextEngine';
-import { useFinanzas } from '@/hooks/useFinanzas';
 import { useTodaySchedule } from '@/hooks/useTodaySchedule';
 import { useEscenario } from '@/hooks/useEscenario';
-import { weatherService } from '@/core/services/weather/weather.service';
-import type { Task } from '@/types/task';
+
+// Async Widgets aislados con Suspense
+import { WeatherWidgetAsync } from '@/features/hub/WeatherWidgetAsync';
+import { TasksWidgetAsync } from '@/features/hub/TasksWidgetAsync';
+import { FinanceWidgetAsync } from '@/features/hub/FinanceWidgetAsync';
+import { ScheduleWidgetAsync } from '@/features/hub/ScheduleWidgetAsync';
+import { VaultWidgetAsync } from '@/features/hub/VaultWidgetAsync';
 
 interface ImmediateActionConfig {
   isRestMode: boolean;
@@ -31,7 +36,6 @@ interface ImmediateActionConfig {
 
 export default function InicioHubPage() {
   const contextSnapshot = useContextEngine();
-  const finanzas = useFinanzas();
   const { diaSeleccionado } = useEscenario();
   const {
     materiasDelDia,
@@ -39,25 +43,6 @@ export default function InicioHubPage() {
     recomendacionIda,
     recomendacionVuelta
   } = useTodaySchedule();
-
-  const [inProgressTasksCount, setInProgressTasksCount] = useState(0);
-  const [currentTemp, setCurrentTemp] = useState<number | null>(null);
-
-  useEffect(() => {
-    // Leer tareas en progreso desde localStorage
-    const storedKanban = localStorage.getItem('lifeos_kanban_tasks');
-    if (storedKanban) {
-      try {
-        const parsed: Task[] = JSON.parse(storedKanban);
-        setInProgressTasksCount(parsed.filter(t => t.status === 'in-progress').length);
-      } catch (e) {}
-    }
-
-    // Obtener clima de Despeñaderos
-    weatherService.getWeather('despenaderos')
-      .then(w => setCurrentTemp(Math.round(w.current.temperature)))
-      .catch(() => setCurrentTemp(null));
-  }, []);
 
   const fechaHoy = new Intl.DateTimeFormat('es-AR', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
   const fechaCapitalizada = fechaHoy.charAt(0).toUpperCase() + fechaHoy.slice(1);
@@ -130,14 +115,6 @@ export default function InicioHubPage() {
     };
   }
 
-  const formatoMoneda = (valor: number) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0
-    }).format(valor);
-  };
-
   // Variantes para cascada / stagger
   const containerVariants: Variants = {
     hidden: { opacity: 0 },
@@ -166,7 +143,7 @@ export default function InicioHubPage() {
       animate="visible"
       className="min-h-screen pb-24 px-4 pt-12 flex flex-col gap-6 bg-[#0a0a0c] text-white max-w-md mx-auto"
     >
-      {/* SECCIÓN 1: Header (Contexto) */}
+      {/* SECCIÓN 1: Header (Contexto) con Async Weather Widget */}
       <motion.header variants={itemVariants} className="px-2 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">
@@ -177,14 +154,9 @@ export default function InicioHubPage() {
           </p>
         </div>
 
-        <Link
-          href="/resumen"
-          className="flex items-center gap-1.5 bg-neutral-900/40 border border-neutral-800/60 backdrop-blur-xl px-3 py-1.5 rounded-full text-xs font-semibold text-neutral-300 hover:border-neutral-700 transition-colors shadow-sm"
-          title="Ver reporte meteorológico"
-        >
-          <CloudSun size={14} className="text-cyan-400" />
-          <span>{currentTemp !== null ? `${currentTemp}°` : 'Clima'}</span>
-        </Link>
+        <Suspense fallback={<div className="w-16 h-7 rounded-full bg-neutral-800/80 animate-pulse" />}>
+          <WeatherWidgetAsync />
+        </Suspense>
       </motion.header>
 
       {/* SECCIÓN 2: Hero Card (Acción Inmediata) */}
@@ -222,78 +194,32 @@ export default function InicioHubPage() {
         </div>
       </motion.div>
 
-      {/* SECCIÓN 3: Bento Grid (Módulos Secundarios) */}
+      {/* SECCIÓN 3: Bento Grid con Async Widgets y React Suspense */}
       <motion.div variants={itemVariants} className="flex flex-col gap-3">
         <span className="text-[11px] font-bold uppercase tracking-widest text-neutral-500 px-2">
           Módulos Principales
         </span>
 
         <div className="grid grid-cols-2 gap-4">
-          {/* Tarjeta Finanzas */}
-          <Link href="/finanzas" className="block group">
-            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">💸</span>
-                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-neutral-500 font-medium mb-1">Presupuesto</p>
-                <p className="text-lg font-bold text-white truncate">
-                  {formatoMoneda(finanzas.balanceTotal || 0)}
-                </p>
-              </div>
-            </div>
-          </Link>
+          {/* Widget Finanzas */}
+          <Suspense fallback={<Skeleton className="aspect-square w-full rounded-[28px]" />}>
+            <FinanceWidgetAsync />
+          </Suspense>
 
-          {/* Tarjeta Kanban / Tareas */}
-          <Link href="/kanban" className="block group">
-            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">📋</span>
-                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-neutral-500 font-medium mb-1">En Curso</p>
-                <p className="text-lg font-bold text-white truncate">
-                  {inProgressTasksCount} {inProgressTasksCount === 1 ? 'Tarea' : 'Tareas'}
-                </p>
-              </div>
-            </div>
-          </Link>
+          {/* Widget Tasks / Kanban */}
+          <Suspense fallback={<Skeleton className="aspect-square w-full rounded-[28px]" />}>
+            <TasksWidgetAsync />
+          </Suspense>
 
-          {/* Tarjeta Agenda / Cursado */}
-          <Link href="/academia" className="block group">
-            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">📚</span>
-                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-neutral-500 font-medium mb-1">Cursado Hoy</p>
-                <p className="text-lg font-bold text-white truncate">
-                  {materiasDelDia && materiasDelDia.length > 0 
-                    ? `${materiasDelDia.length} ${materiasDelDia.length === 1 ? 'materia' : 'materias'}` 
-                    : 'Sin clases'}
-                </p>
-              </div>
-            </div>
-          </Link>
+          {/* Widget Agenda / Cursado */}
+          <Suspense fallback={<Skeleton className="aspect-square w-full rounded-[28px]" />}>
+            <ScheduleWidgetAsync />
+          </Suspense>
 
-          {/* Tarjeta Bóveda / Menú */}
-          <Link href="/boveda" className="block group">
-            <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-[28px] p-5 flex flex-col gap-2 aspect-square justify-between hover:bg-neutral-800/50 transition-all shadow-md active:scale-95">
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">🗄️</span>
-                <ArrowUpRight size={15} className="text-neutral-600 group-hover:text-white transition-colors" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs text-neutral-500 font-medium mb-1">Bóveda</p>
-                <p className="text-lg font-bold text-white truncate">
-                  Menú de Apps
-                </p>
-              </div>
-            </div>
-          </Link>
+          {/* Widget Bóveda / Menú */}
+          <Suspense fallback={<Skeleton className="aspect-square w-full rounded-[28px]" />}>
+            <VaultWidgetAsync />
+          </Suspense>
         </div>
       </motion.div>
     </motion.main>
