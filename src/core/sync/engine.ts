@@ -15,9 +15,8 @@ export class SyncEngine {
   async registerBackgroundSync() {
     if (typeof window !== 'undefined' && 'serviceWorker' in navigator && 'SyncManager' in window) {
       try {
-        const registration = await navigator.serviceWorker.ready;
-        // @ts-ignore - TS a veces no reconoce SyncManager en lib estándar antigua
-        if ('sync' in registration && typeof registration.sync.register === 'function') {
+        const registration = (await navigator.serviceWorker.ready) as any;
+        if (registration && registration.sync && typeof registration.sync.register === 'function') {
           await registration.sync.register('lifeos-sync');
           console.log('[SyncEngine] Background Sync registrado exitosamente.');
         }
