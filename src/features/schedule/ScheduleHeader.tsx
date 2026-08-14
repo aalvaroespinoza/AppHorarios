@@ -28,7 +28,7 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
                 (diaCapitalizado.toLowerCase() === 'hoy');
 
   return (
-    <header className="sticky top-0 z-40 bg-[#0a0a0c]/85 backdrop-blur-xl -mx-4 px-4 pt-2 pb-3 border-b border-neutral-800/60 shadow-lg flex flex-col gap-2 transition-all">
+    <header className="sticky top-0 z-40 bg-[#0a0a0c]/90 backdrop-blur-xl -mx-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-neutral-800/80 shadow-md flex flex-col gap-2 transition-all">
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 text-[11px] font-black tracking-[0.25em] uppercase mb-0.5 drop-shadow-sm">
@@ -40,20 +40,20 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Botón interactivo "Volver a Hoy" (solo visible cuando NO estamos en hoy) */}
+          {/* Botón interactivo "Hoy" compacto (solo visible cuando NO estamos en hoy) */}
           <AnimatePresence>
             {!esHoy && (
               <motion.button
-                initial={{ opacity: 0, scale: 0.8, x: 10 }}
+                initial={{ opacity: 0, scale: 0.8, x: 8 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8, x: 10 }}
+                exit={{ opacity: 0, scale: 0.8, x: 8 }}
                 whileTap={{ scale: 0.93 }}
                 onClick={() => setDiaSeleccionado(diaActualHoy)}
-                className="flex items-center gap-1.5 text-xs font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 px-3 py-1.5 rounded-full hover:bg-cyan-500/25 transition-all shadow-[0_0_12px_rgba(6,182,212,0.2)] active:scale-95"
+                className="flex items-center gap-1 text-xs font-bold text-cyan-300 bg-cyan-500/15 border border-cyan-500/30 px-2.5 py-1.5 rounded-full hover:bg-cyan-500/25 transition-all shadow-[0_0_10px_rgba(6,182,212,0.2)] active:scale-95 shrink-0"
                 title="Restablecer al día de hoy"
               >
-                <RotateCcw size={12} className="text-cyan-400 animate-spin-slow" />
-                <span>Volver a Hoy</span>
+                <RotateCcw size={11} className="text-cyan-400" />
+                <span>Hoy</span>
               </motion.button>
             )}
           </AnimatePresence>

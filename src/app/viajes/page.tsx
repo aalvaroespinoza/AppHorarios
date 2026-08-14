@@ -31,8 +31,7 @@ export default function ViajesPage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-4 max-w-md mx-auto flex flex-col gap-6 pb-28 min-h-[100dvh]"
-      style={{ paddingTop: 'max(1rem, env(safe-area-inset-top))' }}
+      className="px-4 max-w-md mx-auto flex flex-col gap-6 pb-28 min-h-[100dvh]"
     >
       <ScheduleHeader 
         diaCapitalizado={diaCapitalizado} 
@@ -42,7 +41,7 @@ export default function ViajesPage() {
 
       <ContextualControls />
 
-      <div className="flex flex-col gap-6 mt-2">
+      <div className="flex flex-col gap-6 mt-1">
         <HorarioCard 
           titulo="Ida hacia Córdoba"
           recomendacion={recomendacionIda} 
