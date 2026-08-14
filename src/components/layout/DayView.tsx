@@ -7,7 +7,7 @@ import { SubjectList } from '@/features/schedule/SubjectList';
 import { BusScheduleList } from '@/features/schedule/BusScheduleList';
 import { determineScenario, findScenario } from '@/lib/engine';
 import { getScheduleForDay } from '@/lib/services';
-import { subjectData } from '@/data/subjects';
+import { useSubjects } from '@/hooks/useSubjects';
 import { rawScheduleEntries } from '@/data/schedules';
 import { companies } from '@/data/companies';
 import { formatDateLong } from '@/core/utils/date';
@@ -31,24 +31,26 @@ export function DayView({
   date,
 }: DayViewProps) {
   const { cursaArquitectura, isMounted } = useEscenario();
+  const { subjects } = useSubjects();
   const [currentDate, setCurrentDate] = useState<Date>(date);
   const [showDatePicker, setShowDatePicker] = useState(false);
   
   /* ── 1. Fecha ─────────────────────────────────────────────── */
   const dateLabel = formatDateLong(currentDate);
 
-  /* ── 2. Escenario + materias ──────────────────────────────── */
+  /* ── 2. Escenario + materias dinámicas ─────────────────────── */
   const scenarioId = determineScenario({ tuesdayHasArquitectura: cursaArquitectura, referenceDate: currentDate });
   const scenario = scenarioId ? findScenario(scenarioId) : null;
+  const currentDow = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'][currentDate.getDay()] as DayOfWeek;
 
-  const activeSubjects = scenario
-    ? subjectData.subjects.filter((s) =>
-        scenario.activeSubjectIds.includes(s.id),
-      )
-    : [];
+  const activeSubjects = subjects.filter((s) => {
+    if (currentDow === 'martes' && !cursaArquitectura && s.name.toLowerCase().includes('arquitectura')) {
+      return false;
+    }
+    return s.classBlocks.some((b) => b.day.toLowerCase() === currentDow.toLowerCase());
+  });
 
   /* ── 3. Horarios del día ──────────────────────────────────── */
-  const currentDow = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'][currentDate.getDay()] as DayOfWeek;
   const busSchedule = getScheduleForDay(currentDow, rawScheduleEntries, Object.values(companies));
 
   /* ── Render ───────────────────────────────────────────────── */

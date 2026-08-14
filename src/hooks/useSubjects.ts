@@ -4,10 +4,16 @@ import { useState, useEffect, useCallback } from 'react';
 import { Subject, ClassBlock } from '@/types/subject';
 import { DayOfWeek, Shift } from '@/core/types/common';
 import { subjectData as defaultSubjectData } from '@/data/subjects';
-import { idb } from '@/core/utils/indexedDB';
 import { parseMateriaInfo } from '@/core/utils/edificio';
+import { 
+  getStoredSubjectsSync, 
+  getStoredSubjects, 
+  saveStoredSubjects, 
+  SUBJECTS_STORAGE_KEY, 
+  SUBJECTS_UPDATED_EVENT 
+} from '@/core/services/subject.service';
 
-export const SUBJECTS_STORAGE_KEY = 'lifeos_subjects';
+export { SUBJECTS_STORAGE_KEY, SUBJECTS_UPDATED_EVENT };
 
 export interface SubjectFormData {
   nombre: string;
@@ -98,103 +104,88 @@ export function subjectToFormData(subject: Subject): SubjectFormData {
 }
 
 /**
- * Hook para la gestión integral de materias con soporte Local-First (IndexedDB + localStorage).
+ * Hook para la gestión integral de materias con soporte reactivo Local-First (IndexedDB + localStorage).
  */
 export function useSubjects() {
-  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>(() => {
+    return getStoredSubjectsSync();
+  });
   const [isMounted, setIsMounted] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Carga inicial
+  const refreshSubjects = useCallback(async () => {
+    try {
+      const loaded = await getStoredSubjects();
+      setSubjects(loaded);
+    } catch (err) {
+      console.error('Error al refrescar materias:', err);
+    } finally {
+      setLoading(false);
+      setIsMounted(true);
+    }
+  }, []);
+
+  // Carga inicial y suscripción a eventos de actualización
   useEffect(() => {
-    let isCancelled = false;
+    refreshSubjects();
 
-    const loadSubjects = async () => {
-      try {
-        let loaded: Subject[] | null = null;
-
-        // 1. Intentar leer de IndexedDB
-        const idbData = await idb.get<Subject[]>(SUBJECTS_STORAGE_KEY);
-        if (idbData && Array.isArray(idbData) && idbData.length > 0) {
-          loaded = idbData;
-        } else if (typeof window !== 'undefined') {
-          // 2. Fallback a localStorage
-          const localData = localStorage.getItem(SUBJECTS_STORAGE_KEY);
-          if (localData) {
-            try {
-              const parsed = JSON.parse(localData);
-              if (Array.isArray(parsed) && parsed.length > 0) {
-                loaded = parsed;
-              }
-            } catch (e) {
-              console.error('Error al parsear localStorage subjects:', e);
-            }
-          }
-        }
-
-        // 3. Si no hay registros previos, inicializar con subjectData por defecto
-        if (!loaded || loaded.length === 0) {
-          loaded = defaultSubjectData.subjects;
-          if (typeof window !== 'undefined') {
-            localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(loaded));
-          }
-          await idb.set(SUBJECTS_STORAGE_KEY, loaded);
-        }
-
-        if (!isCancelled) {
-          setSubjects(loaded);
-          setLoading(false);
-          setIsMounted(true);
-        }
-      } catch (err) {
-        console.error('Error cargando materias:', err);
-        if (!isCancelled) {
-          setSubjects(defaultSubjectData.subjects);
-          setLoading(false);
-          setIsMounted(true);
-        }
+    const handleCustomUpdate = (event: CustomEvent<Subject[]>) => {
+      if (event.detail && Array.isArray(event.detail)) {
+        setSubjects(event.detail);
+      } else {
+        refreshSubjects();
       }
     };
 
-    loadSubjects();
+    const handleStorageUpdate = (event: StorageEvent) => {
+      if (event.key === SUBJECTS_STORAGE_KEY) {
+        refreshSubjects();
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener(SUBJECTS_UPDATED_EVENT as any, handleCustomUpdate);
+      window.addEventListener('storage', handleStorageUpdate);
+    }
 
     return () => {
-      isCancelled = true;
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(SUBJECTS_UPDATED_EVENT as any, handleCustomUpdate);
+        window.removeEventListener('storage', handleStorageUpdate);
+      }
     };
-  }, []);
-
-  // Guardar en ambas capas de persistencia
-  const saveSubjects = useCallback(async (newSubjects: Subject[]) => {
-    setSubjects(newSubjects);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(newSubjects));
-    }
-    await idb.set(SUBJECTS_STORAGE_KEY, newSubjects);
-  }, []);
+  }, [refreshSubjects]);
 
   const addSubject = useCallback(async (formData: SubjectFormData): Promise<Subject> => {
     const newSubject = formDataToSubject(formData);
-    const updated = [...subjects, newSubject];
-    await saveSubjects(updated);
+    const current = getStoredSubjectsSync();
+    const updated = [...current, newSubject];
+    await saveStoredSubjects(updated);
+    setSubjects(updated);
     return newSubject;
-  }, [subjects, saveSubjects]);
+  }, []);
 
   const updateSubject = useCallback(async (id: string, formData: SubjectFormData): Promise<Subject> => {
-    const existing = subjects.find(s => s.id === id);
+    const current = getStoredSubjectsSync();
+    const existing = current.find(s => s.id === id);
     const updatedSubject = formDataToSubject(formData, existing);
-    const updated = subjects.map(s => s.id === id ? updatedSubject : s);
-    await saveSubjects(updated);
+    const updated = current.map(s => s.id === id ? updatedSubject : s);
+    await saveStoredSubjects(updated);
+    setSubjects(updated);
     return updatedSubject;
-  }, [subjects, saveSubjects]);
+  }, []);
 
   const deleteSubject = useCallback(async (id: string): Promise<void> => {
-    const updated = subjects.filter(s => s.id !== id);
-    await saveSubjects(updated);
-  }, [subjects, saveSubjects]);
+    const current = getStoredSubjectsSync();
+    const updated = current.filter(s => s.id !== id);
+    await saveStoredSubjects(updated);
+    setSubjects(updated);
+  }, []);
 
   const resetToDefaults = useCallback(async (): Promise<void> => {
-    await saveSubjects(defaultSubjectData.subjects);
-  }, [saveSubjects]);
+    await saveStoredSubjects(defaultSubjectData.subjects);
+    setSubjects(defaultSubjectData.subjects);
+  }, []);
 
   return {
     subjects,
@@ -203,6 +194,7 @@ export function useSubjects() {
     addSubject,
     updateSubject,
     deleteSubject,
-    resetToDefaults
+    resetToDefaults,
+    refresh: refreshSubjects
   };
 }

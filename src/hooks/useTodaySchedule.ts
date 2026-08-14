@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { DayOfWeek } from '@/core/types/common';
 import { useEscenario } from '@/hooks/useEscenario';
-import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
-import { subjectData } from '@/data/subjects';
+import { useSubjects } from '@/hooks/useSubjects';
 import { calcularColectivos } from '@/lib/engine/recommendation-engine';
 
 export function useTodaySchedule() {
   const { cursaArquitectura, duermeEnCordoba, diaSeleccionado } = useEscenario();
+  const { subjects, isMounted: isSubjectsMounted } = useSubjects();
   const [horaActualHHMM, setHoraActualHHMM] = useState("00:00");
   const [timeMounted, setTimeMounted] = useState(false);
 
@@ -26,41 +26,46 @@ export function useTodaySchedule() {
   const map: Record<string, number> = {
     'lunes': 1, 'martes': 2, 'miercoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'domingo': 0
   };
-  const targetDay = map[diaSeleccionado];
-  const refDate = new Date();
-  while (refDate.getDay() !== targetDay) {
-    refDate.setDate(refDate.getDate() + 1);
-  }
+  const targetDay = map[diaSeleccionado] ?? 1;
 
-  const scenarioId = determineScenario({ 
-    tuesdayHasArquitectura: cursaArquitectura,
-    referenceDate: refDate 
-  });
-  const scenarioData = scenarioId ? findScenario(scenarioId) : null;
+  // Filtrado de materias dinámicas para el día seleccionado
+  const materiasDelDia: Array<{
+    id?: string;
+    nombre: string;
+    horaInicio: string;
+    horaFin: string;
+    color?: string;
+    aula?: string;
+    modality?: string;
+  }> = [];
 
-  let materiasDelDia: Array<{nombre: string, horaInicio: string, horaFin: string, color?: string}> = [];
-  if (scenarioData) {
-    subjectData.subjects.forEach(subject => {
-      if (scenarioData.activeSubjectIds.includes(subject.id)) {
-        subject.classBlocks.forEach(block => {
-          if (block.day === diaSeleccionado) {
-            materiasDelDia.push({
-              nombre: subject.name,
-              horaInicio: block.startTime,
-              horaFin: block.endTime,
-              color: subject.color
-            });
-          }
+  subjects.forEach(subject => {
+    // Si es martes y no cursa arquitectura, omitir materias de arquitectura
+    if (diaSeleccionado === 'martes' && !cursaArquitectura && subject.name.toLowerCase().includes('arquitectura')) {
+      return;
+    }
+
+    subject.classBlocks.forEach(block => {
+      if (block.day.toLowerCase() === diaSeleccionado.toLowerCase()) {
+        materiasDelDia.push({
+          id: subject.id,
+          nombre: subject.name,
+          horaInicio: block.startTime,
+          horaFin: block.endTime,
+          color: subject.color,
+          aula: block.classroom,
+          modality: subject.modality
         });
       }
     });
-    // Ordenar cronológicamente
-    materiasDelDia.sort((a, b) => {
-      const [h1, m1] = a.horaInicio.split(':').map(Number);
-      const [h2, m2] = b.horaInicio.split(':').map(Number);
-      return (h1 * 60 + m1) - (h2 * 60 + m2);
-    });
-  }
+  });
+
+  // Ordenar cronológicamente
+  materiasDelDia.sort((a, b) => {
+    const [h1, m1] = a.horaInicio.split(':').map(Number);
+    const [h2, m2] = b.horaInicio.split(':').map(Number);
+    return (h1 * 60 + m1) - (h2 * 60 + m2);
+  });
 
   const isToday = new Date().getDay() === targetDay;
   const horaParaFiltro = isToday ? horaActualHHMM : '00:00';
@@ -91,8 +96,23 @@ export function useTodaySchedule() {
     }
   }
 
-  const recomendacionIda = calcularColectivos(diaSeleccionado as DayOfWeek, 'ida', cursaArquitectura, duermeEnCordoba, horaParaFiltro);
-  const recomendacionVuelta = calcularColectivos(diaSeleccionado as DayOfWeek, 'vuelta', cursaArquitectura, duermeEnCordoba, horaParaFiltro);
+  const recomendacionIda = calcularColectivos(
+    diaSeleccionado as DayOfWeek, 
+    'ida', 
+    cursaArquitectura, 
+    duermeEnCordoba, 
+    horaParaFiltro,
+    subjects
+  );
+  
+  const recomendacionVuelta = calcularColectivos(
+    diaSeleccionado as DayOfWeek, 
+    'vuelta', 
+    cursaArquitectura, 
+    duermeEnCordoba, 
+    horaParaFiltro,
+    subjects
+  );
 
   useEffect(() => {
     if (isToday) {
@@ -104,7 +124,7 @@ export function useTodaySchedule() {
             id: `ida-${todayString}-${diaSeleccionado}-${rec.horaSalida}`,
             claseTime: materiasDelDia[0].horaInicio,
             colectivoTime: rec.horaSalida,
-            leaveHomeTime: (rec as any).saleDeCasa || rec.horaSalida, // Fallback si no tiene saleDeCasa
+            leaveHomeTime: (rec as any).saleDeCasa || rec.horaSalida,
             empresa: rec.empresa
           }).catch(console.error);
         }
@@ -115,7 +135,7 @@ export function useTodaySchedule() {
             id: `vuelta-${todayString}-${diaSeleccionado}-${rec.horaSalida}`,
             claseTime: materiasDelDia[materiasDelDia.length - 1].horaFin,
             colectivoTime: rec.horaSalida,
-            leaveHomeTime: rec.horaSalida, // Para la vuelta asumimos la salida de terminal
+            leaveHomeTime: rec.horaSalida,
             empresa: rec.empresa,
             destino: 'Alta Gracia'
           }).catch(console.error);
@@ -132,6 +152,6 @@ export function useTodaySchedule() {
     activeIndex,
     recomendacionIda,
     recomendacionVuelta,
-    timeMounted
+    timeMounted: timeMounted && isSubjectsMounted
   };
 }

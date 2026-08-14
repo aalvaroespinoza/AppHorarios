@@ -1,8 +1,8 @@
 import type { DayOfWeek } from '@/core/types/common';
 import type { Direction, RawScheduleEntry } from '@/types/schedule';
-import { determineScenario, findScenario } from './scenario-engine';
-import { subjectData } from '@/data/subjects';
+import type { Subject } from '@/types/subject';
 import { rawScheduleEntries } from '@/data/schedules';
+import { getStoredSubjectsSync } from '@/core/services/subject.service';
 
 // Funciones puras para manipulación de horas (formato "HH:MM")
 export const OFFSET_PARADA_VUELTA_MIN = 10;
@@ -34,33 +34,23 @@ export const calcularColectivos = (
   tipo: Direction,
   cursaArquitectura: boolean,
   duermeEnCordoba: boolean,
-  horaActualHHMM: string
+  horaActualHHMM: string,
+  providedSubjects?: Subject[]
 ): { recomendado: RawScheduleEntry | null, alternativas: RawScheduleEntry[] } => {
   
-  const map: Record<string, number> = {
-    'lunes': 1, 'martes': 2, 'miercoles': 3, 'jueves': 4, 'viernes': 5, 'sabado': 6, 'domingo': 0
-  };
-  const targetDay = map[dia];
-  const refDate = new Date();
-  while (refDate.getDay() !== targetDay) {
-    refDate.setDate(refDate.getDate() + 1);
-  }
+  const subjectsToUse = providedSubjects ?? getStoredSubjectsSync();
 
-  const scenarioId = determineScenario({ 
-    tuesdayHasArquitectura: cursaArquitectura,
-    referenceDate: refDate 
-  });
-
-  const scenario = scenarioId ? findScenario(scenarioId) : null;
-
-  if (!scenario) {
-    return { recomendado: null, alternativas: [] };
-  }
-
-  let classBlocks = subjectData.subjects
-    .filter(s => scenario.activeSubjectIds.includes(s.id))
+  // Filtrar bloques de cursada para el día solicitado
+  let classBlocks = subjectsToUse
+    .filter(s => {
+      // Excluir Arquitectura si no la cursa en martes
+      if (dia === 'martes' && !cursaArquitectura && s.name.toLowerCase().includes('arquitectura')) {
+        return false;
+      }
+      return true;
+    })
     .flatMap(s => s.classBlocks)
-    .filter(cb => cb.day === dia);
+    .filter(cb => cb.day.toLowerCase() === dia.toLowerCase());
 
   if (classBlocks.length === 0) {
     return { recomendado: null, alternativas: [] };

@@ -1,5 +1,5 @@
 import { ContextProvider, ContextEvent } from '../types';
-import { subjectData } from '@/data/subjects';
+import { getStoredSubjectsSync } from '@/core/services/subject.service';
 
 export class ScheduleContextProvider implements ContextProvider {
   name = 'ScheduleContextProvider';
@@ -17,8 +17,6 @@ export class ScheduleContextProvider implements ContextProvider {
     const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
     const targetDayName = dias[referenceDate.getDay()];
 
-    // 1. Materias estáticas (recurrentes) - TODO: We assume full schedule for simplicity, 
-    // or we can read cursaArquitectura from localStorage ('escenario_config')
     const configStored = localStorage.getItem('escenario_config');
     let cursaArquitectura = false;
     if (configStored) {
@@ -28,18 +26,7 @@ export class ScheduleContextProvider implements ContextProvider {
       } catch(e) {}
     }
 
-    let activeSubjects = subjectData.subjects;
-    const storedSubjects = localStorage.getItem('lifeos_subjects');
-    if (storedSubjects) {
-      try {
-        const parsed = JSON.parse(storedSubjects);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          activeSubjects = parsed;
-        }
-      } catch (e) {
-        console.error('Error parsing lifeos_subjects:', e);
-      }
-    }
+    const activeSubjects = getStoredSubjectsSync();
 
     activeSubjects.forEach(subject => {
       // Excluir Arquitectura si no la cursa y es ese subject

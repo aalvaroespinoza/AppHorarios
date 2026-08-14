@@ -1,7 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { subjectData } from '@/data/subjects';
+import { useState, useEffect, useCallback } from 'react';
+import { 
+  getStoredSubjectsSync, 
+  SUBJECTS_UPDATED_EVENT, 
+  SUBJECTS_STORAGE_KEY 
+} from '@/core/services/subject.service';
 
 export interface CustomEvent {
   id: string;
@@ -28,6 +32,7 @@ export interface AgendaItem {
 export function useAgenda() {
   const [eventos, setEventos] = useState<CustomEvent[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const [, setSubjectVersion] = useState(0);
 
   const getDateForCurrentWeekDay = (dayName: string): string => {
     const map: Record<string, number> = {
@@ -73,6 +78,25 @@ export function useAgenda() {
           console.error("Error parsing academia_agenda_eventos:", e);
         }
       }
+
+      // Escuchar cambios en las materias dinámicas para forzar re-evaluación
+      const handleSubjectsUpdated = () => {
+        setSubjectVersion(v => v + 1);
+      };
+
+      const handleStorage = (e: StorageEvent) => {
+        if (e.key === SUBJECTS_STORAGE_KEY) {
+          setSubjectVersion(v => v + 1);
+        }
+      };
+
+      window.addEventListener(SUBJECTS_UPDATED_EVENT as any, handleSubjectsUpdated);
+      window.addEventListener('storage', handleStorage);
+
+      return () => {
+        window.removeEventListener(SUBJECTS_UPDATED_EVENT as any, handleSubjectsUpdated);
+        window.removeEventListener('storage', handleStorage);
+      };
     }
   }, []);
 
@@ -154,7 +178,7 @@ export function useAgenda() {
   };
 
   // Recibe 'lunes', 'martes', etc o una fecha YYYY-MM-DD
-  const obtenerAgendaDelDia = (diaOFecha: string): AgendaItem[] => {
+  const obtenerAgendaDelDia = useCallback((diaOFecha: string): AgendaItem[] => {
     const agenda: AgendaItem[] = [];
     
     const esFechaISO = /^\d{4}-\d{2}-\d{2}$/.test(diaOFecha);
@@ -170,8 +194,9 @@ export function useAgenda() {
       targetDateISO = getDateForCurrentWeekDay(diaOFecha);
     }
 
-    // 1. Agregar materias estáticas (recurrentes) según el nombre del día
-    subjectData.subjects.forEach(subject => {
+    // 1. Agregar materias dinámicas (recurrentes) según el nombre del día
+    const currentSubjects = getStoredSubjectsSync();
+    currentSubjects.forEach(subject => {
       subject.classBlocks.forEach(block => {
         if (block.day.toLowerCase() === targetDayName) {
           agenda.push({
@@ -204,7 +229,7 @@ export function useAgenda() {
     agenda.sort((a, b) => a.horaInicio.localeCompare(b.horaInicio));
 
     return agenda;
-  };
+  }, [eventos]);
 
   return {
     eventos,

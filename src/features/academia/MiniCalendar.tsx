@@ -6,9 +6,8 @@ import { Plus, Calendar as CalendarIcon, Clock, CheckCircle2, ChevronLeft, Chevr
 import { useDeadlines } from '@/hooks/useDeadlines';
 import { useAgenda } from '@/hooks/useAgenda';
 import { useEscenario } from '@/hooks/useEscenario';
+import { useSubjects } from '@/hooks/useSubjects';
 import NativeCard from '@/core/components/ui/NativeCard';
-import { determineScenario, findScenario } from '@/lib/engine/scenario-engine';
-import { subjectData } from '@/data/subjects';
 import type { DayOfWeek } from '@/core/types/common';
 import { SPRING_CONFIG } from '@/lib/animations';
 import { getEdificio, parseMateria } from '@/core/utils/edificio';
@@ -25,8 +24,9 @@ export function MiniCalendar() {
   const { deadlines, agregarDeadline, calcularDiasFaltantes, isMounted: isDeadMounted } = useDeadlines();
   const agenda = useAgenda();
   const { cursaArquitectura, isMounted: isEscMounted } = useEscenario();
+  const { subjects, isMounted: isSubMounted } = useSubjects();
 
-  const isMounted = isDeadMounted && agenda.isMounted && isEscMounted;
+  const isMounted = isDeadMounted && agenda.isMounted && isEscMounted && isSubMounted;
 
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   
@@ -68,28 +68,24 @@ export function MiniCalendar() {
     
     const combined: any[] = [];
     
-    // 1. Clases
-    const scenarioId = determineScenario({ referenceDate: dateObjLocal, tuesdayHasArquitectura: cursaArquitectura });
-    const scenario = scenarioId ? findScenario(scenarioId) : null;
-    
-    if (scenario) {
-      subjectData.subjects.forEach(sub => {
-        if (scenario.activeSubjectIds.includes(sub.id)) {
-          sub.classBlocks.forEach(block => {
-            if (block.day === dayOfWeek) {
-              combined.push({
-                id: `clase-${sub.id}-${block.day}`,
-                tipo: 'clase',
-                titulo: sub.name,
-                horaInicio: block.startTime,
-                horaFin: block.endTime,
-                color: sub.color || 'bg-blue-500'
-              });
-            }
+    // 1. Clases dinámicas
+    subjects.forEach(sub => {
+      if (dayOfWeek === 'martes' && !cursaArquitectura && sub.name.toLowerCase().includes('arquitectura')) {
+        return;
+      }
+      sub.classBlocks.forEach(block => {
+        if (block.day.toLowerCase() === dayOfWeek.toLowerCase()) {
+          combined.push({
+            id: `clase-${sub.id}-${block.day}`,
+            tipo: 'clase',
+            titulo: sub.name,
+            horaInicio: block.startTime,
+            horaFin: block.endTime,
+            color: sub.color || 'bg-blue-500'
           });
         }
       });
-    }
+    });
     
     // 2. Eventos Manuales
     const agendaEventos = agenda.eventos.filter(e => e.fecha === dateStr);
