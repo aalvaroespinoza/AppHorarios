@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Plus, FileText, Trash2, Sparkles, BookOpen, Search, ArrowRight } from 'lucide-react';
+import { 
+  ChevronLeft, Plus, FileText, Trash2, Sparkles, 
+  BookOpen, Search, ArrowRight, Settings2, HelpCircle, X, RotateCcw, Download 
+} from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -40,6 +43,8 @@ export default function NotasPage() {
   const [activeNote, setActiveNote] = useState<NoteDocument | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isMounted, setIsMounted] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -58,6 +63,22 @@ export default function NotasPage() {
   const saveNotesToStorage = (updatedNotes: NoteDocument[]) => {
     setNotes(updatedNotes);
     localStorage.setItem('lifeos_vault_notes', JSON.stringify(updatedNotes));
+  };
+
+  const handleResetNotes = () => {
+    if (!window.confirm('¿Reiniciar las notas de la bóveda a los valores iniciales?')) return;
+    saveNotesToStorage(INITIAL_NOTES);
+    setShowSettings(false);
+  };
+
+  const handleExportNotes = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(notes, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `lifeos_notas_backup_${new Date().toISOString().slice(0,10)}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
   };
 
   const handleCreateNewNote = () => {
@@ -113,7 +134,7 @@ export default function NotasPage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-4 max-w-md mx-auto flex flex-col gap-5 min-h-[100dvh] relative bg-[#0a0a0c] text-white pb-28"
+      className="p-4 max-w-md mx-auto flex flex-col gap-4 min-h-[100dvh] relative bg-[#0a0a0c] text-white pb-28"
       style={{ paddingTop: 'max(1.2rem, env(safe-area-inset-top))' }}
     >
       {/* Header */}
@@ -127,15 +148,28 @@ export default function NotasPage() {
           </Link>
           <div>
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-              Bóveda de Notas <BookOpen size={18} className="text-cyan-400" />
+              Bóveda de Notas <BookOpen size={18} className="text-teal-400" />
             </h1>
             <p className="text-xs text-neutral-500 font-medium">Editor de bloques tipo Notion</p>
           </div>
         </div>
 
-        <Badge variant="outline" className="text-xs font-mono text-neutral-400 border-neutral-800">
-          {notes.length} páginas
-        </Badge>
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setShowHelp(true)}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+            title="Ayuda"
+          >
+            <HelpCircle size={15} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+            title="Ajustes y Exportar"
+          >
+            <Settings2 size={15} />
+          </button>
+        </div>
       </header>
 
       {/* Buscador */}
@@ -146,7 +180,7 @@ export default function NotasPage() {
           placeholder="Buscar notas o contenidos..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          className="w-full bg-neutral-900/60 border border-neutral-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-cyan-500 transition-colors"
+          className="w-full bg-neutral-900/60 border border-neutral-800 rounded-2xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-neutral-500 focus:outline-none focus:border-teal-500 transition-colors"
         />
       </div>
 
@@ -168,7 +202,7 @@ export default function NotasPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-1 min-w-0 flex-1">
-                    <CardTitle className="text-base font-bold text-white leading-snug truncate group-hover:text-cyan-300 transition-colors">
+                    <CardTitle className="text-base font-bold text-white leading-snug truncate group-hover:text-teal-300 transition-colors">
                       {note.title || 'Nota sin título'}
                     </CardTitle>
                     <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
@@ -187,7 +221,7 @@ export default function NotasPage() {
                     >
                       <Trash2 size={15} />
                     </button>
-                    <ArrowRight size={16} className="text-neutral-600 group-hover:text-cyan-400 group-hover:translate-x-0.5 transition-all mt-3" />
+                    <ArrowRight size={16} className="text-neutral-600 group-hover:text-teal-400 group-hover:translate-x-0.5 transition-all mt-3" />
                   </div>
                 </div>
               </Card>
@@ -200,11 +234,89 @@ export default function NotasPage() {
       <motion.button
         whileTap={TAP_ANIMATION}
         onClick={handleCreateNewNote}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-cyan-500 hover:bg-cyan-400 text-black rounded-full shadow-[0_0_25px_rgba(6,182,212,0.4)] flex items-center justify-center z-40 transition-transform active:scale-95"
+        className="fixed bottom-24 right-6 w-14 h-14 bg-teal-500 hover:bg-teal-400 text-black rounded-full shadow-[0_0_25px_rgba(20,184,166,0.4)] flex items-center justify-center z-40 transition-transform active:scale-95"
         title="Crear nueva nota"
       >
         <Plus size={28} strokeWidth={2.5} />
       </motion.button>
+
+      {/* Modal Ajustes */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+          >
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 text-white">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-2.5">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Settings2 size={16} className="text-teal-400" /> Ajustes de Bóveda
+                </h2>
+                <button onClick={() => setShowSettings(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={15} />
+                </button>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <Button
+                  onClick={handleExportNotes}
+                  className="w-full text-xs font-bold rounded-xl bg-neutral-800 hover:bg-neutral-700 text-white flex items-center justify-center gap-2"
+                >
+                  <Download size={14} />
+                  <span>Exportar Notas como JSON</span>
+                </Button>
+
+                <Button
+                  onClick={handleResetNotes}
+                  variant="destructive"
+                  className="w-full text-xs font-bold rounded-xl flex items-center justify-center gap-2 mt-2"
+                >
+                  <RotateCcw size={14} />
+                  <span>Reiniciar Notas por Defecto</span>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Ayuda */}
+      <AnimatePresence>
+        {showHelp && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+          >
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-3 text-white">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-2">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <HelpCircle size={16} className="text-teal-400" /> ¿Cómo usar Notas Notion?
+                </h2>
+                <button onClick={() => setShowHelp(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={15} />
+                </button>
+              </div>
+
+              <ul className="text-xs text-neutral-300 space-y-2 leading-relaxed">
+                <li>• <strong>Bloques</strong>: Podés escribir títulos (H1, H2), párrafos y listas/checklists.</li>
+                <li>• <strong>Guardado Automático</strong>: Todo lo que escribas se guarda en tiempo real en tu teléfono.</li>
+                <li>• <strong>Búsqueda Rápida</strong>: Escribí en el buscador superior para encontrar notas al instante.</li>
+              </ul>
+
+              <Button
+                onClick={() => setShowHelp(false)}
+                className="w-full mt-2 text-xs font-bold rounded-xl bg-teal-500 text-black hover:bg-teal-400"
+              >
+                Entendido
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

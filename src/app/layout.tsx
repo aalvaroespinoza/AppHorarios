@@ -70,7 +70,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} bg-gray-50 text-neutral-900 dark:bg-black dark:text-white min-h-[100dvh] antialiased overflow-x-hidden transition-colors duration-300`}>
+      <body className={`${inter.className} bg-gray-50 text-neutral-900 dark:bg-black dark:text-white min-h-[100dvh] antialiased transition-colors duration-300`}>
         <ThemeProvider>
           <EscenarioProvider>
             <PageTransitionWrapper>

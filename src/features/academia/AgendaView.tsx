@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, Plus, Trash2, CalendarDays, Sparkles, MapPin } from 'lucide-react';
+import { Clock, Plus, Trash2, CalendarDays, Sparkles, MapPin, Kanban, CheckSquare } from 'lucide-react';
 import type { useAgenda } from '@/hooks/useAgenda';
 import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
 
 import { getEdificio, parseMateria } from '@/core/utils/edificio';
 import { MateriaDetailModal } from '@/components/MateriaDetailModal';
+import type { Task } from '@/types/task';
 
 interface AgendaViewProps {
   fechaSeleccionada: string;
@@ -17,20 +18,42 @@ interface AgendaViewProps {
   agendaDelDia: ReturnType<ReturnType<typeof useAgenda>['obtenerAgendaDelDia']>;
 }
 
-const START_HOUR = 8; // 08:00
-const END_HOUR = 22; // 22:00
-const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 15 horas (08:00 a 22:00)
+const START_HOUR = 7; // 07:00
+const END_HOUR = 23; // 23:00
+const TOTAL_HOURS = END_HOUR - START_HOUR + 1; // 17 horas
 const HOUR_HEIGHT = 64; // h-16 = 64px
 
 export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agendaDelDia }: AgendaViewProps) {
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
   const [mostrarFormEvento, setMostrarFormEvento] = useState(false);
+  const [timeblockingBlocks, setTimeblockingBlocks] = useState<any[]>([]);
+  const [kanbanTasks, setKanbanTasks] = useState<Task[]>([]);
+
   const [nuevoEvento, setNuevoEvento] = useState({ 
     titulo: '', 
     fecha: fechaSeleccionada,
     horaInicio: '10:00', 
     duracion: '60' // minutos
   });
+
+  useEffect(() => {
+    // Sincronizar bloques de time-blocking
+    const storedTB = localStorage.getItem('lifeos_timeblocking_blocks');
+    if (storedTB) {
+      try {
+        setTimeblockingBlocks(JSON.parse(storedTB));
+      } catch (e) {}
+    }
+
+    // Sincronizar tareas de Kanban
+    const storedKB = localStorage.getItem('lifeos_kanban_tasks');
+    if (storedKB) {
+      try {
+        const parsed: Task[] = JSON.parse(storedKB);
+        setKanbanTasks(parsed.filter(t => t.status === 'in-progress' || t.status === 'todo'));
+      } catch (e) {}
+    }
+  }, [fechaSeleccionada]);
 
   if (nuevoEvento.fecha !== fechaSeleccionada && !mostrarFormEvento) {
     setNuevoEvento(prev => ({ ...prev, fecha: fechaSeleccionada }));
@@ -57,13 +80,35 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
     setMostrarFormEvento(false);
   };
 
-  // Separar eventos de todo el día vs eventos con hora
-  const allDayEvents = agendaDelDia.filter(item => !item.horaInicio || !item.horaInicio.includes(':'));
-  const timedEvents = agendaDelDia.filter(item => item.horaInicio && item.horaInicio.includes(':'));
+  // Eventos de todo el día base
+  const allDayEvents = [
+    ...agendaDelDia.filter(item => !item.horaInicio || !item.horaInicio.includes(':')),
+    ...(esHoy ? kanbanTasks.slice(0, 3).map(k => ({
+      id: 'kb-' + k.id,
+      titulo: `📌 ${k.title}`,
+      tipo: 'kanban',
+      color: 'border-sky-500/40 text-sky-300'
+    })) : [])
+  ];
+
+  // Eventos con hora (clases + bloques de time-blocking de hoy)
+  const tbEventsFormatted = esHoy ? timeblockingBlocks.map(b => ({
+    id: b.id,
+    titulo: b.title,
+    horaInicio: b.horaInicio,
+    horaFin: b.horaFin,
+    color: b.color || 'bg-cyan-950/40 border-cyan-500/40 text-cyan-200',
+    tipo: 'timeblocking'
+  })) : [];
+
+  const timedEvents = [
+    ...agendaDelDia.filter(item => item.horaInicio && item.horaInicio.includes(':')),
+    ...tbEventsFormatted
+  ];
 
   // Helper para calcular posición y altura absoluta en la grilla
   const getEventPosition = (horaInicio: string, horaFin?: string) => {
-    const [hStart, mStart] = horaInicio.split(':').map(Number);
+    const [hStart, mStart] = (horaInicio || '08:00').split(':').map(Number);
     const startMinutes = (hStart - START_HOUR) * 60 + (mStart || 0);
     const top = Math.max((startMinutes / 60) * HOUR_HEIGHT, 0);
 
@@ -74,7 +119,7 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
       durationMinutes = Math.max(endMinutes - startMinutes, 30);
     }
 
-    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT - 4, 36);
+    const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT - 4, 38);
     return { top, height };
   };
 
@@ -91,7 +136,7 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
         <div className="flex items-center gap-2">
           <Clock size={18} className="text-cyan-400" />
           <h2 className="font-bold text-sm uppercase tracking-wider text-white">
-            {esHoy ? "Agenda de Hoy" : `Agenda del ${fechaSeleccionada.split('-').reverse().join('/')}`}
+            {esHoy ? "Agenda & Timeline de Hoy" : `Agenda del ${fechaSeleccionada.split('-').reverse().join('/')}`}
           </h2>
         </div>
         <button
@@ -173,18 +218,18 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
         )}
       </AnimatePresence>
 
-      {/* Sección "Todo el día" (All Day Events) */}
+      {/* Sección "Todo el día" (All Day Events & Kanban Sync) */}
       {allDayEvents.length > 0 && (
         <div className="flex flex-col gap-2 pb-3 border-b border-neutral-800/80">
           <span className="text-[11px] font-bold text-neutral-500 uppercase tracking-widest flex items-center gap-1">
-            <CalendarDays size={12} /> Todo el día
+            <CalendarDays size={12} /> Tareas y Recordatorios
           </span>
           <div className="flex flex-wrap gap-2">
             {allDayEvents.map((item, idx) => (
               <div 
                 key={item.id || idx}
-                onClick={() => setSelectedSubject(item)}
-                className="flex items-center gap-2 bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/60 px-3 py-1.5 rounded-xl cursor-pointer transition-colors text-xs font-medium text-white"
+                onClick={() => item.tipo !== 'kanban' && setSelectedSubject(item)}
+                className={`flex items-center gap-2 bg-neutral-800/80 hover:bg-neutral-800 border border-neutral-700/60 px-3 py-1.5 rounded-xl transition-colors text-xs font-medium text-white ${item.tipo !== 'kanban' ? 'cursor-pointer' : ''}`}
               >
                 <span className="w-2 h-2 rounded-full bg-cyan-400" />
                 <span className="truncate max-w-[200px]">{item.titulo}</span>
@@ -205,7 +250,7 @@ export function AgendaView({ fechaSeleccionada, diaNombre, esHoy, agenda, agenda
         </div>
       )}
 
-      {/* Time-Blocking Calendar Grid (Estilo Cal.com de 08:00 a 22:00) */}
+      {/* Time-Blocking Calendar Grid (Estilo Cal.com de 07:00 a 23:00) */}
       <div className="flex flex-col relative w-full h-[600px] sm:h-[680px] overflow-y-auto mt-2 border-t border-neutral-800 rounded-2xl bg-neutral-950/40 hide-scrollbar">
         {/* Filas de horas */}
         {Array.from({ length: TOTAL_HOURS }).map((_, i) => {

@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ChevronLeft, ChevronRight, Trash2, CheckCircle2, Circle, Clock, MoreHorizontal, Sparkles, X } from 'lucide-react';
+import { 
+  Plus, ChevronLeft, ChevronRight, Trash2, CheckCircle2, 
+  Circle, Clock, MoreHorizontal, Sparkles, X, Settings2, HelpCircle, RotateCcw 
+} from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -78,6 +81,8 @@ export function KanbanBoard() {
   const [addingToColumn, setAddingToColumn] = useState<TaskStatus | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDesc, setNewDesc] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
@@ -91,33 +96,39 @@ export function KanbanBoard() {
     }
   }, []);
 
-  useEffect(() => {
-    if (isMounted) {
-      localStorage.setItem('lifeos_kanban_tasks', JSON.stringify(tasks));
+  const saveTasks = (updated: Task[]) => {
+    setTasks(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lifeos_kanban_tasks', JSON.stringify(updated));
     }
-  }, [tasks, isMounted]);
+  };
+
+  const handleResetBoard = () => {
+    if (!window.confirm('¿Reiniciar el tablero Kanban a las tareas por defecto?')) return;
+    saveTasks(INITIAL_TASKS);
+    setShowSettings(false);
+  };
 
   const moveTask = (taskId: string, direction: 'prev' | 'next') => {
-    setTasks(prevTasks =>
-      prevTasks.map(task => {
-        if (task.id !== taskId) return task;
+    const updated = tasks.map(task => {
+      if (task.id !== taskId) return task;
 
-        let nextStatus: TaskStatus = task.status;
-        if (direction === 'next') {
-          if (task.status === 'todo') nextStatus = 'in-progress';
-          else if (task.status === 'in-progress') nextStatus = 'done';
-        } else if (direction === 'prev') {
-          if (task.status === 'done') nextStatus = 'in-progress';
-          else if (task.status === 'in-progress') nextStatus = 'todo';
-        }
+      let nextStatus: TaskStatus = task.status;
+      if (direction === 'next') {
+        if (task.status === 'todo') nextStatus = 'in-progress';
+        else if (task.status === 'in-progress') nextStatus = 'done';
+      } else if (direction === 'prev') {
+        if (task.status === 'done') nextStatus = 'in-progress';
+        else if (task.status === 'in-progress') nextStatus = 'todo';
+      }
 
-        return { ...task, status: nextStatus };
-      })
-    );
+      return { ...task, status: nextStatus };
+    });
+    saveTasks(updated);
   };
 
   const deleteTask = (taskId: string) => {
-    setTasks(prev => prev.filter(t => t.id !== taskId));
+    saveTasks(tasks.filter(t => t.id !== taskId));
   };
 
   const handleAddTask = (status: TaskStatus) => {
@@ -131,7 +142,7 @@ export function KanbanBoard() {
       createdAt: new Date().toISOString(),
     };
 
-    setTasks(prev => [newTask, ...prev]);
+    saveTasks([newTask, ...tasks]);
     setNewTitle('');
     setNewDesc('');
     setAddingToColumn(null);
@@ -139,15 +150,32 @@ export function KanbanBoard() {
 
   return (
     <div className="w-full flex flex-col gap-4">
-      {/* Header Info */}
+      {/* Header Info y Botones de Control */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-neutral-400">
-            Tablero Kanban
+            Tablero Ágil
           </span>
           <Badge variant="outline" className="text-[10px] text-neutral-400 font-mono">
-            {tasks.length} tareas
+            {tasks.length} tarjetas
           </Badge>
+        </div>
+
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setShowHelp(true)}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+            title="Ayuda"
+          >
+            <HelpCircle size={15} />
+          </button>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
+            title="Ajustes y Reinicio"
+          >
+            <Settings2 size={15} />
+          </button>
         </div>
       </div>
 
@@ -249,66 +277,54 @@ export function KanbanBoard() {
                         exit={{ opacity: 0, scale: 0.95 }}
                         transition={SPRING_CONFIG}
                       >
-                        <Card className="bg-neutral-950/80 hover:bg-neutral-950 border border-neutral-800/80 p-3 rounded-xl flex flex-col gap-2.5 shadow-sm transition-colors group">
-                          {/* Contenido de la tarjeta */}
-                          <div className="flex flex-col gap-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <span className="text-xs font-bold text-white leading-snug break-words">
-                                {task.title}
-                              </span>
-                              <button
-                                onClick={() => deleteTask(task.id)}
-                                className="text-neutral-600 hover:text-red-400 p-0.5 rounded transition-colors opacity-60 hover:opacity-100 shrink-0"
-                                title="Eliminar tarjeta"
-                              >
-                                <Trash2 size={13} />
-                              </button>
-                            </div>
-                            {task.description && (
-                              <p className="text-[11px] text-neutral-400 leading-normal line-clamp-2">
-                                {task.description}
-                              </p>
-                            )}
+                        <Card className="bg-neutral-900/90 border border-neutral-800/90 rounded-xl p-3.5 flex flex-col gap-2 shadow-sm hover:border-neutral-700 transition-colors">
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="text-xs font-bold text-white leading-snug">
+                              {task.title}
+                            </h4>
+                            <button
+                              onClick={() => deleteTask(task.id)}
+                              className="text-neutral-500 hover:text-red-400 p-1 rounded transition-colors"
+                              title="Eliminar tarjeta"
+                            >
+                              <Trash2 size={12} />
+                            </button>
                           </div>
 
-                          {/* Botones de acción compactos para mover entre columnas */}
-                          <div className="flex items-center justify-between pt-2 border-t border-neutral-800/50 mt-0.5">
-                            {/* Botón mover izquierda */}
-                            {task.status !== 'todo' ? (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => moveTask(task.id, 'prev')}
-                                className="h-7 w-7 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800"
-                                title="Mover a la columna anterior"
-                              >
-                                <ChevronLeft size={16} />
-                              </Button>
-                            ) : (
-                              <div className="w-7 h-7" />
-                            )}
+                          {task.description && (
+                            <p className="text-[11px] text-neutral-400 leading-relaxed">
+                              {task.description}
+                            </p>
+                          )}
 
-                            {/* Badge de estado actual */}
-                            <span className="text-[10px] font-mono text-neutral-500 uppercase tracking-widest font-semibold">
-                              {task.status}
+                          {/* Acciones de Movimiento */}
+                          <div className="flex items-center justify-between pt-2 border-t border-neutral-800/50 mt-1">
+                            <span className="text-[9px] text-neutral-500 font-mono">
+                              {new Date(task.createdAt).toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })}
                             </span>
 
-                            {/* Botón mover derecha */}
-                            {task.status !== 'done' ? (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => moveTask(task.id, 'next')}
-                                className="h-7 w-7 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800"
-                                title="Mover a la siguiente columna"
-                              >
-                                <ChevronRight size={16} />
-                              </Button>
-                            ) : (
-                              <div className="w-7 h-7 flex items-center justify-center text-emerald-400">
-                                <CheckCircle2 size={16} />
-                              </div>
-                            )}
+                            <div className="flex gap-1">
+                              {col.id !== 'todo' && (
+                                <motion.button
+                                  whileTap={TAP_ANIMATION}
+                                  onClick={() => moveTask(task.id, 'prev')}
+                                  className="w-6 h-6 rounded-md bg-neutral-800 hover:bg-neutral-700 text-neutral-300 flex items-center justify-center transition-colors"
+                                  title="Mover a columna anterior"
+                                >
+                                  <ChevronLeft size={13} />
+                                </motion.button>
+                              )}
+                              {col.id !== 'done' && (
+                                <motion.button
+                                  whileTap={TAP_ANIMATION}
+                                  onClick={() => moveTask(task.id, 'next')}
+                                  className="w-6 h-6 rounded-md bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 flex items-center justify-center transition-colors"
+                                  title="Mover a siguiente columna"
+                                >
+                                  <ChevronRight size={13} />
+                                </motion.button>
+                              )}
+                            </div>
                           </div>
                         </Card>
                       </motion.div>
@@ -320,8 +336,78 @@ export function KanbanBoard() {
           );
         })}
       </div>
+
+      {/* Modal Ajustes */}
+      <AnimatePresence>
+        {showSettings && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+          >
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-4 text-white">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-2.5">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Settings2 size={16} className="text-sky-400" /> Ajustes de Kanban
+                </h2>
+                <button onClick={() => setShowSettings(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={15} />
+                </button>
+              </div>
+
+              <p className="text-xs text-neutral-400 leading-relaxed">
+                Podés reiniciar las tarjetas del tablero a los valores iniciales para limpiar tareas de prueba.
+              </p>
+
+              <Button
+                onClick={handleResetBoard}
+                variant="destructive"
+                className="w-full text-xs font-bold rounded-xl flex items-center justify-center gap-2"
+              >
+                <RotateCcw size={14} />
+                <span>Reiniciar Tablero por Defecto</span>
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Ayuda */}
+      <AnimatePresence>
+        {showHelp && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md"
+          >
+            <div className="relative w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-5 shadow-2xl flex flex-col gap-3 text-white">
+              <div className="flex justify-between items-center border-b border-neutral-800 pb-2">
+                <h2 className="text-sm font-bold text-white flex items-center gap-2">
+                  <HelpCircle size={16} className="text-sky-400" /> ¿Cómo usar el Tablero Kanban?
+                </h2>
+                <button onClick={() => setShowHelp(false)} className="text-neutral-500 hover:text-white p-1 rounded-full bg-neutral-800">
+                  <X size={15} />
+                </button>
+              </div>
+
+              <ul className="text-xs text-neutral-300 space-y-2 leading-relaxed">
+                <li>• <strong>Columnas</strong>: Por Hacer, En Progreso y Completado.</li>
+                <li>• <strong>Mover Tarjetas</strong>: Usá las flechas inferiores de cada tarjeta para avanzar o retroceder de estado.</li>
+                <li>• <strong>Sincronización</strong>: Las tareas en progreso aparecen automáticamente en tu Agenda diaria.</li>
+              </ul>
+
+              <Button
+                onClick={() => setShowHelp(false)}
+                className="w-full mt-2 text-xs font-bold rounded-xl bg-sky-500 text-black hover:bg-sky-400"
+              >
+                Entendido
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
-
-export default KanbanBoard;

@@ -9,10 +9,10 @@ export default function PageTransitionWrapper({ children }: { children: React.Re
   return (
     <motion.main
       key={pathname}
-      initial={{ opacity: 0, y: 4 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.15, ease: "easeOut" }}
-      className="w-full max-w-[100vw] overflow-x-hidden pb-[calc(5rem+env(safe-area-inset-bottom))]"
+      className="w-full min-h-screen pb-[calc(5rem+env(safe-area-inset-bottom))]"
     >
       {children}
     </motion.main>
