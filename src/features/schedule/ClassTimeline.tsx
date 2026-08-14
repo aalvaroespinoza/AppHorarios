@@ -40,6 +40,20 @@ export function ClassTimeline({
   const items = materiasDelDia || classes || [];
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
 
+  const currentTime = horaActualHHMM || (() => {
+    const now = new Date();
+    const h = now.getHours().toString().padStart(2, '0');
+    const m = now.getMinutes().toString().padStart(2, '0');
+    return `${h}:${m}`;
+  })();
+
+  const [h, m] = currentTime.split(':').map(Number);
+  const currentMinutes = (isNaN(h) ? 0 : h) * 60 + (isNaN(m) ? 0 : m);
+
+  const isTimeBetween = (start: string, end: string, current: string) => {
+    return current >= start && current < end;
+  };
+
   if (items.length === 0) {
     return (
       <div className="bg-neutral-900/40 border border-neutral-800/60 rounded-3xl p-5 text-center text-sm text-neutral-400 italic backdrop-blur-md">
@@ -57,12 +71,22 @@ export function ClassTimeline({
 
       {/* Timeline Vertical */}
       <div className="relative border-l-2 border-neutral-800 ml-3 pl-5 flex flex-col gap-4 py-1">
+        {/* Línea de tiempo actual */}
+        {isToday && (
+          <div 
+            className="absolute left-0 right-0 border-t-2 border-red-500 z-40 w-full pointer-events-none" 
+            style={{ top: `${Math.min(Math.max((currentMinutes / 1440) * 100, 0), 100)}%` }}
+          >
+            <div className="absolute -top-1.5 -left-1 w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
+          </div>
+        )}
+
         {items.map((cls, idx) => {
           const rawString = cls.nombre || cls.name || cls.title || cls.rawText || '';
           const info = parseMateriaInfo(rawString);
           const horaInicio = cls.horaInicio || cls.timeStart || "08:00";
           const horaFin = cls.horaFin || cls.timeEnd || "11:10";
-          const isActive = activeIndex === idx && isToday;
+          const isCurrentClass = isToday && isTimeBetween(horaInicio, horaFin, currentTime);
           
           const mapping = getSubjectColorMapping(cls.color);
 
@@ -71,7 +95,7 @@ export function ClassTimeline({
               {/* Timeline Indicator Dot */}
               <span 
                 className={`absolute -left-[1.65rem] top-3.5 h-3.5 w-3.5 rounded-full border-[3px] border-neutral-950 z-20 transition-all ${
-                  isActive 
+                  isCurrentClass 
                     ? `${mapping.dot} ring-4 ${mapping.ring} scale-110` 
                     : 'bg-neutral-700'
                 }`} 
@@ -80,14 +104,14 @@ export function ClassTimeline({
               <div
                 onClick={() => setSelectedSubject(cls)}
                 className={`group relative z-10 p-4 rounded-2xl border transition-all cursor-pointer active:scale-98 ${
-                  isActive
+                  isCurrentClass
                     ? `bg-gradient-to-r ${mapping.gradient} ${mapping.border} shadow-lg ${mapping.shadow}`
                     : `bg-neutral-900/80 border-neutral-800 ${mapping.bgHover}`
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex flex-col gap-0.5">
-                    <h3 className={`font-bold text-base leading-tight transition-colors ${isActive ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
+                    <h3 className={`font-bold text-base leading-tight transition-colors ${isCurrentClass ? 'text-white' : 'text-neutral-200 group-hover:text-white'}`}>
                       {info.nombre}
                     </h3>
                     {info.aula !== 'N/A' && (
@@ -101,13 +125,13 @@ export function ClassTimeline({
 
                   <div className="flex flex-col items-end shrink-0">
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-lg border ${
-                      isActive 
+                      isCurrentClass 
                         ? `${mapping.dot} text-white ${mapping.border} animate-pulse` 
                         : 'bg-black/40 text-neutral-300 border-neutral-800'
                     }`}>
                       {horaInicio} - {horaFin}
                     </span>
-                    {isActive && (
+                    {isCurrentClass && (
                       <span className={`text-[10px] font-extrabold uppercase tracking-wider mt-1 ${mapping.text}`}>
                         En curso
                       </span>

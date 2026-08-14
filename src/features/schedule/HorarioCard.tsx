@@ -37,47 +37,11 @@ export function HorarioCard({
   
   const [currentRecomendado, setCurrentRecomendado] = useState<RawScheduleEntry | null>(recomendacion.recomendado);
   const [currentAlternativas, setCurrentAlternativas] = useState<RawScheduleEntry[]>(recomendacion.alternativas);
-  const [probLluvia, setProbLluvia] = useState<number | null>(null);
 
   useEffect(() => {
     setCurrentRecomendado(recomendacion.recomendado);
     setCurrentAlternativas(recomendacion.alternativas);
   }, [recomendacion]);
-
-  // Obtener clima de Open-Meteo
-  useEffect(() => {
-    if (!currentRecomendado) return;
-    
-    // Si es ida salimos de Despeñaderos, si es vuelta salimos de Córdoba
-    const locationId = direction === 'ida' ? 'despenaderos' : 'cordoba';
-    
-    const fetchWeather = async () => {
-      try {
-        const { weatherService } = await import('@/core/services/weather/weather.service');
-        const data = await weatherService.getWeather(locationId);
-        
-        // Calcular hora real de salida
-        const esVuelta = direction === 'vuelta';
-        const horaReal = esVuelta ? addMinutes(currentRecomendado.horaSalida, OFFSET_PARADA_VUELTA_MIN) : currentRecomendado.horaSalida;
-        const horaSalidaNum = parseInt(horaReal.split(':')[0], 10);
-        
-        // Formatear hoy como YYYY-MM-DD
-        const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Cordoba' });
-        const hoyDateStr = formatter.format(new Date()); // YYYY-MM-DD
-        
-        const targetTimeStr = `${hoyDateStr}T${horaSalidaNum.toString().padStart(2, '0')}:00`;
-        const hourlyItem = data.hourly.find(h => h.datetimeISO === targetTimeStr);
-        
-        if (hourlyItem) {
-          setProbLluvia(hourlyItem.precipitationProbability);
-        }
-      } catch (error) {
-        console.error("Error fetching weather:", error);
-      }
-    };
-    
-    fetchWeather();
-  }, [currentRecomendado, direction]);
 
   const registroHoy = bec.getRegistroHoy();
   const becUsado = direction === 'ida' ? registroHoy.idaUsado : registroHoy.vueltaUsado;
@@ -212,13 +176,6 @@ export function HorarioCard({
           <span className="leading-snug">
             {currentRecomendado.notas.replace(/llegada estimada/i, `Llegada estimada a las ${calcularHoraLlegada(currentRecomendado.horaSalida, direction)}`)}
           </span>
-        </div>
-      )}
-      
-      {probLluvia !== null && probLluvia > 40 && (
-        <div className="bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-500/30 text-blue-700 dark:text-blue-300 px-4 py-2.5 rounded-2xl mb-4 text-sm font-medium flex items-center gap-2">
-          <span>🌧️</span>
-          <span>Probabilidad de lluvia del {probLluvia}% a la hora de salida. ¡Salí con margen!</span>
         </div>
       )}
 

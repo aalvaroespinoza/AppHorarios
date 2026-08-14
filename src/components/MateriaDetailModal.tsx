@@ -28,7 +28,7 @@ export function MateriaDetailModal({ materia, onClose }: MateriaDetailModalProps
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
             onClick={onClose}
           >
             <motion.div
@@ -36,7 +36,7 @@ export function MateriaDetailModal({ materia, onClose }: MateriaDetailModalProps
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
               transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className={`w-full max-w-sm bg-zinc-900 border ${mapping.border} rounded-3xl p-5 flex flex-col gap-5 text-white shadow-2xl relative overflow-hidden`}
+              className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-white relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Decoración de fondo sutil con el color de la materia */}
