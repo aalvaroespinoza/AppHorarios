@@ -5,15 +5,21 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, Plus, Trash2, CheckCircle2, Circle, 
   Clock, Sparkles, X, Settings2, HelpCircle, RotateCcw,
-  CalendarDays, Tag, AlertCircle, Check
+  CalendarDays, Tag, AlertCircle, Check, FileText, BookOpen, GraduationCap
 } from 'lucide-react';
 import Link from 'next/link';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useSubjects } from '@/hooks/useSubjects';
+import { parseMateriaInfo } from '@/core/utils/edificio';
+import { trackEvent } from '@/core/analytics/engine';
 import { PAGE_TRANSITION, SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
+import type { Task as KanbanTask } from '@/types/task';
 
-interface BlockTask {
+export type ScheduleItemKind = 'materia' | 'kanban' | 'block';
+
+export interface BlockTask {
   id: string;
   title: string;
   description?: string;
@@ -22,6 +28,24 @@ interface BlockTask {
   priority: 'alta' | 'media' | 'baja';
   completed: boolean;
   color?: string;
+}
+
+export interface UnifiedScheduleItem {
+  id: string;
+  kind: ScheduleItemKind;
+  title: string;
+  description?: string;
+  horaInicio: string;
+  horaFin: string;
+  isAllDay?: boolean;
+  priority?: 'alta' | 'media' | 'baja';
+  completed?: boolean;
+  aula?: string;
+  edificio?: string;
+  curso?: string;
+  color?: string;
+  kanbanStatus?: string;
+  rawMateria?: any;
 }
 
 const DEFAULT_BLOCKS: BlockTask[] = [
@@ -58,12 +82,15 @@ const DEFAULT_BLOCKS: BlockTask[] = [
 ];
 
 export default function TareasTimeBlockingPage() {
+  const { subjects } = useSubjects();
   const [blocks, setBlocks] = useState<BlockTask[]>([]);
+  const [kanbanTasks, setKanbanTasks] = useState<KanbanTask[]>([]);
   const [isMounted, setIsMounted] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [selectedBlock, setSelectedBlock] = useState<BlockTask | null>(null);
+  const [selectedItemDetail, setSelectedItemDetail] = useState<UnifiedScheduleItem | null>(null);
 
   // Selector de días
   const [selectedDayIndex, setSelectedDayIndex] = useState(() => {
@@ -80,15 +107,24 @@ export default function TareasTimeBlockingPage() {
 
   useEffect(() => {
     setIsMounted(true);
-    const stored = localStorage.getItem('lifeos_timeblocking_blocks');
-    if (stored) {
+    // Cargar bloques de time-blocking
+    const storedBlocks = localStorage.getItem('lifeos_timeblocking_blocks');
+    if (storedBlocks) {
       try {
-        setBlocks(JSON.parse(stored));
+        setBlocks(JSON.parse(storedBlocks));
       } catch (e) {
         setBlocks(DEFAULT_BLOCKS);
       }
     } else {
       setBlocks(DEFAULT_BLOCKS);
+    }
+
+    // Cargar tareas del Kanban
+    const storedKanban = localStorage.getItem('lifeos_kanban_tasks');
+    if (storedKanban) {
+      try {
+        setKanbanTasks(JSON.parse(storedKanban));
+      } catch (e) {}
     }
   }, []);
 
@@ -126,10 +162,37 @@ export default function TareasTimeBlockingPage() {
   };
 
   const handleToggleBlock = (id: string) => {
-    const updated = blocks.map(b => b.id === id ? { ...b, completed: !b.completed } : b);
+    const updated = blocks.map(b => {
+      if (b.id === id) {
+        const nextCompleted = !b.completed;
+        if (nextCompleted) {
+          trackEvent('task_completed', 'task', 1);
+        }
+        return { ...b, completed: nextCompleted };
+      }
+      return b;
+    });
     saveBlocks(updated);
     if (selectedBlock?.id === id) {
       setSelectedBlock({ ...selectedBlock, completed: !selectedBlock.completed });
+    }
+  };
+
+  const handleToggleKanbanTask = (kanbanId: string) => {
+    const realId = kanbanId.replace('kb-', '');
+    const updated = kanbanTasks.map(k => {
+      if (k.id === realId) {
+        const nextStatus = k.status === 'done' ? 'todo' : 'done';
+        if (nextStatus === 'done') {
+          trackEvent('task_completed', 'task', 1);
+        }
+        return { ...k, status: nextStatus as any };
+      }
+      return k;
+    });
+    setKanbanTasks(updated);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lifeos_kanban_tasks', JSON.stringify(updated));
     }
   };
 
@@ -141,17 +204,80 @@ export default function TareasTimeBlockingPage() {
 
   // Días de la semana para el selector
   const diasSemana = [
-    { label: 'Lun', nombre: 'Lunes' },
-    { label: 'Mar', nombre: 'Martes' },
-    { label: 'Mié', nombre: 'Miércoles' },
-    { label: 'Jue', nombre: 'Jueves' },
-    { label: 'Vie', nombre: 'Viernes' },
-    { label: 'Sáb', nombre: 'Sábado' },
-    { label: 'Dom', nombre: 'Domingo' },
+    { label: 'Lun', nombre: 'lunes' },
+    { label: 'Mar', nombre: 'martes' },
+    { label: 'Mié', nombre: 'miercoles' },
+    { label: 'Jue', nombre: 'jueves' },
+    { label: 'Vie', nombre: 'viernes' },
+    { label: 'Sáb', nombre: 'sabado' },
+    { label: 'Dom', nombre: 'domingo' },
   ];
 
-  // Ordenar tareas cronológicamente por horaInicio
-  const tareasOrdenadas = [...blocks].sort((a, b) => (a.horaInicio || '00:00').localeCompare(b.horaInicio || '00:00'));
+  const diaSeleccionadoObj = diasSemana[selectedDayIndex] || diasSemana[0];
+  const diaActualNombre = diaSeleccionadoObj.nombre;
+
+  // 1. Materias del día seleccionado
+  const materiasDelDia: UnifiedScheduleItem[] = [];
+  subjects.forEach(subject => {
+    subject.classBlocks?.forEach(block => {
+      if (block.day.toLowerCase() === diaActualNombre) {
+        const parsed = parseMateriaInfo(subject.name);
+        materiasDelDia.push({
+          id: `mat-${subject.id}-${block.startTime}`,
+          kind: 'materia',
+          title: parsed.nombre || subject.name,
+          description: `${parsed.curso ? parsed.curso + ' • ' : ''}Aula ${parsed.aula || block.classroom || '—'} (${parsed.edificio || 'Campus'})`,
+          horaInicio: block.startTime || "08:00",
+          horaFin: block.endTime || "11:10",
+          aula: parsed.aula || block.classroom,
+          edificio: parsed.edificio,
+          curso: parsed.curso,
+          color: subject.color,
+          rawMateria: subject,
+        });
+      }
+    });
+  });
+
+  // 2. Bloques de agenda / timeblocking
+  const timeblockingItems: UnifiedScheduleItem[] = blocks.map(b => ({
+    id: b.id,
+    kind: 'block',
+    title: b.title,
+    description: b.description,
+    horaInicio: b.horaInicio || "10:00",
+    horaFin: b.horaFin || "11:30",
+    priority: b.priority,
+    completed: b.completed,
+    color: b.color,
+  }));
+
+  // 3. Tareas del Kanban pendientes o en progreso (inyectadas al inicio del día como "Todo el día")
+  const kanbanItems: UnifiedScheduleItem[] = kanbanTasks
+    .filter(k => k.status !== 'done')
+    .map(k => ({
+      id: `kb-${k.id}`,
+      kind: 'kanban',
+      title: k.title,
+      description: k.description || 'Tarea del tablero Kanban',
+      horaInicio: '08:00',
+      horaFin: 'Todo el día',
+      isAllDay: true,
+      priority: (k.priority || 'media') as any,
+      completed: k.status === 'done',
+      kanbanStatus: k.status,
+    }));
+
+  // Lista unificada ordenada cronológicamente
+  const agendaUnificada: UnifiedScheduleItem[] = [
+    ...kanbanItems,
+    ...materiasDelDia,
+    ...timeblockingItems
+  ].sort((a, b) => {
+    if (a.isAllDay && !b.isAllDay) return -1;
+    if (!a.isAllDay && b.isAllDay) return 1;
+    return (a.horaInicio || '00:00').localeCompare(b.horaInicio || '00:00');
+  });
 
   return (
     <motion.div 
@@ -172,7 +298,7 @@ export default function TareasTimeBlockingPage() {
             <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
               Agenda <Clock size={17} className="text-cyan-400" />
             </h1>
-            <p className="text-xs text-neutral-400 font-medium">Schedule List View</p>
+            <p className="text-xs text-neutral-400 font-medium">Schedule List • Clases & Tareas</p>
           </div>
         </div>
 
@@ -223,12 +349,12 @@ export default function TareasTimeBlockingPage() {
         })}
       </div>
 
-      {/* SECCIÓN 2: Schedule List (Cuerpo) */}
-      <div className="flex flex-col gap-5 mt-2 px-1 pb-24">
-        {tareasOrdenadas.length === 0 ? (
+      {/* SECCIÓN 2: Schedule List Unificado */}
+      <div className="flex flex-col gap-4 mt-2 px-1 pb-24">
+        {agendaUnificada.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center text-neutral-500 gap-2">
             <Clock size={32} className="opacity-40" />
-            <p className="text-sm font-medium">No hay actividades programadas</p>
+            <p className="text-sm font-medium">No hay actividades programadas para este día</p>
             <Button
               onClick={() => setShowAddModal(true)}
               variant="outline"
@@ -239,70 +365,136 @@ export default function TareasTimeBlockingPage() {
             </Button>
           </div>
         ) : (
-          tareasOrdenadas.map((tarea) => (
-            <div key={tarea.id} className="flex gap-3.5 items-start">
-              {/* Columna Izquierda: Hora */}
-              <div className="w-14 shrink-0 flex flex-col items-end pt-1">
-                <span className="text-sm font-bold text-white">{tarea.horaInicio}</span>
-                <span className="text-[10px] text-neutral-500 uppercase">{tarea.horaFin}</span>
-              </div>
-              
-              {/* Columna Derecha: Tarjeta de la Tarea */}
-              <div 
-                onClick={() => setSelectedBlock(tarea)}
-                className={`flex-1 bg-neutral-900/50 border rounded-2xl p-4 active:scale-[0.98] transition-transform cursor-pointer shadow-lg backdrop-blur-md flex flex-col gap-2 ${
-                  tarea.completed 
-                    ? 'border-neutral-800/60 opacity-50 bg-neutral-950/40' 
-                    : 'border-neutral-800 hover:border-neutral-700'
-                }`}
-              >
-                <div className="flex items-start justify-between gap-2 min-w-0">
-                  <h3 className={`text-base font-bold truncate leading-tight ${tarea.completed ? 'line-through text-neutral-400' : 'text-white'}`}>
-                    {tarea.title}
-                  </h3>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleToggleBlock(tarea.id);
-                    }}
-                    className="text-neutral-400 hover:text-white shrink-0 p-0.5"
-                    title={tarea.completed ? "Marcar pendiente" : "Marcar completado"}
-                  >
-                    {tarea.completed ? (
-                      <CheckCircle2 size={18} className="text-emerald-400" />
+          agendaUnificada.map((item) => {
+            const isMateria = item.kind === 'materia';
+            const isKanban = item.kind === 'kanban';
+            const isBlock = item.kind === 'block';
+
+            return (
+              <div key={item.id} className="flex gap-3.5 items-start">
+                {/* Columna Izquierda: Hora */}
+                <div className="w-14 shrink-0 flex flex-col items-end pt-1">
+                  <span className="text-sm font-bold text-white leading-tight">
+                    {item.isAllDay ? 'Todo el día' : item.horaInicio}
+                  </span>
+                  <span className="text-[10px] text-neutral-500 uppercase">
+                    {item.isAllDay ? 'Pendiente' : item.horaFin}
+                  </span>
+                </div>
+                
+                {/* Columna Derecha: Tarjeta */}
+                <div 
+                  onClick={() => {
+                    if (isBlock) {
+                      const found = blocks.find(b => b.id === item.id);
+                      if (found) setSelectedBlock(found);
+                    } else {
+                      setSelectedItemDetail(item);
+                    }
+                  }}
+                  className={`flex-1 rounded-2xl p-4 transition-all cursor-pointer shadow-lg backdrop-blur-md flex flex-col gap-2.5 ${
+                    isKanban
+                      ? 'border border-dashed border-amber-500/50 bg-amber-950/15 hover:border-amber-400'
+                      : isMateria
+                      ? 'border border-cyan-500/30 bg-cyan-950/20 hover:border-cyan-400/60'
+                      : item.completed
+                      ? 'border border-neutral-800/60 opacity-50 bg-neutral-950/40'
+                      : 'border border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2 min-w-0">
+                    <h3 className={`text-base font-bold truncate leading-tight ${item.completed ? 'line-through text-neutral-400' : 'text-white'}`}>
+                      {item.title}
+                    </h3>
+
+                    {/* Botón de Check o Badge */}
+                    {isMateria ? (
+                      <Badge variant="outline" className="text-[10px] uppercase font-bold border-cyan-500/40 text-cyan-300 bg-cyan-500/10 shrink-0">
+                        MATERIA
+                      </Badge>
+                    ) : isKanban ? (
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold border-amber-500/40 text-amber-300 bg-amber-500/10">
+                          TAREA
+                        </Badge>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleKanbanTask(item.id);
+                          }}
+                          className="text-neutral-400 hover:text-white p-0.5"
+                          title="Marcar como realizada en Kanban"
+                        >
+                          <Circle size={18} className="text-amber-400 hover:scale-110 transition-transform" />
+                        </button>
+                      </div>
                     ) : (
-                      <Circle size={18} />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Badge variant="outline" className="text-[10px] uppercase font-bold border-neutral-700 text-neutral-400">
+                          AGENDA
+                        </Badge>
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleToggleBlock(item.id);
+                          }}
+                          className="text-neutral-400 hover:text-white p-0.5"
+                          title={item.completed ? "Marcar pendiente" : "Marcar completado"}
+                        >
+                          {item.completed ? (
+                            <CheckCircle2 size={18} className="text-emerald-400" />
+                          ) : (
+                            <Circle size={18} />
+                          )}
+                        </button>
+                      </div>
                     )}
-                  </button>
-                </div>
+                  </div>
 
-                {tarea.description && (
-                  <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
-                    {tarea.description}
-                  </p>
-                )}
-
-                <div className="flex items-center gap-2 mt-1">
-                  <Badge 
-                    variant="outline" 
-                    className={`text-[10px] uppercase font-bold border capitalize ${
-                      tarea.priority === 'alta' ? 'border-red-500/40 text-red-300 bg-red-500/10' :
-                      tarea.priority === 'media' ? 'border-cyan-500/40 text-cyan-300 bg-cyan-500/10' :
-                      'border-neutral-700 text-neutral-400'
-                    }`}
-                  >
-                    {tarea.priority}
-                  </Badge>
-
-                  {tarea.completed && (
-                    <span className="text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                      Completada
-                    </span>
+                  {item.description && (
+                    <p className="text-xs text-neutral-400 line-clamp-2 leading-relaxed">
+                      {item.description}
+                    </p>
                   )}
+
+                  {/* Footer de Tarjeta con Enlace a Notas o Prioridad */}
+                  <div className="flex items-center justify-between gap-2 mt-0.5 pt-2 border-t border-neutral-800/40">
+                    <div className="flex items-center gap-1.5">
+                      {item.priority && (
+                        <Badge 
+                          variant="outline" 
+                          className={`text-[10px] uppercase font-bold border capitalize ${
+                            item.priority === 'alta' ? 'border-red-500/40 text-red-300 bg-red-500/10' :
+                            item.priority === 'media' ? 'border-cyan-500/40 text-cyan-300 bg-cyan-500/10' :
+                            'border-neutral-700 text-neutral-400'
+                          }`}
+                        >
+                          {item.priority}
+                        </Badge>
+                      )}
+
+                      {isMateria && item.aula && (
+                        <span className="text-[11px] font-semibold text-neutral-300">
+                          Aula {item.aula}
+                        </span>
+                      )}
+                    </div>
+
+                    {isMateria && (
+                      <Link 
+                        href={`/boveda?subject=${encodeURIComponent(item.title)}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[11px] font-semibold text-teal-400 hover:text-teal-300 flex items-center gap-1 bg-teal-500/10 px-2 py-1 rounded-lg border border-teal-500/20 hover:bg-teal-500/20 transition-all"
+                      >
+                        <FileText size={12} />
+                        <span>Notas</span>
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -409,7 +601,7 @@ export default function TareasTimeBlockingPage() {
         )}
       </AnimatePresence>
 
-      {/* Modal Detalle Tarea */}
+      {/* Modal Detalle Tarea Block */}
       <AnimatePresence>
         {selectedBlock && (
           <motion.div 
@@ -470,6 +662,81 @@ export default function TareasTimeBlockingPage() {
                 >
                   <Trash2 size={16} />
                 </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Detalle Item Unificado (Materia o Kanban) */}
+      <AnimatePresence>
+        {selectedItemDetail && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
+            onClick={() => setSelectedItemDetail(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 10 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 10 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="w-full max-w-sm bg-neutral-900/60 backdrop-blur-2xl border border-neutral-800 shadow-[0_0_40px_rgba(0,0,0,0.5)] ring-1 ring-white/10 rounded-3xl p-5 flex flex-col gap-4 text-white"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-start border-b border-neutral-800/80 pb-2">
+                <div>
+                  <h3 className="text-base font-bold text-white">{selectedItemDetail.title}</h3>
+                  <span className="text-xs text-neutral-400 font-mono">
+                    {selectedItemDetail.isAllDay ? 'Todo el día' : `${selectedItemDetail.horaInicio} - ${selectedItemDetail.horaFin} hs`}
+                  </span>
+                </div>
+                <button onClick={() => setSelectedItemDetail(null)} className="w-8 h-8 rounded-full text-neutral-400 hover:text-white bg-neutral-800/50 hover:bg-neutral-700 transition-all flex items-center justify-center active:scale-95">
+                  <X size={15} />
+                </button>
+              </div>
+
+              {selectedItemDetail.description && (
+                <p className="text-xs text-neutral-300 leading-relaxed bg-neutral-950 p-3 rounded-xl border border-neutral-800">
+                  {selectedItemDetail.description}
+                </p>
+              )}
+
+              {selectedItemDetail.kind === 'materia' && (
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold">Aula</span>
+                    <p className="font-bold text-white mt-0.5">{selectedItemDetail.aula || '—'}</p>
+                  </div>
+                  <div className="p-3 bg-neutral-950 rounded-xl border border-neutral-800">
+                    <span className="text-[10px] text-neutral-500 uppercase font-bold">Edificio</span>
+                    <p className="font-bold text-white mt-0.5">{selectedItemDetail.edificio || 'Campus'}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 mt-2">
+                {selectedItemDetail.kind === 'materia' ? (
+                  <Link href={`/boveda?subject=${encodeURIComponent(selectedItemDetail.title)}`} className="w-full">
+                    <Button className="w-full bg-teal-500 hover:bg-teal-400 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2">
+                      <FileText size={15} />
+                      <span>Abrir Notas de la Materia</span>
+                    </Button>
+                  </Link>
+                ) : (
+                  <Button
+                    onClick={() => {
+                      handleToggleKanbanTask(selectedItemDetail.id);
+                      setSelectedItemDetail(null);
+                    }}
+                    className="w-full bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-xl flex items-center justify-center gap-2"
+                  >
+                    <CheckCircle2 size={15} />
+                    <span>Marcar Tarea como Completada</span>
+                  </Button>
+                )}
               </div>
             </motion.div>
           </motion.div>
@@ -548,9 +815,9 @@ export default function TareasTimeBlockingPage() {
               </div>
 
               <ul className="text-xs text-neutral-300 space-y-2 leading-relaxed">
-                <li>• <strong>Lista Táctil</strong>: Las tareas se ordenan cronológicamente según la hora de inicio.</li>
+                <li>• <strong>Conectividad Total</strong>: Tus clases de la facultad y las tareas del Kanban se integran automáticamente.</li>
+                <li>• <strong>Notas Directas</strong>: Toca el botón de Notas en cualquier materia para abrir sus apuntes en la Bóveda.</li>
                 <li>• <strong>Selector Superior</strong>: Cambia entre los días de la semana con inercia táctil.</li>
-                <li>• <strong>Check Rápido</strong>: Toca el círculo para marcar una tarea como realizada.</li>
               </ul>
 
               <Button

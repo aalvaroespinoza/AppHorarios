@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseMateriaInfo } from '@/core/utils/materiaParser';
 import { getSubjectColorMapping } from '@/core/utils/edificio';
-import { Clock, MapPin, Sparkles, Bus, CheckCircle2 } from 'lucide-react';
+import { Clock, MapPin, Sparkles, Bus, CheckCircle2, FileText } from 'lucide-react';
+import Link from 'next/link';
 import { trackEvent } from '@/core/analytics/engine';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -211,6 +212,16 @@ export function ClassTimeline({
                       <Sparkles size={13} className="mr-1.5 text-cyan-400" />
                       Ver Detalle
                     </Button>
+                    <Link href={`/boveda?subject=${encodeURIComponent(info.nombre)}`}>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="text-xs rounded-xl flex items-center gap-1.5 font-semibold text-teal-300 hover:text-teal-200"
+                      >
+                        <FileText size={13} />
+                        <span>Notas</span>
+                      </Button>
+                    </Link>
                     <Button
                       size="sm"
                       variant="ghost"

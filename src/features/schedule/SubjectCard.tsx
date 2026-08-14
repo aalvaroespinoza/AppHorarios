@@ -8,6 +8,10 @@ import { SPRING_CONFIG } from '@/lib/animations';
 import { parseMateriaRawText } from '@/core/utils/materiaParser';
 import { parseMateriaInfo } from '@/core/utils/edificio';
 
+import { FileText } from 'lucide-react';
+import Link from 'next/link';
+import { Button } from "@/components/ui/button";
+
 interface SubjectCardProps {
   subject: Subject;
 }
@@ -146,7 +150,13 @@ export function SubjectCard({ subject }: SubjectCardProps) {
                     <span className="text-base font-bold text-amber-300 mt-1 flex items-center gap-1.5">
                       📍 {info.edificio}
                     </span>
-                  </div>
+                <div className="flex gap-2 mt-2">
+                  <Link href={`/boveda?subject=${encodeURIComponent(info.nombre)}`} className="w-full">
+                    <Button size="sm" variant="secondary" className="w-full rounded-xl flex items-center justify-center gap-2">
+                      <FileText size={14} className="text-teal-400" />
+                      <span>Abrir en Bóveda (Notas)</span>
+                    </Button>
+                  </Link>
                 </div>
               </motion.div>
             </motion.div>

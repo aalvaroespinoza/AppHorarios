@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { 
   Bus, Wallet, CalendarDays, Sparkles, 
@@ -8,7 +10,17 @@ import {
 import Link from 'next/link';
 import { PAGE_TRANSITION, SPRING_CONFIG } from '@/lib/animations';
 
-export default function HubPage() {
+function BovedaContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const subject = searchParams.get('subject');
+    if (subject) {
+      router.replace(`/notas?subject=${encodeURIComponent(subject)}`);
+    }
+  }, [searchParams, router]);
+
   const apps = [
     {
       id: 'viajes',
@@ -99,69 +111,86 @@ export default function HubPage() {
       description: 'Guías y Manual'
     },
     {
-      id: 'lifeos',
-      title: 'LifeOS Asistente',
-      href: '/lifeos',
-      icon: <Sparkles size={28} className="text-orange-400" />,
-      color: 'from-orange-500/20 to-orange-600/5 border-orange-500/20',
-      description: 'Dictado IA'
-    },
-    {
-      id: 'config',
-      title: 'Ajustes',
+      id: 'configuracion',
+      title: 'Configuración',
       href: '/configuracion',
-      icon: <Settings size={28} className="text-zinc-400" />,
-      color: 'from-zinc-500/20 to-zinc-600/5 border-zinc-500/20',
-      description: 'Preferencias'
-    },
+      icon: <Settings size={28} className="text-neutral-400" />,
+      color: 'from-neutral-500/20 to-neutral-600/5 border-neutral-500/20',
+      description: 'Ajustes del Sistema'
+    }
   ];
 
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="p-5 max-w-md mx-auto flex flex-col gap-5 min-h-[100dvh] pb-28 relative bg-[#0a0a0c]"
+      className="p-4 max-w-md mx-auto flex flex-col gap-6 min-h-[100dvh] bg-[#0a0a0c] text-white pb-28"
       style={{ paddingTop: 'max(1.2rem, env(safe-area-inset-top))' }}
     >
-      {/* Header con botón atrás hacia Inicio */}
-      <header className="flex items-center justify-between mt-1 mb-1">
+      {/* Header */}
+      <header className="flex items-center justify-between mt-1 px-1">
         <div className="flex items-center gap-3">
           <Link 
             href="/"
-            className="w-10 h-10 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors shadow-sm"
-            title="Volver a Inicio"
+            className="w-10 h-10 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors shadow-sm active:scale-95"
           >
             <ChevronLeft size={20} />
           </Link>
           <div>
-            <h1 className="text-2xl font-black tracking-tight text-white leading-tight">
-              Menú de Apps
+            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+              Bóveda <Sparkles size={17} className="text-cyan-400" />
             </h1>
-            <p className="text-xs text-neutral-400 font-medium">
-              Ecosistema completo de herramientas
-            </p>
+            <p className="text-xs text-neutral-400 font-medium">Centro de Módulos & Apps</p>
           </div>
         </div>
+
+        <Link 
+          href="/configuracion"
+          className="w-10 h-10 bg-neutral-900 border border-neutral-800 rounded-full flex items-center justify-center text-neutral-400 hover:text-white transition-colors shadow-sm active:scale-95"
+        >
+          <Settings size={18} />
+        </Link>
       </header>
 
-      {/* Grid de Apps */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {apps.map((app, i) => (
-          <Link key={app.id} href={app.href}>
+      {/* Grid de Apps y Módulos */}
+      <div className="grid grid-cols-2 gap-3.5 px-1">
+        {apps.map((app) => (
+          <Link
+            key={app.id}
+            href={app.href}
+            className="group block"
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.93 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.03, ...SPRING_CONFIG }}
-              className={`flex flex-col p-4 rounded-3xl bg-gradient-to-br ${app.color} border backdrop-blur-xl shadow-sm hover:shadow-md active:scale-95 transition-all duration-200 aspect-square justify-center`}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.96 }}
+              transition={SPRING_CONFIG}
+              className={`h-full p-4 rounded-3xl bg-gradient-to-br ${app.color} border backdrop-blur-xl shadow-lg flex flex-col justify-between gap-3 relative overflow-hidden`}
             >
-              <div className="mb-2.5">
-                {app.icon}
+              <div className="flex items-center justify-between">
+                <div className="p-2.5 rounded-2xl bg-neutral-950/60 border border-white/5 backdrop-blur-sm shadow-inner">
+                  {app.icon}
+                </div>
               </div>
-              <h2 className="text-sm font-bold text-white tracking-tight leading-snug">{app.title}</h2>
-              <span className="text-[10px] font-semibold text-white/70 dark:text-neutral-400 uppercase tracking-wider mt-0.5">{app.description}</span>
+
+              <div>
+                <h3 className="font-bold text-sm text-white group-hover:text-cyan-300 transition-colors leading-tight">
+                  {app.title}
+                </h3>
+                <p className="text-[11px] text-neutral-400 mt-0.5 line-clamp-1">
+                  {app.description}
+                </p>
+              </div>
             </motion.div>
           </Link>
         ))}
       </div>
     </motion.div>
+  );
+}
+
+export default function HubPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0a0a0c]" />}>
+      <BovedaContent />
+    </Suspense>
   );
 }
