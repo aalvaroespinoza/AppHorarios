@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseMateriaInfo } from '@/core/utils/materiaParser';
 import { getSubjectColorMapping } from '@/core/utils/edificio';
@@ -45,7 +45,7 @@ export function ClassTimeline({
   const [attended, setAttended] = useState<Record<string, boolean>>({});
 
   // Leer asistencias del día actual desde localStorage
-  React.useEffect(() => {
+  useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
       const todayKey = new Date().toISOString().split('T')[0];
@@ -53,7 +53,8 @@ export function ClassTimeline({
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed._date === todayKey) {
-          setAttended(parsed);
+          const { _date, ...rest } = parsed;
+          setAttended(rest);
         }
       }
     } catch (e) {}
@@ -62,9 +63,10 @@ export function ClassTimeline({
   const handleAttendance = (materiaName: string, idx: number) => {
     const key = `class-${idx}`;
     if (attended[key]) return;
-    const next = { ...attended, [key]: true, _date: new Date().toISOString().split('T')[0] };
+    const todayKey = new Date().toISOString().split('T')[0];
+    const next: Record<string, boolean> = { ...attended, [key]: true };
     setAttended(next);
-    localStorage.setItem('lifeos_class_attendance', JSON.stringify(next));
+    localStorage.setItem('lifeos_class_attendance', JSON.stringify({ ...next, _date: todayKey }));
     trackEvent('class_attended', 'academic', 1, { materia: materiaName });
   };
 
