@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { calcularColectivos, OFFSET_PARADA_VUELTA_MIN, addMinutes } from '@/lib/engine/recommendation-engine';
 import { weatherService } from '@/core/services/weather/weather.service';
 import { DayOfWeek } from '@/core/types/common';
-import { supabaseServerAdmin } from '@/lib/server/supabase';
-import { GeminiService } from '@/core/ai/service';
 
 const botToken = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;
@@ -174,86 +172,5 @@ export async function GET(request: Request) {
     // Evita que Vercel rompa la ejecución silenciosamente
     console.error("[CRON] Error crítico durante la ejecución:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
-
-/**
- * Endpoint POST opcional para Daily Briefing
- */
-export async function POST(req: Request) {
-  try {
-    const authHeader = req.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      return new NextResponse('Unauthorized', { status: 401 });
-    }
-
-    if (!botToken || !chatId) {
-      return NextResponse.json(
-        { error: 'Server Misconfiguration: Faltan credenciales de Telegram' },
-        { status: 500 }
-      );
-    }
-
-    ejecutarBriefingDiario(botToken, chatId).catch(console.error);
-
-    return NextResponse.json({ status: 'ok', msg: 'Daily Briefing scheduled' }, { status: 200 });
-  } catch (error: any) {
-    console.error("[CRON] Error en endpoint POST:", error);
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
-
-async function ejecutarBriefingDiario(token: string, chat: string) {
-  try {
-    const ayer = new Date();
-    ayer.setDate(ayer.getDate() - 1);
-    const hoy = new Date();
-
-    const ayerStr = ayer.toISOString().split('T')[0];
-    const hoyStr = hoy.toISOString().split('T')[0];
-
-    const [gastosRes, eventosRes, bateriaRes] = await Promise.all([
-      supabaseServerAdmin.from('transacciones').select('*').eq('tipo', 'gasto').gte('fecha', ayerStr).lte('fecha', hoyStr),
-      supabaseServerAdmin.from('agenda').select('*').eq('fecha', hoyStr),
-      supabaseServerAdmin.from('bateria_mental').select('*').order('created_at', { ascending: false }).limit(1)
-    ]);
-
-    const promptData = `
-Gastos de ayer: ${JSON.stringify(gastosRes.data || [])}
-Eventos de hoy: ${JSON.stringify(eventosRes.data || [])}
-Última Batería Mental: ${JSON.stringify(bateriaRes.data || [])}
-`;
-
-    const geminiText = await GeminiService.askText(
-      'gemini-3.5-flash',
-      'Eres LifeOS. Redacta un saludo de buenos días ultra corto (2 líneas) resumiendo hoy según estos datos crudos. Sé directo.',
-      promptData
-    );
-
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const tgBody = {
-      chat_id: chat,
-      text: geminiText,
-      reply_markup: {
-        inline_keyboard: [
-          [{ text: "☀️ Ver LifeOS", url: "https://apphorarios.vercel.app/lifeos" }]
-        ]
-      }
-    };
-
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(tgBody)
-    });
-
-    if (!res.ok) {
-      console.error('Error de API Telegram en Daily Briefing:', await res.text());
-    } else {
-      console.log('Daily Briefing enviado con éxito');
-    }
-
-  } catch (error) {
-    console.error('Error en ejecutarBriefingDiario:', error);
   }
 }

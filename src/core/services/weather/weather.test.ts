@@ -101,12 +101,15 @@ describe('WeatherService', () => {
     expect(fetch).toHaveBeenCalledTimes(1);
   });
   
-  it('debería fallar si la API responde con error', async () => {
+  it('debería retornar fallback offline seguro si la API responde con error', async () => {
     vi.mocked(fetch).mockResolvedValueOnce({
       ok: false,
       status: 500
     } as any);
 
-    await expect(weatherService.getWeather('utn')).rejects.toThrow('Open-Meteo HTTP error: 500');
+    const result = await weatherService.getWeather('utn');
+    expect(result.isStale).toBe(true);
+    expect(result.locationId).toBe('utn');
+    expect(result.current.condition).toBe('despejado');
   });
 });

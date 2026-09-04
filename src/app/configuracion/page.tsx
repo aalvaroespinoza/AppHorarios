@@ -2,18 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import NativeCard from '@/core/components/ui/NativeCard';
 import { 
-  Bell, RefreshCw, Moon, Sun, ChevronLeft, Ticket, 
-  Info, ChevronRight, BookOpen, Wallet, Kanban, FileText, 
-  Settings2, Check, Sparkles, HelpCircle 
+  RefreshCw, Moon, Sun, ChevronLeft, Ticket, 
+  ChevronRight, BookOpen, Clock
 } from 'lucide-react';
 import Link from 'next/link';
 import { useBec } from '@/hooks/useBec';
 import { useTheme, ThemeMode } from '@/context/ThemeContext';
-import { HelpModal } from '@/components/HelpModal';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 export default function Configuracion() {
   const router = useRouter();
@@ -21,25 +16,9 @@ export default function Configuracion() {
   const { theme, isDark, setTheme } = useTheme();
   const [isMounted, setIsMounted] = useState(false);
 
-  // Estado para el Presupuesto Semanal
-  const [presupuestoSemanal, setPresupuestoSemanal] = useState<string>('30000');
-  const [presupuestoGuardado, setPresupuestoGuardado] = useState(false);
-
   useEffect(() => {
     setIsMounted(true);
-    const storedBudget = localStorage.getItem('lifeos_weekly_budget');
-    if (storedBudget) {
-      setPresupuestoSemanal(storedBudget);
-    }
   }, []);
-
-  const handleGuardarPresupuesto = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!presupuestoSemanal) return;
-    localStorage.setItem('lifeos_weekly_budget', presupuestoSemanal);
-    setPresupuestoGuardado(true);
-    setTimeout(() => setPresupuestoGuardado(false), 2000);
-  };
 
   const handleForzarRecarga = () => {
     if (window.confirm('¿Seguro que querés limpiar caché y forzar la recarga? Esto actualizará la app y sincronizará los estados.')) {
@@ -73,7 +52,7 @@ export default function Configuracion() {
         </button>
 
         <span className="text-xs font-bold uppercase tracking-widest text-neutral-400">
-          Centro de Comando
+          Ajustes
         </span>
       </header>
       
@@ -83,26 +62,26 @@ export default function Configuracion() {
             Configuración ⚙️
           </h1>
           <p className="text-xs text-neutral-400 font-medium">
-            Personalización, presupuesto y módulos del sistema.
+            Preferencias de la aplicación y gestión de cursado.
           </p>
         </div>
 
-        {/* SECCIÓN 1: Categorías de Ajustes Rápidos */}
+        {/* SECCIÓN 1: Accesos de Gestión */}
         <section className="flex flex-col gap-2.5">
           <h2 className="text-[11px] uppercase text-neutral-500 font-bold tracking-wider px-1">
-            Categorías de Ajustes
+            Gestión y Horarios
           </h2>
 
           <div className="grid grid-cols-2 gap-2.5">
-            {/* General / Materias */}
-            <Link href="/configuracion/materias" className="group">
+            {/* Aulas y Materias */}
+            <Link href="/aulas" className="group">
               <div className="bg-neutral-900/60 hover:bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-3.5 flex flex-col justify-between h-24 transition-all shadow-sm active:scale-95">
                 <div className="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
                   <BookOpen size={16} />
                 </div>
                 <div className="min-w-0">
                   <span className="text-xs font-bold text-white block truncate group-hover:text-indigo-300 transition-colors">
-                    General
+                    Aulas
                   </span>
                   <span className="text-[10px] text-neutral-400 truncate block">
                     Gestión de materias
@@ -111,154 +90,26 @@ export default function Configuracion() {
               </div>
             </Link>
 
-            {/* Finanzas */}
-            <Link href="/finanzas" className="group">
+            {/* Colectivos */}
+            <Link href="/horarios" className="group">
               <div className="bg-neutral-900/60 hover:bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-3.5 flex flex-col justify-between h-24 transition-all shadow-sm active:scale-95">
-                <div className="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                  <Wallet size={16} />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-white block truncate group-hover:text-emerald-300 transition-colors">
-                    Finanzas
-                  </span>
-                  <span className="text-[10px] text-neutral-400 truncate block">
-                    Balance y deudas
-                  </span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Bóveda de Notas */}
-            <Link href="/notas" className="group">
-              <div className="bg-neutral-900/60 hover:bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-3.5 flex flex-col justify-between h-24 transition-all shadow-sm active:scale-95">
-                <div className="w-8 h-8 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center">
-                  <FileText size={16} />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-white block truncate group-hover:text-teal-300 transition-colors">
-                    Bóveda
-                  </span>
-                  <span className="text-[10px] text-neutral-400 truncate block">
-                    Notas tipo Notion
-                  </span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Kanban */}
-            <Link href="/kanban" className="group">
-              <div className="bg-neutral-900/60 hover:bg-neutral-900 border border-neutral-800 hover:border-neutral-700 rounded-2xl p-3.5 flex flex-col justify-between h-24 transition-all shadow-sm active:scale-95">
-                <div className="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
-                  <Kanban size={16} />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-xs font-bold text-white block truncate group-hover:text-sky-300 transition-colors">
-                    Kanban
-                  </span>
-                  <span className="text-[10px] text-neutral-400 truncate block">
-                    Tablero ágil
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </section>
-
-        {/* SECCIÓN 2: Presupuesto Semanal de Finanzas */}
-        <section className="flex flex-col gap-2.5">
-          <h2 className="text-[11px] uppercase text-neutral-500 font-bold tracking-wider px-1">
-            Presupuesto Semanal (Finanzas)
-          </h2>
-
-          <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-4 flex flex-col gap-3 shadow-xl backdrop-blur-md">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
-                <Wallet size={18} />
-              </div>
-              <div>
-                <span className="text-sm font-bold text-white block leading-tight">
-                  Límite de Gasto Semanal
-                </span>
-                <span className="text-[11px] text-neutral-400">
-                  Calcula alertas automáticas de balance
-                </span>
-              </div>
-            </div>
-
-            <form onSubmit={handleGuardarPresupuesto} className="flex gap-2 mt-1">
-              <div className="relative flex-1">
-                <span className="absolute left-3.5 top-2.5 text-xs text-neutral-500 font-mono">$</span>
-                <input
-                  type="number"
-                  value={presupuestoSemanal}
-                  onChange={(e) => setPresupuestoSemanal(e.target.value)}
-                  placeholder="30000"
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl pl-8 pr-3 py-2 text-xs text-white placeholder:text-neutral-600 focus:outline-none focus:border-emerald-500 font-mono"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                size="sm"
-                className={`text-xs font-bold rounded-xl px-4 transition-all ${
-                  presupuestoGuardado
-                    ? 'bg-emerald-500 text-black'
-                    : 'bg-neutral-800 hover:bg-neutral-700 text-white'
-                }`}
-              >
-                {presupuestoGuardado ? (
-                  <span className="flex items-center gap-1"><Check size={14} /> Guardado</span>
-                ) : (
-                  'Guardar'
-                )}
-              </Button>
-            </form>
-          </div>
-        </section>
-
-        {/* SECCIÓN 3: Notificaciones y Caché */}
-        <section className="flex flex-col gap-2.5">
-          <h2 className="text-[11px] uppercase text-neutral-500 font-bold tracking-wider px-1">
-            Sistema & Notificaciones
-          </h2>
-
-          <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl divide-y divide-neutral-800/80 overflow-hidden shadow-xl">
-            {/* Link a Notificaciones */}
-            <Link 
-              href="/configuracion/notificaciones" 
-              className="w-full flex items-center justify-between p-3.5 hover:bg-neutral-900/80 transition-colors text-left"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center">
-                  <Bell size={16} />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-white block">Avisos y Notificaciones</span>
-                  <span className="text-[10px] text-neutral-400">Recordatorios de colectivos y clases</span>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-neutral-500" />
-            </Link>
-
-            {/* Limpiar Caché / Forzar Recarga */}
-            <button 
-              onClick={handleForzarRecarga}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-neutral-900/80 transition-colors text-left"
-            >
-              <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
-                  <RefreshCw size={16} />
+                  <Clock size={16} />
                 </div>
-                <div>
-                  <span className="text-xs font-bold text-white block">Limpiar Caché y Forzar Sync</span>
-                  <span className="text-[10px] text-neutral-400">Actualiza Service Worker y assets locales</span>
+                <div className="min-w-0">
+                  <span className="text-xs font-bold text-white block truncate group-hover:text-cyan-300 transition-colors">
+                    Horarios
+                  </span>
+                  <span className="text-[10px] text-neutral-400 truncate block">
+                    Grilla de colectivos
+                  </span>
                 </div>
               </div>
-            </button>
+            </Link>
           </div>
         </section>
 
-        {/* SECCIÓN 4: Apariencia */}
+        {/* SECCIÓN 2: Apariencia */}
         <section className="flex flex-col gap-2.5">
           <h2 className="text-[11px] uppercase text-neutral-500 font-bold tracking-wider px-1">
             Apariencia
@@ -292,7 +143,7 @@ export default function Configuracion() {
           </div>
         </section>
 
-        {/* SECCIÓN 5: Boleto Educativo */}
+        {/* SECCIÓN 3: Boleto Educativo */}
         <section className="flex flex-col gap-2.5">
           <h2 className="text-[11px] uppercase text-neutral-500 font-bold tracking-wider px-1">
             Boleto Educativo Gratuito
@@ -325,15 +176,37 @@ export default function Configuracion() {
           </div>
         </section>
 
+        {/* SECCIÓN 4: Caché y Mantenimiento */}
+        <section className="flex flex-col gap-2.5">
+          <h2 className="text-[11px] uppercase text-neutral-500 font-bold tracking-wider px-1">
+            Mantenimiento
+          </h2>
+
+          <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl overflow-hidden shadow-xl">
+            <button 
+              onClick={handleForzarRecarga}
+              className="w-full flex items-center justify-between p-3.5 hover:bg-neutral-900/80 transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center">
+                  <RefreshCw size={16} />
+                </div>
+                <div>
+                  <span className="text-xs font-bold text-white block">Limpiar Caché y Forzar Sync</span>
+                  <span className="text-[10px] text-neutral-400">Actualiza Service Worker y horarios locales</span>
+                </div>
+              </div>
+              <ChevronRight size={16} className="text-neutral-500" />
+            </button>
+          </div>
+        </section>
+
         {/* Footer info */}
         <div className="mt-4 text-center flex flex-col gap-1 text-neutral-600 pb-6">
-          <p className="text-xs font-bold tracking-wide text-neutral-500">LifeOS • AppHorarios v2.1</p>
-          <p className="text-[11px]">Sistema Local-First para iPhone & Web</p>
+          <p className="text-xs font-bold tracking-wide text-neutral-500">AppHorarios</p>
+          <p className="text-[11px]">Horarios, Viajes y Gestión de Aulas</p>
         </div>
       </div>
-
-      {/* Modal Flotante de Ayuda Global */}
-      <HelpModal />
     </main>
   );
 }

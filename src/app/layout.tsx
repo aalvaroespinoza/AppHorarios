@@ -5,9 +5,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import PageTransitionWrapper from "@/components/layout/PageTransitionWrapper";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { EscenarioProvider } from "@/context/EscenarioContext";
-import NotificationProvider from "@/components/NotificationProvider";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { CommandPalette } from "@/components/CommandPalette";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -79,8 +77,6 @@ export default function RootLayout({
             </PageTransitionWrapper>
             <Navbar />
             <ServiceWorkerRegister />
-            <NotificationProvider />
-            <CommandPalette />
           </EscenarioProvider>
         </ThemeProvider>
       </body>

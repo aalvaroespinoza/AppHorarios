@@ -114,37 +114,6 @@ export function useTodaySchedule() {
     subjects
   );
 
-  useEffect(() => {
-    if (isToday) {
-      import('@/core/services/notifications/travel-notification.service').then(({ travelNotificationService }) => {
-        const todayString = new Date().toISOString().split('T')[0];
-        if (recomendacionIda.recomendado && materiasDelDia.length > 0) {
-          const rec = recomendacionIda.recomendado;
-          travelNotificationService.handleRecommendation({
-            id: `ida-${todayString}-${diaSeleccionado}-${rec.horaSalida}`,
-            claseTime: materiasDelDia[0].horaInicio,
-            colectivoTime: rec.horaSalida,
-            leaveHomeTime: (rec as any).saleDeCasa || rec.horaSalida,
-            empresa: rec.empresa,
-            materia: materiasDelDia[0].nombre
-          }).catch(console.error);
-        }
-
-        if (recomendacionVuelta.recomendado && materiasDelDia.length > 0) {
-          const rec = recomendacionVuelta.recomendado;
-          travelNotificationService.handleRecommendation({
-            id: `vuelta-${todayString}-${diaSeleccionado}-${rec.horaSalida}`,
-            claseTime: materiasDelDia[materiasDelDia.length - 1].horaFin,
-            colectivoTime: rec.horaSalida,
-            leaveHomeTime: rec.horaSalida,
-            empresa: rec.empresa,
-            destino: 'Alta Gracia',
-            materia: materiasDelDia[materiasDelDia.length - 1].nombre
-          }).catch(console.error);
-        }
-      });
-    }
-  }, [isToday, recomendacionIda.recomendado, recomendacionVuelta.recomendado, materiasDelDia, diaSeleccionado]);
 
   return {
     materiasDelDia,

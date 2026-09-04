@@ -531,7 +531,7 @@ export default function GestorMateriasPage() {
               <div>
                 <h3 className="text-lg font-bold text-white">¿Eliminar materia?</h3>
                 <p className="text-sm text-zinc-400 mt-1">
-                  Vas a eliminar <strong className="text-zinc-200">"{parseMateriaInfo(subjectToDelete.name).nombre}"</strong> de tus horarios.
+                  Vas a eliminar <strong className="text-zinc-200">&quot;{parseMateriaInfo(subjectToDelete.name).nombre}&quot;</strong> de tus horarios.
                 </p>
               </div>
 
