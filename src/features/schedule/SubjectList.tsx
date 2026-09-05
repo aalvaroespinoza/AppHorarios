@@ -11,31 +11,23 @@ interface SubjectListProps {
 /**
  * SubjectList
  *
- * Lista las materias activas del escenario.
- * Muestra un empty state si no hay materias cargadas todavía.
+ * Lista las materias activas del escenario en formato de matriz técnica.
  */
 export function SubjectList({ subjects }: SubjectListProps) {
   return (
-    <section aria-label="Materias del día">
-      {/* Etiqueta de sección */}
-      <p
-        className="
-          text-[11px] font-semibold uppercase tracking-widest
-          text-[var(--color-text-secondary)]
-          mb-1
-        "
-      >
-        Materias
+    <section aria-label="Materias del día" className="flex flex-col gap-2">
+      {/* Etiqueta de sección de telemetría */}
+      <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500">
+        [SYS.ACADEMIC // MATERIAS]
       </p>
 
       {subjects.length === 0 ? (
-        /* Empty state */
-        <p className="text-[14px] text-[var(--color-text-secondary)] py-3">
-          Sin materias registradas para este día.
-        </p>
+        <div className="border border-zinc-800 bg-zinc-900 rounded-sm p-5 text-center text-xs font-mono text-zinc-500 uppercase tracking-wider">
+          [SIN MATERIAS REGISTRADAS PARA ESTE DÍA]
+        </div>
       ) : (
         <motion.ul
-          className="divide-y divide-[var(--color-border)]"
+          className="flex flex-col gap-1.5"
           aria-label="Lista de materias"
           initial="hidden"
           animate="visible"
@@ -43,7 +35,7 @@ export function SubjectList({ subjects }: SubjectListProps) {
             hidden: { opacity: 0 },
             visible: { 
               opacity: 1, 
-              transition: { staggerChildren: 0.1 } 
+              transition: { staggerChildren: 0.05 } 
             }
           }}
         >

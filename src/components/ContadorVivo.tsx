@@ -6,6 +6,10 @@ interface Props {
   horaSalida: string;
 }
 
+/**
+ * ContadorVivo
+ * Módulo de telemetría LED / display segmentado para el conteo regresivo de colectivos.
+ */
 export default function ContadorVivo({ horaSalida }: Props) {
   const [minutosRestantes, setMinutosRestantes] = useState<number | null>(null);
 
@@ -31,34 +35,49 @@ export default function ContadorVivo({ horaSalida }: Props) {
 
   // Previene destellos o hidrataciones incorrectas
   if (minutosRestantes === null) {
-    return <span className="opacity-0 text-xs">Calculando...</span>;
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-zinc-800 bg-zinc-950 text-zinc-600 font-mono text-[11px] uppercase tracking-wider animate-pulse select-none">
+        <span className="w-1.5 h-1.5 bg-zinc-700 rounded-none" />
+        <span>CALC...</span>
+      </div>
+    );
   }
 
   // Escenario 1: Ya se fue
   if (minutosRestantes < 0) {
-    return <span className="text-white/60 font-medium text-xs tracking-wide bg-black/20 px-3 py-1 rounded-full">El colectivo ya pasó</span>;
+    return (
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-zinc-800 bg-zinc-950 text-zinc-500 font-mono text-[11px] uppercase tracking-wider select-none">
+        <span className="w-1.5 h-1.5 bg-zinc-600 rounded-none" />
+        <span>PASADO // YA SALIÓ</span>
+      </div>
+    );
   }
 
   // Escenario 2: Falta mucho (> 1 hora)
   if (minutosRestantes > 60) {
-    return <span className="text-white/90 font-medium text-xs tracking-wide">Sale a las <span className="font-bold">{horaSalida}</span></span>;
-  }
-
-  // Escenario 3: ¡Alerta! Menos de 15 minutos (Corre!)
-  if (minutosRestantes <= 15) {
     return (
-      <span className="font-bold text-white text-xs bg-red-500 shadow-[0_0_15px_rgba(239,68,68,0.6)] px-3 py-1 rounded-full flex items-center gap-1 animate-pulse border border-red-400">
-        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        Faltan {minutosRestantes} min
-      </span>
+      <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border border-zinc-800 bg-zinc-950 text-zinc-300 font-mono text-[11px] uppercase tracking-wider select-none">
+        <span className="w-1.5 h-1.5 bg-zinc-500 rounded-none" />
+        <span>PROGRAMADO: <strong className="text-zinc-100 font-bold">{horaSalida} HS</strong></span>
+      </div>
     );
   }
 
-  // Escenario 4: Entre 16 y 60 minutos
+  // Escenario 3: ¡Alerta de urgencia! Menos de 15 minutos (Safety Orange #FF5500)
+  if (minutosRestantes <= 15) {
+    return (
+      <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm border border-safety-orange bg-safety-orange/15 text-safety-orange font-mono text-[11px] font-bold uppercase tracking-widest shadow-none animate-pulse select-none">
+        <span className="w-2 h-2 bg-safety-orange rounded-none" />
+        <span>T-{minutosRestantes} MIN // SALIDA INMINENTE</span>
+      </div>
+    );
+  }
+
+  // Escenario 4: Entre 16 y 60 minutos (Acid Green #00E599)
   return (
-    <span className="font-bold text-white text-xs bg-white/20 backdrop-blur-md px-3 py-1 rounded-full shadow-inner flex items-center gap-1 border border-white/10">
-      <svg className="w-3.5 h-3.5 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-      Faltan {minutosRestantes} min
-    </span>
+    <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-sm border border-acid-green/60 bg-acid-green/10 text-acid-green font-mono text-[11px] font-bold uppercase tracking-widest shadow-none select-none">
+      <span className="w-2 h-2 bg-acid-green rounded-none" />
+      <span>T-{minutosRestantes} MIN // A TIEMPO</span>
+    </div>
   );
 }

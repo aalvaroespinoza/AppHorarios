@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ChevronUp, MapPin, Moon, CheckCircle2, Clock, Bus, Sparkles, RotateCcw } from 'lucide-react';
+import { ChevronDown, ChevronUp, Clock, Bus, RotateCcw, Moon } from 'lucide-react';
 import NativeCard from '@/core/components/ui/NativeCard';
 import { calcularHoraLlegada } from '@/core/utils/time';
 import { addMinutes, OFFSET_PARADA_VUELTA_MIN } from '@/lib/engine/recommendation-engine';
@@ -49,7 +49,7 @@ export function HorarioCard({
   const storageKey = `selected-bus-${todayDateStr}-${diaSeleccionado}-${direction}`;
 
   // Persistencia local-first del colectivo seleccionado manualmente
-  const [overrideBus, setOverrideBus, isStorageMounted] = useLocalStorageState<RawScheduleEntry | null>(
+  const [overrideBus, setOverrideBus] = useLocalStorageState<RawScheduleEntry | null>(
     storageKey,
     null
   );
@@ -95,39 +95,48 @@ export function HorarioCard({
 
   if (!currentRecomendado) {
     return (
-      <NativeCard className="flex flex-col items-center justify-center py-10 text-center gap-3 bg-neutral-900/40 border-neutral-800/80 rounded-3xl">
-        <div className="w-14 h-14 bg-neutral-800/50 rounded-full flex items-center justify-center border border-neutral-700/50">
-          <Moon size={24} className="text-neutral-400" />
+      <NativeCard className="flex flex-col items-center justify-center py-10 text-center gap-3 bg-zinc-900 border border-zinc-800 rounded-sm shadow-none">
+        <div className="w-10 h-10 bg-zinc-950 border border-zinc-800 rounded-sm flex items-center justify-center text-zinc-500">
+          <Moon size={18} />
         </div>
         <div>
-          <p className="text-base font-bold text-white">No hay {titulo.toLowerCase()} programada</p>
-          <p className="text-xs text-neutral-400 mt-0.5">Disfrutá tu día o descansá en casa.</p>
+          <p className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+            [SYS.SCHEDULE // INACTIVO]
+          </p>
+          <p className="text-sm font-bold text-zinc-100 mt-1">
+            No hay {titulo.toLowerCase()} programada
+          </p>
+          <p className="text-xs text-zinc-500 font-mono mt-0.5">
+            STANDBY // DESCANSO
+          </p>
         </div>
       </NativeCard>
     );
   }
 
   return (
-    <NativeCard className={`flex flex-col relative overflow-hidden transition-all duration-300 rounded-3xl border border-neutral-800/80 bg-neutral-950/60 backdrop-blur-md p-5 shadow-xl ${becUsado ? 'opacity-75 grayscale-[0.2]' : ''}`}>
-      {/* Resplandor sutil */}
-      <div className={`absolute -top-12 -right-12 w-32 h-32 rounded-full blur-3xl pointer-events-none transition-colors ${becUsado ? 'bg-emerald-500/10' : 'bg-cyan-500/10'}`} />
-
-      {/* Cabecera de la Tarjeta */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${esVuelta ? 'bg-indigo-500/10 text-indigo-400' : 'bg-cyan-500/10 text-cyan-400'}`}>
-            <Icon size={18} />
+    <NativeCard className={`flex flex-col relative overflow-hidden transition-all duration-200 rounded-sm border border-zinc-800 bg-zinc-900 p-4 sm:p-5 shadow-none ${becUsado ? 'opacity-80' : ''}`}>
+      {/* Cabecera Técnica de Telemetría */}
+      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-3">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+              SYS.DEP // {direction.toUpperCase()}
+            </span>
+            {isManualOverride && (
+              <span className="text-[9px] font-mono font-bold text-safety-orange bg-safety-orange/10 px-1.5 py-0.5 rounded-sm border border-safety-orange/30 uppercase tracking-wider">
+                MANUAL
+              </span>
+            )}
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="font-bold text-sm text-white tracking-tight leading-tight">{titulo}</h2>
-              {isManualOverride && (
-                <span className="text-[10px] font-bold text-amber-400 bg-amber-500/10 px-1.5 py-0.2 rounded-md border border-amber-500/20">
-                  Manual
-                </span>
-              )}
+          <div className="flex items-center gap-2">
+            <div className={`w-5 h-5 rounded-sm flex items-center justify-center border ${esVuelta ? 'border-zinc-700 bg-zinc-800 text-zinc-300' : 'border-safety-orange/40 bg-safety-orange/10 text-safety-orange'}`}>
+              <Icon size={12} />
             </div>
-            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider">
+            <h2 className="font-bold text-xs uppercase tracking-wider text-zinc-100 font-mono">
+              {titulo}
+            </h2>
+            <span className="text-[10px] font-mono font-semibold text-zinc-400 border border-zinc-800 bg-zinc-950 px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
               {currentRecomendado.empresa}
             </span>
           </div>
@@ -138,105 +147,99 @@ export function HorarioCard({
           {isManualOverride && (
             <button
               onClick={handleResetToAutomatic}
-              className="flex items-center gap-1 text-[11px] font-semibold text-neutral-400 hover:text-cyan-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-full hover:border-neutral-700 transition-all active:scale-95"
+              className="flex items-center gap-1 text-[10px] font-mono font-semibold text-zinc-400 hover:text-safety-orange bg-zinc-950 border border-zinc-800 px-2 py-1 rounded-sm hover:border-zinc-700 transition-colors active:translate-y-[0.5px]"
               title="Restablecer al colectivo automático recomendado"
             >
-              <RotateCcw size={12} />
-              <span>Restablecer</span>
+              <RotateCcw size={11} />
+              <span>AUTO</span>
             </button>
           )}
 
-          {/* Botón BEC */}
+          {/* Botón Mecánico BEC */}
           <motion.button 
             whileTap={TAP_ANIMATION}
             onClick={toggleTomado}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold transition-all border ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider transition-all border shadow-none ${
               becUsado 
-                ? 'bg-emerald-950/50 text-emerald-300 border-emerald-500/40 shadow-[0_0_10px_rgba(16,185,129,0.2)]' 
-                : 'bg-neutral-900 hover:bg-neutral-800 text-neutral-300 border-neutral-800 hover:border-neutral-700'
+                ? 'bg-acid-green/15 text-acid-green border-acid-green/60' 
+                : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border-zinc-800 hover:border-zinc-700'
             }`}
           >
-            <CheckCircle2 size={14} className={becUsado ? 'text-emerald-400' : 'text-neutral-500'} />
-            <span>{becUsado ? 'BEC Usado ✓' : 'Marcar BEC'}</span>
+            <span className={`w-1.5 h-1.5 rounded-none ${becUsado ? 'bg-acid-green' : 'bg-zinc-600'}`} />
+            <span>{becUsado ? 'BEC: ON' : 'BEC: OFF'}</span>
           </motion.button>
         </div>
       </div>
 
-      {/* Horario Principal y Cuenta Regresiva */}
-      <div className="flex justify-between items-end my-2">
-        <div>
-          {esVuelta ? (
-            <div className="flex flex-col">
-              <span className="text-[11px] text-neutral-400 font-medium">Paso por parada Ministerio:</span>
-              <div className="text-5xl font-black font-sans tracking-tight text-white leading-none mt-1">
-                {horaReal}
-              </div>
-              <span className="text-[10px] text-neutral-500 font-mono mt-1">
-                Sale de Terminal Cba: {currentRecomendado.horaSalida} hs
-              </span>
+      {/* Módulo LCD / Telemetría Principal */}
+      <div className="bg-zinc-950 border border-zinc-800/90 rounded-sm p-3.5 my-1">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 block mb-1">
+          {esVuelta ? 'PUNTO DE EMBARQUE // PARADA MINISTERIO' : 'SALIDA ORIGEN // DESPEÑADEROS'}
+        </span>
+        
+        <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-2.5">
+          <div>
+            {/* HORA GIGANTE EN MONOESPACIADO */}
+            <div className="font-mono text-5xl sm:text-6xl font-bold tracking-tight text-zinc-100 leading-none py-0.5">
+              {horaReal}
             </div>
-          ) : (
-            <div className="flex flex-col">
-              <span className="text-[11px] text-neutral-400 font-medium">Salida de Despeñaderos:</span>
-              <div className="text-5xl font-black font-sans tracking-tight text-white leading-none mt-1">
-                {currentRecomendado.horaSalida}
-              </div>
+            {esVuelta && (
+              <span className="text-[10px] text-zinc-500 font-mono mt-1 block uppercase tracking-wider">
+                ORIGEN TERMINAL CBA: <strong className="text-zinc-300 font-semibold">{currentRecomendado.horaSalida} HS</strong>
+              </span>
+            )}
+          </div>
+          
+          {/* Status Badge Estilo Terminal */}
+          {minutosFaltantes !== null && (
+            <div className="self-start sm:self-end">
+              {minutosFaltantes > 0 && minutosFaltantes <= 45 ? (
+                <div className="border border-safety-orange bg-safety-orange/15 text-safety-orange font-mono text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-sm flex items-center gap-2 shadow-none animate-pulse">
+                  <span className="w-2 h-2 bg-safety-orange rounded-none" />
+                  <span>SALE EN {formatMinutosFaltantes(minutosFaltantes)}</span>
+                </div>
+              ) : minutosFaltantes === 0 ? (
+                <div className="border border-safety-orange bg-safety-orange text-black font-mono text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-sm flex items-center gap-2 shadow-none animate-pulse">
+                  <span className="w-2 h-2 bg-black rounded-none" />
+                  <span>SALIENDO AHORA</span>
+                </div>
+              ) : minutosFaltantes < 0 ? (
+                <div className="border border-zinc-800 bg-zinc-900 text-zinc-500 font-mono text-xs uppercase tracking-wider px-2.5 py-1 rounded-sm flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-zinc-600 rounded-none" />
+                  <span>SERVICIO FINALIZADO</span>
+                </div>
+              ) : (
+                <div className="border border-acid-green/50 bg-acid-green/10 text-acid-green font-mono text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-sm flex items-center gap-2 shadow-none">
+                  <span className="w-2 h-2 bg-acid-green rounded-none" />
+                  <span>SALE EN {formatMinutosFaltantes(minutosFaltantes)}</span>
+                </div>
+              )}
             </div>
           )}
         </div>
-        
-        {/* Píldora de cuenta regresiva */}
-        {minutosFaltantes !== null && (
-          <div className="flex flex-col items-end pb-1">
-            <div className={`font-bold px-3 py-1.5 rounded-full text-xs flex items-center gap-1.5 shadow-md ${
-              minutosFaltantes > 0 && minutosFaltantes <= 45 
-                ? 'bg-cyan-500/15 border border-cyan-500/40 text-cyan-300 animate-pulse shadow-[0_0_12px_rgba(6,182,212,0.25)]' 
-                : minutosFaltantes < 0
-                  ? 'bg-red-500/10 border border-red-500/30 text-red-400'
-                  : 'bg-neutral-900 border border-neutral-800 text-neutral-300'
-            }`}>
-              <span className="relative flex h-2 w-2">
-                {minutosFaltantes > 0 && minutosFaltantes <= 45 && (
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                )}
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${
-                  minutosFaltantes > 0 && minutosFaltantes <= 45 
-                    ? 'bg-cyan-400' 
-                    : minutosFaltantes < 0
-                      ? 'bg-red-400'
-                      : 'bg-neutral-500'
-                }`}></span>
-              </span>
-              <span>
-                {minutosFaltantes > 0 
-                  ? `Sale en ${formatMinutosFaltantes(minutosFaltantes)}` 
-                  : minutosFaltantes === 0 
-                    ? 'Saliendo ahora' 
-                    : 'Ya salió'}
-              </span>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* Nota / Llegada Estimada */}
-      <div className="bg-neutral-900/60 border border-neutral-800/80 p-2.5 rounded-2xl my-2 text-xs text-neutral-300 flex items-center gap-2">
-        <Clock size={14} className="text-cyan-400 shrink-0" />
-        <span className="leading-snug">
-          Llegada estimada a destino: <strong className="text-white font-mono">{calcularHoraLlegada(currentRecomendado.horaSalida, direction)} hs</strong>
+      {/* Franja de Llegada Estimada */}
+      <div className="border-t border-zinc-800/80 pt-2.5 mt-2 flex items-center justify-between text-xs font-mono">
+        <div className="flex items-center gap-1.5 text-zinc-500 text-[11px] uppercase tracking-wider">
+          <Clock size={12} className="text-zinc-400" />
+          <span>LLEGADA ESTIMADA DESTINO:</span>
+        </div>
+        <span className="font-mono text-xs font-bold text-zinc-100 tracking-wider">
+          {calcularHoraLlegada(currentRecomendado.horaSalida, direction)} HS
         </span>
       </div>
 
-      {/* Alternativas Siguientes */}
+      {/* Opciones Alternativas Siguientes */}
       {currentAlternativas.length > 0 && (
-        <div className="border-t border-neutral-800/60 pt-3 mt-1">
+        <div className="border-t border-zinc-800/80 pt-2.5 mt-2.5">
           <motion.button 
             whileTap={TAP_ANIMATION}
             onClick={() => setVerAlternativas(!verAlternativas)}
-            className="flex items-center justify-between w-full text-xs font-semibold text-neutral-400 hover:text-white transition-colors py-1"
+            className="flex items-center justify-between w-full text-[10px] font-mono uppercase tracking-widest text-zinc-400 hover:text-zinc-100 transition-colors py-1 cursor-pointer select-none"
           >
-            <span>Ver siguientes {currentAlternativas.length} opciones de viaje</span>
-            {verAlternativas ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+            <span>[ + ] OPCIONES ALTERNATIVAS ({currentAlternativas.length})</span>
+            {verAlternativas ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
           </motion.button>
           <AnimatePresence>
             {verAlternativas && (
@@ -245,25 +248,25 @@ export function HorarioCard({
                 animate={{ opacity: 1, height: "auto" }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={SPRING_CONFIG}
-                className="mt-2 flex flex-col gap-2 overflow-hidden"
+                className="mt-2 flex flex-col gap-1.5 overflow-hidden"
               >
                 {currentAlternativas.map((alt: RawScheduleEntry, idx: number) => (
                   <motion.button 
                     whileTap={TAP_ANIMATION}
                     key={idx} 
                     onClick={() => handleSelectAlternative(alt)}
-                    className="flex justify-between items-center bg-neutral-900/70 hover:bg-neutral-900 border border-neutral-800 p-2.5 rounded-xl transition-colors text-left group"
+                    className="flex justify-between items-center bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 p-2.5 rounded-sm transition-colors text-left group cursor-pointer"
                   >
-                    <div>
-                      <span className="font-mono font-bold text-white text-sm group-hover:text-cyan-300 transition-colors">
-                        {alt.horaSalida} hs
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-bold text-zinc-100 text-sm group-hover:text-safety-orange transition-colors">
+                        {alt.horaSalida} HS
                       </span>
-                      <span className="text-xs text-neutral-400 ml-2 font-medium">
+                      <span className="text-[10px] font-mono uppercase text-zinc-500 font-medium">
                         {alt.empresa}
                       </span>
                     </div>
-                    <span className="text-[11px] text-neutral-400 font-mono">
-                      Llega {calcularHoraLlegada(alt.horaSalida, direction)}
+                    <span className="text-[10px] text-zinc-400 font-mono uppercase tracking-wider">
+                      ETA: {calcularHoraLlegada(alt.horaSalida, direction)} HS
                     </span>
                   </motion.button>
                 ))}

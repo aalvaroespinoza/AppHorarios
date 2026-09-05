@@ -14,7 +14,7 @@ export default function NativeCard({ children, className = '', ...props }: Nativ
       layout
       transition={SPRING_CONFIG}
       whileTap={TAP_ANIMATION}
-      className={`bg-white dark:bg-zinc-900 rounded-3xl border border-gray-200 dark:border-zinc-800 p-5 overflow-hidden shadow-sm ${className}`}
+      className={`bg-zinc-900 rounded-sm border border-zinc-800 p-4 sm:p-5 overflow-hidden shadow-none ${className}`}
       {...props as any}
     >
       {children}

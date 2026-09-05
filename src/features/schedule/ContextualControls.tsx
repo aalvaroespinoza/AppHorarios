@@ -50,29 +50,15 @@ export default function ContextualControls() {
 
   // Prevenir desajustes de hidratación en Server Side Rendering
   if (!isMounted) {
-    return <div className="animate-pulse h-24 bg-zinc-900/50 rounded-xl" />;
+    return <div className="animate-pulse h-16 bg-zinc-900 border border-zinc-800 rounded-sm" />;
   }
 
   return (
-    <div className="flex flex-col gap-6 w-full">
-      {/* 
-        Añadimos un bloque de estilos en línea en caso de que la clase
-        "no-scrollbar" no esté configurada previamente en Tailwind/globals.css
-      */}
-      <style dangerouslySetInnerHTML={{__html: `
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-      `}} />
-
-      {/* 1. Carrusel de Días */}
+    <div className="flex flex-col gap-4 w-full">
+      {/* 1. Selector Mecánico de Días */}
       <div 
         ref={scrollContainerRef}
-        className="overflow-x-auto no-scrollbar pb-2 -mx-4 px-4 flex space-x-2 items-center"
+        className="overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 flex space-x-1.5 items-center"
       >
         {DIAS_SEMANA.map((dia) => {
           const isSelected = diaSeleccionado === dia.id;
@@ -82,71 +68,58 @@ export default function ContextualControls() {
               key={dia.id}
               data-active={isSelected}
               onClick={() => setDiaSeleccionado(dia.id)}
-              className={`whitespace-nowrap transition-all duration-200 relative rounded-full px-4 py-2 ${
+              className={`whitespace-nowrap transition-colors duration-150 relative rounded-sm px-3 py-1.5 font-mono text-xs uppercase tracking-wider border select-none cursor-pointer ${
                 isSelected 
-                  ? 'bg-zinc-800 text-white font-semibold' 
-                  : 'text-zinc-500 font-medium hover:bg-zinc-800/40'
+                  ? 'bg-zinc-800 text-zinc-100 border-zinc-600 font-bold' 
+                  : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700'
               } ${
                 isToday 
-                  ? 'border-b-2 border-emerald-500 !text-emerald-400 font-extrabold bg-emerald-500/10' 
+                  ? '!border-acid-green/60 !text-acid-green font-bold' 
                   : ''
               }`}
             >
-              {dia.label} {isToday && "(Hoy)"}
+              {dia.label} {isToday && "*"}
             </button>
           );
         })}
       </div>
 
-      {/* Controles Dinámicos (solo martes o viernes) */}
+      {/* Controles Dinámicos de Escenario */}
       <AnimatePresence mode="popLayout">
         {diaSeleccionado === 'martes' && (
           <motion.button 
             key="martes-btn"
-            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+            initial={{ opacity: 0, scale: 0.98, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            exit={{ opacity: 0, scale: 0.98, y: -4 }}
             transition={SPRING_CONFIG}
             whileTap={TAP_ANIMATION}
             onClick={() => setCursaArquitectura(!cursaArquitectura)}
-            className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+            className={`w-full text-left p-3.5 rounded-sm border transition-colors shadow-none cursor-pointer ${
               cursaArquitectura 
-                ? 'bg-orange-500/10 border-orange-500/50 shadow-[0_0_15px_rgba(249,115,22,0.15)]' 
-                : 'bg-[var(--color-surface)] border-[var(--color-border)]'
+                ? 'bg-safety-orange/10 border-safety-orange/60' 
+                : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
             }`}
           >
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-orange-500/20 rounded-full blur-3xl transition-opacity duration-500 ${cursaArquitectura ? 'opacity-100' : 'opacity-0'}`} />
-            <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl transition-colors duration-300 ${cursaArquitectura ? 'bg-orange-500 text-white shadow-lg shadow-orange-500/30' : 'bg-zinc-800/50 dark:bg-zinc-800 text-[var(--color-text-secondary)]'}`}>
-                  <Building2 size={20} />
+                <div className={`p-2 rounded-sm border ${cursaArquitectura ? 'bg-safety-orange text-black border-safety-orange font-bold' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}>
+                  <Building2 size={16} />
                 </div>
                 <div>
-                  <span className={`font-semibold text-[16px] block leading-tight transition-colors duration-300 ${cursaArquitectura ? 'text-orange-900 dark:text-orange-50' : 'text-[var(--color-text-primary)]'}`}>
-                    Cursar Arquitectura
+                  <span className={`font-mono font-bold text-xs uppercase tracking-wide block leading-tight ${cursaArquitectura ? 'text-safety-orange' : 'text-zinc-200'}`}>
+                    CURSAR ARQUITECTURA
                   </span>
-                  <span className={`text-[13px] block leading-tight mt-0.5 transition-colors duration-300 ${cursaArquitectura ? 'text-orange-700 dark:text-orange-200/70' : 'text-[var(--color-text-secondary)]'}`}>
-                    {cursaArquitectura ? 'Agregado al itinerario de hoy' : 'Tocar para cursar'}
+                  <span className="text-[10px] font-mono text-zinc-500 block leading-tight mt-0.5 uppercase tracking-wider">
+                    {cursaArquitectura ? '[ACTIVO // ITINERARIO MODIFICADO]' : '[INACTIVO // TOCAR PARA ACTIVAR]'}
                   </span>
                 </div>
               </div>
-              <motion.div 
-                layout
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                cursaArquitectura ? 'bg-orange-500 border-orange-500' : 'border-zinc-300 dark:border-zinc-600'
+              <div className={`w-5 h-5 rounded-none border flex items-center justify-center font-mono text-[10px] font-bold ${
+                cursaArquitectura ? 'bg-safety-orange border-safety-orange text-black' : 'border-zinc-700 bg-zinc-950 text-transparent'
               }`}>
-                <AnimatePresence>
-                  {cursaArquitectura && (
-                    <motion.svg 
-                      initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </motion.svg>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                {cursaArquitectura ? '✓' : ''}
+              </div>
             </div>
           </motion.button>
         )}
@@ -154,50 +127,37 @@ export default function ContextualControls() {
         {diaSeleccionado === 'viernes' && (
           <motion.button 
             key="viernes-btn"
-            initial={{ opacity: 0, scale: 0.9, y: -10 }}
+            initial={{ opacity: 0, scale: 0.98, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -10 }}
+            exit={{ opacity: 0, scale: 0.98, y: -4 }}
             transition={SPRING_CONFIG}
             whileTap={TAP_ANIMATION}
             onClick={() => setDuermeEnCordoba(!duermeEnCordoba)}
-            className={`w-full text-left p-4 mt-2 rounded-2xl border transition-all duration-300 relative overflow-hidden ${
+            className={`w-full text-left p-3.5 rounded-sm border transition-colors shadow-none cursor-pointer ${
               duermeEnCordoba 
-                ? 'bg-indigo-500/10 border-indigo-500/50 shadow-[0_0_15px_rgba(99,102,241,0.15)]' 
-                : 'bg-[var(--color-surface)] border-[var(--color-border)]'
+                ? 'bg-acid-green/10 border-acid-green/60' 
+                : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
             }`}
           >
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl transition-opacity duration-500 ${duermeEnCordoba ? 'opacity-100' : 'opacity-0'}`} />
-            <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-xl transition-colors duration-300 ${duermeEnCordoba ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-zinc-800/50 dark:bg-zinc-800 text-[var(--color-text-secondary)]'}`}>
-                  <Bed size={20} />
+                <div className={`p-2 rounded-sm border ${duermeEnCordoba ? 'bg-acid-green text-black border-acid-green font-bold' : 'bg-zinc-950 border-zinc-800 text-zinc-400'}`}>
+                  <Bed size={16} />
                 </div>
                 <div>
-                  <span className={`font-semibold text-[16px] block leading-tight transition-colors duration-300 ${duermeEnCordoba ? 'text-indigo-900 dark:text-indigo-50' : 'text-[var(--color-text-primary)]'}`}>
-                    Dormir en Córdoba
+                  <span className={`font-mono font-bold text-xs uppercase tracking-wide block leading-tight ${duermeEnCordoba ? 'text-acid-green' : 'text-zinc-200'}`}>
+                    DORMIR EN CÓRDOBA
                   </span>
-                  <span className={`text-[13px] block leading-tight mt-0.5 transition-colors duration-300 ${duermeEnCordoba ? 'text-indigo-700 dark:text-indigo-200/70' : 'text-[var(--color-text-secondary)]'}`}>
-                    {duermeEnCordoba ? 'Se cancelan regresos de hoy' : 'Tocar si te quedás'}
+                  <span className="text-[10px] font-mono text-zinc-500 block leading-tight mt-0.5 uppercase tracking-wider">
+                    {duermeEnCordoba ? '[ACTIVO // SE CANCELAN REGRESOS]' : '[INACTIVO // TOCAR SI TE QUEDÁS]'}
                   </span>
                 </div>
               </div>
-              <motion.div 
-                layout
-                transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                duermeEnCordoba ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-300 dark:border-zinc-600'
+              <div className={`w-5 h-5 rounded-none border flex items-center justify-center font-mono text-[10px] font-bold ${
+                duermeEnCordoba ? 'bg-acid-green border-acid-green text-black' : 'border-zinc-700 bg-zinc-950 text-transparent'
               }`}>
-                <AnimatePresence>
-                  {duermeEnCordoba && (
-                    <motion.svg 
-                      initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
-                      width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </motion.svg>
-                  )}
-                </AnimatePresence>
-              </motion.div>
+                {duermeEnCordoba ? '✓' : ''}
+              </div>
             </div>
           </motion.button>
         )}

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import PageTransitionWrapper from "@/components/layout/PageTransitionWrapper";
@@ -7,7 +7,16 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import { EscenarioProvider } from "@/context/EscenarioContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-ibm-plex-mono",
+});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -15,7 +24,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#000000",
+  themeColor: "#0A0A0C",
 };
 
 export const metadata: Metadata = {
@@ -35,7 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es" className="scroll-smooth">
+    <html lang="es" className="scroll-smooth dark">
       <head>
         <script
           dangerouslySetInnerHTML={{
@@ -69,7 +78,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.className} bg-gray-50 text-neutral-900 dark:bg-black dark:text-white min-h-[100dvh] antialiased transition-colors duration-300`}>
+      <body className={`${inter.className} ${inter.variable} ${ibmPlexMono.variable} font-sans bg-[#0A0A0C] text-[#F4F4F6] min-h-[100dvh] antialiased selection:bg-[#FF5500] selection:text-black`}>
         <ThemeProvider>
           <EscenarioProvider>
             <PageTransitionWrapper>

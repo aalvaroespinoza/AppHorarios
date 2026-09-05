@@ -45,13 +45,13 @@ export default function RelojMinimalista() {
 
   // Para evitar destellos de hidratación en SSR, no mostramos nada hasta que esté montado
   if (!hora) {
-    return <span className="text-zinc-500 font-mono text-sm opacity-0 select-none">00:00</span>;
+    return <span className="text-zinc-100 font-mono text-sm font-bold tracking-wider tabular-nums opacity-0 select-none">00:00</span>;
   }
 
   return (
     <span 
       onClick={() => setClics(c => c + 1)}
-      className="text-zinc-500 font-mono text-sm cursor-default select-none"
+      className="text-zinc-100 font-mono text-sm font-bold tracking-wider tabular-nums cursor-default select-none"
     >
       {hora}
     </span>

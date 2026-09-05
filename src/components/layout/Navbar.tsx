@@ -40,16 +40,16 @@ export function Navbar() {
   const isAulasActive = pathname?.startsWith('/aulas') || pathname?.startsWith('/configuracion/materias');
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-neutral-950/90 backdrop-blur-xl border-t border-neutral-800/80 pb-safe">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0C] border-t border-zinc-800 pb-safe shadow-none">
       {/* Indicador Minimalista Offline */}
       {isOffline && (
-        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-500 text-black text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-lg flex items-center gap-1.5 backdrop-blur-md">
+        <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-400 text-black text-[9px] font-mono font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-none border border-amber-500 shadow-none flex items-center gap-1.5">
           <WifiOff size={11} />
-          <span>Modo Offline • Guardando en IDB</span>
+          <span>OFFLINE // LOCAL IDB</span>
         </div>
       )}
 
-      <div className="flex justify-around items-center h-16 max-w-md mx-auto px-4 relative">
+      <div className="flex justify-around items-center h-14 max-w-md mx-auto px-4 relative">
         {/* 1. Viajes */}
         <Link
           href="/"
@@ -57,17 +57,17 @@ export function Navbar() {
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <motion.div whileTap={TAP_ANIMATION} className="flex flex-col items-center gap-1">
-            <div className={`p-1.5 rounded-xl transition-all ${
+            <div className={`p-1 rounded-sm border transition-colors ${
               isViajesActive
-                ? 'text-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                : 'text-neutral-400 group-hover:text-white'
+                ? 'text-safety-orange bg-safety-orange/15 border-safety-orange/50 shadow-none'
+                : 'border-transparent text-zinc-500 group-hover:text-zinc-200'
             }`}>
-              <Bus size={20} strokeWidth={isViajesActive ? 2.5 : 1.8} />
+              <Bus size={18} strokeWidth={isViajesActive ? 2.5 : 1.8} />
             </div>
-            <span className={`text-[10px] font-bold tracking-tight transition-colors ${
-              isViajesActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'
+            <span className={`text-[9px] font-mono font-bold uppercase tracking-wider transition-colors ${
+              isViajesActive ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'
             }`}>
-              Viajes
+              VIAJES
             </span>
           </motion.div>
         </Link>
@@ -79,17 +79,17 @@ export function Navbar() {
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <motion.div whileTap={TAP_ANIMATION} className="flex flex-col items-center gap-1">
-            <div className={`p-1.5 rounded-xl transition-all ${
+            <div className={`p-1 rounded-sm border transition-colors ${
               isHorariosActive
-                ? 'text-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                : 'text-neutral-400 group-hover:text-white'
+                ? 'text-safety-orange bg-safety-orange/15 border-safety-orange/50 shadow-none'
+                : 'border-transparent text-zinc-500 group-hover:text-zinc-200'
             }`}>
-              <Clock size={20} strokeWidth={isHorariosActive ? 2.5 : 1.8} />
+              <Clock size={18} strokeWidth={isHorariosActive ? 2.5 : 1.8} />
             </div>
-            <span className={`text-[10px] font-bold tracking-tight transition-colors ${
-              isHorariosActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'
+            <span className={`text-[9px] font-mono font-bold uppercase tracking-wider transition-colors ${
+              isHorariosActive ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'
             }`}>
-              Horarios
+              HORARIOS
             </span>
           </motion.div>
         </Link>
@@ -101,17 +101,17 @@ export function Navbar() {
           style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <motion.div whileTap={TAP_ANIMATION} className="flex flex-col items-center gap-1">
-            <div className={`p-1.5 rounded-xl transition-all ${
+            <div className={`p-1 rounded-sm border transition-colors ${
               isAulasActive
-                ? 'text-cyan-400 bg-cyan-500/15 ring-1 ring-cyan-500/30 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-                : 'text-neutral-400 group-hover:text-white'
+                ? 'text-safety-orange bg-safety-orange/15 border-safety-orange/50 shadow-none'
+                : 'border-transparent text-zinc-500 group-hover:text-zinc-200'
             }`}>
-              <GraduationCap size={20} strokeWidth={isAulasActive ? 2.5 : 1.8} />
+              <GraduationCap size={18} strokeWidth={isAulasActive ? 2.5 : 1.8} />
             </div>
-            <span className={`text-[10px] font-bold tracking-tight transition-colors ${
-              isAulasActive ? 'text-white' : 'text-neutral-500 group-hover:text-neutral-300'
+            <span className={`text-[9px] font-mono font-bold uppercase tracking-wider transition-colors ${
+              isAulasActive ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300'
             }`}>
-              Aulas
+              AULAS
             </span>
           </motion.div>
         </Link>

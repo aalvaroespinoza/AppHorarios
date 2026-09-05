@@ -17,9 +17,7 @@ interface SubjectCardProps {
 
 /**
  * SubjectCard
- *
- * Fila compacta que muestra una materia con su horario.
- * Permite hacer clic para abrir el submenú de detalles de cursado.
+ * Celda técnica de la matriz de materias con estilo de consola de hardware industrial.
  */
 export function SubjectCard({ subject }: SubjectCardProps) {
   const [selectedSubject, setSelectedSubject] = useState<any | null>(null);
@@ -29,7 +27,7 @@ export function SubjectCard({ subject }: SubjectCardProps) {
     <>
       <motion.li 
         variants={{
-          hidden: { opacity: 0, scale: 0.98, y: 10 },
+          hidden: { opacity: 0, scale: 0.99, y: 4 },
           visible: { 
             opacity: 1, 
             scale: 1, 
@@ -38,39 +36,45 @@ export function SubjectCard({ subject }: SubjectCardProps) {
           }
         }}
         onClick={() => setSelectedSubject(subject)}
-        className="flex items-start justify-between gap-4 py-3 cursor-pointer active:scale-98 transition-transform"
+        className="p-3.5 my-2 bg-zinc-900 border border-zinc-800 rounded-sm list-none transition-colors hover:border-zinc-700 shadow-none cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 select-none"
       >
-        <div className="flex flex-col items-center text-center justify-center h-full w-full min-w-0">
-          {parsed.curso ? (
-            <div className="flex flex-col items-center text-center justify-center h-full w-full p-1 gap-0.5">
-              <span className="font-bold text-xs leading-tight">{parsed.nombre}</span>
-              <span className="text-[11px] opacity-80 font-medium">
-                {parsed.curso} | Aula {parsed.aula}
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-mono font-bold text-xs sm:text-sm text-zinc-100 uppercase tracking-tight">
+              {parsed.nombre}
+            </span>
+            {parsed.curso && (
+              <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300 border border-zinc-700 bg-zinc-950 px-1.5 py-0.5 rounded-sm">
+                {parsed.curso}
               </span>
-              <span className="text-[10px] font-bold text-neutral-900 dark:text-white bg-black/10 dark:bg-white/20 px-1.5 py-0.5 rounded-md mt-0.5">
+            )}
+            {parsed.aula && (
+              <span className="text-[10px] font-mono uppercase tracking-wider text-acid-green border border-acid-green/40 bg-acid-green/10 px-1.5 py-0.5 rounded-sm">
+                AULA {parsed.aula}
+              </span>
+            )}
+            {parsed.edificio && (
+              <span className="text-[10px] font-mono uppercase tracking-wider text-safety-orange border border-safety-orange/40 bg-safety-orange/10 px-1.5 py-0.5 rounded-sm">
                 📍 {parsed.edificio}
               </span>
-            </div>
-          ) : (
-            <span className="text-xs text-center font-bold">{parsed.nombre}</span>
-          )}
+            )}
+          </div>
 
-          {/* Bloques horarios */}
+          {/* Bloques horarios técnicos */}
           {subject.classBlocks && subject.classBlocks.length > 0 && (
-            <ul className="flex flex-wrap justify-center gap-x-3 gap-y-0.5 mt-1">
+            <ul className="flex flex-wrap items-center gap-x-2.5 gap-y-1 mt-0.5">
               {subject.classBlocks.map((block, i) => (
                 <li
                   key={i}
-                  className="text-[12px] text-[var(--color-text-secondary)] flex items-center gap-1"
+                  className="text-[11px] font-mono text-zinc-400 flex items-center gap-1"
                 >
-                  <span className="capitalize">{block.day}</span>
-                  <span aria-hidden="true">·</span>
-                  <span>{formatTimeRange(block.startTime, block.endTime)}</span>
+                  <span className="uppercase text-zinc-500 font-semibold">{block.day}</span>
+                  <span className="text-zinc-600">{"//"}</span>
+                  <span className="text-zinc-200">{formatTimeRange(block.startTime, block.endTime)} HS</span>
                 </li>
               ))}
-              <li className="text-[12px] text-[var(--color-text-secondary)] flex items-center gap-1">
-                <span aria-hidden="true">·</span>
-                <span className="capitalize">{subject.modality}</span>
+              <li className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+                [{subject.modality}]
               </li>
             </ul>
           )}
@@ -78,18 +82,15 @@ export function SubjectCard({ subject }: SubjectCardProps) {
 
         {/* Turno */}
         {subject.shift && (
-          <span
-            className="
-              shrink-0 mt-0.5
-              text-[11px] font-medium uppercase tracking-wide
-              text-[var(--color-text-secondary)]
-            "
-          >
-            {subject.shift}
-          </span>
+          <div className="shrink-0 self-start sm:self-center">
+            <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-400 border border-zinc-800 bg-zinc-950 px-2 py-0.5 rounded-sm">
+              {subject.shift}
+            </span>
+          </div>
         )}
       </motion.li>
 
+      {/* Modal Técnico: Detalle de Cursado */}
       <AnimatePresence>
         {selectedSubject && (() => {
           const info = parseMateriaInfo(selectedSubject.nombre || selectedSubject.title || selectedSubject.rawText || selectedSubject.name || '');
@@ -102,23 +103,25 @@ export function SubjectCard({ subject }: SubjectCardProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[99999] bg-black/60 backdrop-blur-md flex items-center justify-center p-4"
+              className="fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4"
               onClick={() => setSelectedSubject(null)}
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
                 transition={{ type: "spring", damping: 25, stiffness: 400 }}
-                className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-white"
+                className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-sm p-5 shadow-none flex flex-col gap-4 text-zinc-100"
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* Header del Submenú */}
-                <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-                  <span className="text-xs font-semibold text-purple-400 uppercase tracking-wider">Detalle de Cursado</span>
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                  <span className="text-[10px] font-mono font-bold text-safety-orange uppercase tracking-widest">
+                    SYS.MATERIA // DETALLE DE CURSADO
+                  </span>
                   <button
                     onClick={() => setSelectedSubject(null)}
-                    className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-gray-400 hover:text-white"
+                    className="text-zinc-400 hover:text-zinc-100 bg-zinc-950 border border-zinc-800 rounded-sm w-6 h-6 flex items-center justify-center font-mono text-xs cursor-pointer"
                   >
                     ✕
                   </button>
@@ -126,37 +129,37 @@ export function SubjectCard({ subject }: SubjectCardProps) {
 
                 {/* Nombre de la Materia */}
                 <div>
-                  <h3 className="text-xl font-bold text-white">{info.nombre}</h3>
-                  <p className="text-sm text-neutral-400 mt-0.5">
-                    ⏰ Horario: <span className="text-white font-medium">{horaInicio} a {horaFin} hs</span>
+                  <h3 className="text-base font-mono font-bold leading-tight text-zinc-100 uppercase">{info.nombre}</h3>
+                  <p className="text-xs text-zinc-400 font-mono mt-1">
+                    HORARIO: <span className="text-zinc-200 font-semibold">{horaInicio} a {horaFin} HS</span>
                   </p>
                 </div>
 
-                {/* Grid de Detalles: Curso, Aula y Edificio */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-2xl p-3.5 flex flex-col">
-                    <span className="text-xs text-neutral-400">Curso</span>
-                    <span className="text-base font-bold text-purple-300 mt-1">{info.curso}</span>
+                {/* Grid de Detalles Técnico */}
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div className="bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
+                    <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">CURSO</span>
+                    <span className="text-sm font-bold text-zinc-200 mt-0.5">{info.curso}</span>
                   </div>
 
-                  <div className="bg-neutral-800/60 border border-neutral-700/50 rounded-2xl p-3.5 flex flex-col">
-                    <span className="text-xs text-neutral-400">Aula</span>
-                    <span className="text-base font-bold text-emerald-300 mt-1">Aula {info.aula}</span>
+                  <div className="bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
+                    <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">AULA</span>
+                    <span className="text-sm font-bold text-acid-green mt-0.5">AULA {info.aula}</span>
                   </div>
 
-                  <div className="col-span-2 bg-neutral-800/60 border border-neutral-700/50 rounded-2xl p-3.5 flex flex-col">
-                    <span className="text-xs text-neutral-400">Ubicación / Edificio</span>
-                    <span className="text-base font-bold text-amber-300 mt-1 flex items-center gap-1.5">
+                  <div className="col-span-2 bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
+                    <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">UBICACIÓN / EDIFICIO</span>
+                    <span className="text-xs font-bold text-safety-orange mt-0.5">
                       📍 {info.edificio}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex gap-2 mt-2">
+                <div className="flex gap-2 mt-1">
                   <Link href="/aulas" className="w-full">
-                    <Button size="sm" variant="secondary" className="w-full rounded-xl flex items-center justify-center gap-2">
-                      <GraduationCap size={14} className="text-cyan-400" />
-                      <span>Gestionar en Aulas</span>
+                    <Button size="sm" variant="secondary" className="w-full rounded-sm h-8 flex items-center justify-center gap-2">
+                      <GraduationCap size={13} className="text-safety-orange" />
+                      <span>GESTIONAR EN AULAS</span>
                     </Button>
                   </Link>
                 </div>

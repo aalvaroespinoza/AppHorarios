@@ -11,11 +11,9 @@ interface BusScheduleListProps {
 /**
  * BusScheduleList
  *
- * Renderiza los servicios de colectivo agrupados por sentido:
+ * Renderiza los servicios de colectivo agrupados por sentido con pestañas mecánicas:
  *   IDA (Despeñaderos → UTN)
  *   VUELTA (UTN → Despeñaderos)
- *
- * Utiliza pestañas (Tabs) para no extender el scroll verticalmente.
  */
 export function BusScheduleList({ schedule }: BusScheduleListProps) {
   const { ida, vuelta } = schedule;
@@ -26,12 +24,12 @@ export function BusScheduleList({ schedule }: BusScheduleListProps) {
 
   if (noServices) {
     return (
-      <section aria-label="Horarios de colectivos">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-[var(--color-text-secondary)] mb-1">
-          Colectivos
+      <section aria-label="Horarios de colectivos" className="bg-zinc-900 border border-zinc-800 rounded-sm p-4">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500 mb-1">
+          [SYS.SCHEDULE // COLECTIVOS]
         </p>
-        <p className="text-[14px] text-[var(--color-text-secondary)] py-3">
-          Sin horarios registrados para este día.
+        <p className="text-xs font-mono text-zinc-400 py-2">
+          NO HAY SERVICIOS REGISTRADOS PARA ESTE DÍA.
         </p>
       </section>
     );
@@ -41,25 +39,34 @@ export function BusScheduleList({ schedule }: BusScheduleListProps) {
 
   return (
     <section aria-label="Horarios de colectivos" className="flex flex-col gap-3">
-      <div className="flex bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-lg">
+      {/* Botones Mecánicos de Pestañas */}
+      <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm gap-1">
         <button 
           onClick={() => setTab('ida')}
-          className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${tab === 'ida' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'}`}
+          className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer ${
+            tab === 'ida' 
+              ? 'bg-zinc-900 border border-safety-orange/50 text-safety-orange font-bold shadow-none' 
+              : 'border border-transparent text-zinc-500 hover:text-zinc-300'
+          }`}
         >
-          Ida ({ida.length})
+          IDA ({ida.length})
         </button>
         <button 
           onClick={() => setTab('vuelta')}
-          className={`flex-1 py-1.5 text-sm font-semibold rounded-md transition-all ${tab === 'vuelta' ? 'bg-white dark:bg-zinc-700 text-zinc-900 dark:text-white shadow-sm' : 'text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-300'}`}
+          className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer ${
+            tab === 'vuelta' 
+              ? 'bg-zinc-900 border border-acid-green/50 text-acid-green font-bold shadow-none' 
+              : 'border border-transparent text-zinc-500 hover:text-zinc-300'
+          }`}
         >
-          Vuelta ({vuelta.length})
+          VUELTA ({vuelta.length})
         </button>
       </div>
 
       <div className="min-h-[200px]">
         {activeList.length > 0 ? (
           <ul
-            className="divide-y divide-[var(--color-border)] animate-in fade-in slide-in-from-bottom-2 duration-300"
+            className="flex flex-col gap-1.5"
             aria-label={`Servicios de ${tab}`}
           >
             {activeList.map((service) => (
@@ -67,9 +74,9 @@ export function BusScheduleList({ schedule }: BusScheduleListProps) {
             ))}
           </ul>
         ) : (
-          <div className="flex flex-col items-center justify-center py-10 text-center border border-dashed border-[var(--color-border)] rounded-xl bg-zinc-50 dark:bg-zinc-900/50 mt-2">
-            <p className="text-[14px] font-medium text-[var(--color-text-secondary)]">
-              No hay servicios de {tab} para este día.
+          <div className="flex flex-col items-center justify-center py-10 text-center border border-zinc-800 rounded-sm bg-zinc-950 mt-2">
+            <p className="text-xs font-mono uppercase tracking-wider text-zinc-500">
+              [NO HAY SERVICIOS DE {tab.toUpperCase()} PARA ESTE DÍA]
             </p>
           </div>
         )}

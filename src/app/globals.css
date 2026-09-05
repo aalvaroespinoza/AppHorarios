@@ -1,65 +1,79 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --color-safety-orange: #FF5500;
+  --color-acid-green: #00E599;
+  --color-asfalto: #0A0A0C;
+  --color-grafito: #18181B;
+  --color-off-white: #F4F4F6;
+  --color-zinc-850: #202024;
+  --font-sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --background: 240 10% 4%;
+    --foreground: 240 5% 96%;
+    --card: 240 5% 10%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 10% 4%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 21 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 21 100% 50%;
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
-    --radius: 0.75rem;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 21 100% 50%;
+    --radius: 0.125rem;
 
-    --color-bg: #000000;
-    --color-surface: #18181b; /* zinc-900 */
-    --color-border: #27272a; /* zinc-800 */
-    --color-text-primary: #ffffff;
-    --color-text-secondary: #a1a1aa; /* zinc-400 */
-    --color-accent: #3b82f6; /* blue-500 */
+    --color-bg: #0A0A0C;
+    --color-surface: #18181B;
+    --color-border: #27272A;
+    --color-text-primary: #F4F4F6;
+    --color-text-secondary: #71717A;
+    --color-accent: #FF5500;
+    --color-acid-green: #00E599;
   }
 
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --background: 240 10% 4%;
+    --foreground: 240 5% 96%;
+    --card: 240 5% 10%;
+    --card-foreground: 240 5% 96%;
+    --popover: 240 10% 4%;
+    --popover-foreground: 240 5% 96%;
+    --primary: 21 100% 50%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 240 5% 96%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 21 100% 50%;
+    --accent-foreground: 0 0% 0%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 21 100% 50%;
   }
 }
 
 /* Ocultar barra de scroll para carruseles */
-.hide-scrollbar::-webkit-scrollbar {
+.hide-scrollbar::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
   display: none;
 }
-.hide-scrollbar {
+.hide-scrollbar,
+.no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }

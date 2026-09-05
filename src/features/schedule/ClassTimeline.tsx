@@ -3,9 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { parseMateriaInfo } from '@/core/utils/materiaParser';
-import { getSubjectColorMapping } from '@/core/utils/edificio';
 import { Clock, MapPin, Sparkles, Bus, CheckCircle2 } from 'lucide-react';
-import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -53,11 +51,11 @@ export function ClassTimeline({
       if (stored) {
         const parsed = JSON.parse(stored);
         if (parsed._date === todayKey) {
-          const { _date, ...rest } = parsed;
-          setAttended(rest);
+          delete parsed._date;
+          setAttended(parsed);
         }
       }
-    } catch (e) {}
+    } catch {}
   }, []);
 
   const handleAttendance = (materiaName: string, idx: number) => {
@@ -85,28 +83,38 @@ export function ClassTimeline({
 
   if (items.length === 0) {
     return (
-      <Card className="border-neutral-800 bg-neutral-950/50 backdrop-blur-sm p-5 text-center text-sm text-neutral-400 italic">
-        Sin materias programadas para hoy 🏠
+      <Card className="border-zinc-800 bg-zinc-900 rounded-sm p-5 text-center text-xs font-mono text-zinc-500 uppercase tracking-widest shadow-none">
+        [SYS.STATUS // SIN MATERIAS PROGRAMADAS PARA HOY]
       </Card>
     );
   }
 
   return (
-    <section id="seccion-cursado" className="bg-neutral-900/60 border border-neutral-800/80 rounded-3xl p-5 shadow-xl backdrop-blur-md relative scroll-mt-24">
-      <div className="flex items-center gap-2 mb-4 text-neutral-400">
-        <Clock size={18} className="text-zinc-400" />
-        <h2 className="font-bold text-xs uppercase tracking-wider text-zinc-300">Cursado / Horario del día</h2>
+    <section id="seccion-cursado" className="bg-zinc-900 border border-zinc-800 rounded-sm p-4 sm:p-5 shadow-none relative scroll-mt-24">
+      {/* Cabecera Técnica */}
+      <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3 mb-4">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded-sm border border-zinc-700 bg-zinc-800 flex items-center justify-center text-zinc-300">
+            <Clock size={12} />
+          </div>
+          <h2 className="font-bold text-xs uppercase tracking-wider text-zinc-100 font-mono">
+            MATRIZ DE CURSADO // HORARIO DEL DÍA
+          </h2>
+        </div>
+        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+          [SYS.ACADEMIC]
+        </span>
       </div>
 
-      {/* Timeline Vertical con Componentes Shadcn */}
-      <div className="relative border-l-2 border-neutral-800 ml-3 pl-5 flex flex-col gap-4 py-1">
-        {/* Línea de tiempo actual */}
+      {/* Matriz Técnica / Timeline Vertical */}
+      <div className="relative border-l border-zinc-800 ml-2 pl-4 flex flex-col gap-3.5 py-1">
+        {/* Línea recta de tiempo actual */}
         {isToday && (
           <div 
-            className="absolute left-0 right-0 border-t-2 border-red-500 z-40 w-full pointer-events-none" 
+            className="absolute left-0 right-0 border-t border-safety-orange z-30 w-full pointer-events-none" 
             style={{ top: `${Math.min(Math.max((currentMinutes / 1440) * 100, 0), 100)}%` }}
           >
-            <div className="absolute -top-1.5 -left-1 w-3 h-3 bg-red-500 rounded-full shadow-sm"></div>
+            <div className="absolute -top-1 -left-1 w-2 h-2 bg-safety-orange rounded-none" />
           </div>
         )}
 
@@ -116,29 +124,28 @@ export function ClassTimeline({
           const horaInicio = cls.horaInicio || cls.timeStart || "08:00";
           const horaFin = cls.horaFin || cls.timeEnd || "11:10";
           const isCurrentClass = isToday && isTimeBetween(horaInicio, horaFin, currentTime);
-          const mapping = getSubjectColorMapping(cls.color);
 
-          // Si es viaje, renderizar tarjeta horizontal minimalista sin badges de aula/curso/edificio
+          // Si es viaje, renderizar bloque técnico de tránsito
           if (info.isViaje) {
             return (
               <div key={cls.id || idx} className="relative">
-                <span className="absolute -left-[1.65rem] top-3.5 h-3.5 w-3.5 rounded-full border-[3px] border-neutral-950 z-20 bg-sky-400" />
-                <div className="bg-sky-900/20 border border-sky-800/50 backdrop-blur-sm rounded-2xl p-3 flex items-center justify-between transition-all">
+                <span className="absolute -left-[1.38rem] top-3.5 h-2.5 w-2.5 rounded-none border border-zinc-800 bg-zinc-700 z-20" />
+                <div className="bg-zinc-950 border border-zinc-800 rounded-sm p-3 flex items-center justify-between transition-colors shadow-none">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
-                      <Bus size={14} />
+                    <div className="w-6 h-6 rounded-sm border border-zinc-800 bg-zinc-900 text-zinc-300 flex items-center justify-center shrink-0">
+                      <Bus size={13} />
                     </div>
                     <div className="flex flex-col min-w-0">
-                      <span className="text-sm font-bold text-white leading-tight truncate">
+                      <span className="text-xs font-bold text-zinc-100 leading-tight truncate uppercase font-mono">
                         {info.nombre}
                       </span>
-                      <span className="text-[11px] text-sky-300/80 font-mono">
-                        {horaInicio} - {horaFin} hs
+                      <span className="text-[10px] text-zinc-400 font-mono">
+                        {horaInicio} - {horaFin} HS
                       </span>
                     </div>
                   </div>
-                  <Badge variant="outline" className="text-[10px] font-bold border-sky-500/30 text-sky-300 bg-sky-500/10 shrink-0">
-                    Viaje
+                  <Badge variant="outline" className="text-[9px] font-mono uppercase tracking-widest border-zinc-700 text-zinc-300 bg-zinc-900 shrink-0">
+                    TRANSIT
                   </Badge>
                 </div>
               </div>
@@ -147,68 +154,68 @@ export function ClassTimeline({
 
           return (
             <div key={cls.id || idx} className="relative">
-              {/* Timeline Indicator Dot */}
+              {/* Conector de nodo técnico cuadrado */}
               <span 
-                className={`absolute -left-[1.65rem] top-4 h-3.5 w-3.5 rounded-full border-[3px] border-neutral-950 z-20 transition-all ${
+                className={`absolute -left-[1.38rem] top-4 h-2.5 w-2.5 rounded-none z-20 transition-all ${
                   isCurrentClass 
-                    ? `${mapping.dot} ring-4 ${mapping.ring} scale-110` 
-                    : 'bg-neutral-700'
+                    ? 'bg-safety-orange border border-black ring-2 ring-safety-orange/40' 
+                    : 'bg-zinc-700 border border-zinc-900'
                 }`} 
               />
 
               <Card 
-                className={`border-neutral-800 backdrop-blur-sm transition-all overflow-hidden ${
+                className={`border rounded-sm transition-colors overflow-hidden shadow-none ${
                   isCurrentClass
-                    ? `bg-gradient-to-r ${mapping.gradient} ${mapping.border} shadow-lg ${mapping.shadow}`
-                    : `bg-neutral-950/50 hover:bg-neutral-900/80`
+                    ? 'border-safety-orange/80 bg-zinc-900'
+                    : 'border-zinc-800 bg-zinc-950 hover:bg-zinc-900/90'
                 }`}
               >
-                <CardHeader className="pb-2 flex flex-row justify-between items-start gap-2">
-                  <div className="flex flex-col gap-1">
-                    <CardTitle className="text-base sm:text-lg font-bold leading-snug text-white">
+                <CardHeader className="p-3.5 pb-2 border-b border-zinc-800/80 flex flex-row justify-between items-start gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <CardTitle className="text-sm font-bold leading-snug text-zinc-100 font-mono">
                       {info.nombre}
                     </CardTitle>
-                    <span className="text-xs text-neutral-400 font-mono">
-                      {horaInicio} - {horaFin} hs
+                    <span className="text-[11px] text-zinc-400 font-mono font-medium">
+                      {horaInicio} - {horaFin} HS
                     </span>
                   </div>
 
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {info.curso && info.curso !== '-' && (
-                      <Badge className="border-emerald-500/30 text-emerald-400 bg-emerald-500/10 font-bold" variant="outline">
+                      <Badge className="border-zinc-700 text-zinc-300 bg-zinc-800 font-mono text-[9px] uppercase tracking-wider" variant="outline">
                         {info.curso}
                       </Badge>
                     )}
                     {isCurrentClass && (
-                      <Badge className="bg-red-500 text-white font-extrabold animate-pulse text-[10px]" variant="default">
+                      <Badge className="border-safety-orange bg-safety-orange text-black font-mono font-extrabold text-[9px] uppercase tracking-widest animate-pulse" variant="default">
                         EN CURSO
                       </Badge>
                     )}
                   </div>
                 </CardHeader>
 
-                <CardContent className="pt-1 flex flex-col gap-3">
-                  <div className="flex items-center justify-between text-xs text-neutral-400">
-                    <span className="flex items-center gap-1">
-                      <MapPin size={12} className="text-neutral-500" />
-                      Aula: <strong className="text-neutral-200">{info.aula}</strong>
+                <CardContent className="p-3.5 pt-2.5 flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                    <span className="flex items-center gap-1.5">
+                      <MapPin size={11} className="text-zinc-500" />
+                      <span>AULA: <strong className="text-zinc-200 font-semibold">{info.aula}</strong></span>
                     </span>
                     {info.edificio && info.edificio !== '-' && (
-                      <span className="text-neutral-400 truncate max-w-[140px]">
-                        {info.edificio}
+                      <span className="text-zinc-400 truncate max-w-[150px] uppercase text-[10px]">
+                        EDIF: {info.edificio}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-1 border-t border-zinc-800">
                     <Button 
-                      className="flex-1 font-semibold text-xs rounded-xl" 
+                      className="flex-1 font-bold text-[10px] rounded-sm h-7" 
                       onClick={() => setSelectedMateria(cls)} 
-                      variant="secondary"
+                      variant="outline"
                       size="sm"
                     >
-                      <Sparkles size={13} className="mr-1.5 text-cyan-400" />
-                      Ver Detalle
+                      <Sparkles size={11} className="mr-1 text-safety-orange" />
+                      DETALLE
                     </Button>
                     <Button
                       size="sm"
@@ -218,16 +225,16 @@ export function ClassTimeline({
                         handleAttendance(info.nombre, idx);
                       }}
                       disabled={!!attended[`class-${idx}`]}
-                      className={`text-xs rounded-xl font-bold shrink-0 transition-all ${
+                      className={`text-[10px] rounded-sm font-bold shrink-0 h-7 border transition-all ${
                         attended[`class-${idx}`]
-                          ? 'text-emerald-400 bg-emerald-500/10 cursor-default'
-                          : 'text-emerald-500 bg-emerald-500/10 hover:bg-emerald-500/20 active:scale-95'
+                          ? 'text-acid-green bg-acid-green/15 border-acid-green/60 cursor-default'
+                          : 'text-zinc-300 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700'
                       }`}
                     >
                       {attended[`class-${idx}`] ? (
-                        <><CheckCircle2 size={14} className="mr-1" /> Asistido</>
+                        <><CheckCircle2 size={12} className="mr-1 text-acid-green" /> ASISTIDO</>
                       ) : (
-                        '✅ Asistencia'
+                        '[ REGISTRAR ]'
                       )}
                     </Button>
                   </div>
@@ -238,7 +245,7 @@ export function ClassTimeline({
         })}
       </div>
 
-      {/* Modal Detalle de Materia */}
+      {/* Modal Técnico: Detalle de Materia */}
       <AnimatePresence>
         {selectedMateria && (() => {
           const info = parseMateriaInfo(selectedMateria.nombre || selectedMateria.title || selectedMateria.rawText || "");
@@ -247,49 +254,56 @@ export function ClassTimeline({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[99999] bg-black/70 backdrop-blur-md flex items-center justify-center p-4"
+              className="fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4"
               onClick={() => setSelectedMateria(null)}
             >
               <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-5 text-white"
+                initial={{ scale: 0.98, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.98, opacity: 0 }}
+                className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-sm p-5 shadow-none flex flex-col gap-4 text-zinc-100"
                 onClick={(e) => e.stopPropagation()}
               >
-                <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
-                  <span className="text-xs font-bold text-cyan-400 uppercase tracking-widest">Detalle de Cursado</span>
-                  <button onClick={() => setSelectedMateria(null)} className="text-neutral-500 hover:text-white bg-neutral-800 rounded-full w-8 h-8 flex items-center justify-center">✕</button>
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
+                  <span className="text-[10px] font-mono font-bold text-safety-orange uppercase tracking-widest">
+                    SYS.MATERIA // DETALLE DE CURSADO
+                  </span>
+                  <button 
+                    onClick={() => setSelectedMateria(null)} 
+                    className="text-zinc-400 hover:text-zinc-100 bg-zinc-950 border border-zinc-800 rounded-sm w-6 h-6 flex items-center justify-center font-mono text-xs cursor-pointer"
+                  >
+                    ✕
+                  </button>
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-bold leading-tight text-white">{info.nombre}</h3>
-                  <p className="text-sm text-neutral-400 mt-2">
-                    ⏰ Horario: <span className="text-white font-medium">{selectedMateria.horaInicio || selectedMateria.timeStart || "00:00"} a {selectedMateria.horaFin || selectedMateria.timeEnd || "00:00"} hs</span>
+                  <h3 className="text-base font-mono font-bold leading-tight text-zinc-100 uppercase">{info.nombre}</h3>
+                  <p className="text-xs text-zinc-400 font-mono mt-1">
+                    HORARIO: <span className="text-zinc-200 font-semibold">{selectedMateria.horaInicio || selectedMateria.timeStart || "00:00"} a {selectedMateria.horaFin || selectedMateria.timeEnd || "00:00"} HS</span>
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-1">
-                  <div className="bg-neutral-800/50 rounded-2xl p-4 flex flex-col border border-neutral-700/50">
-                    <span className="text-[11px] text-neutral-400 uppercase font-semibold">Curso</span>
-                    <span className="text-lg font-bold text-cyan-300 mt-0.5">{info.curso}</span>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div className="bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
+                    <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">CURSO</span>
+                    <span className="text-sm font-bold text-zinc-200 mt-0.5">{info.curso}</span>
                   </div>
-                  <div className="bg-neutral-800/50 rounded-2xl p-4 flex flex-col border border-neutral-700/50">
-                    <span className="text-[11px] text-neutral-400 uppercase font-semibold">Aula</span>
-                    <span className="text-lg font-bold text-emerald-300 mt-0.5">{info.aula}</span>
+                  <div className="bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
+                    <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">AULA</span>
+                    <span className="text-sm font-bold text-acid-green mt-0.5">{info.aula}</span>
                   </div>
-                  <div className="col-span-2 bg-neutral-800/50 rounded-2xl p-4 flex flex-col border border-neutral-700/50">
-                    <span className="text-[11px] text-neutral-400 uppercase font-semibold">Edificio</span>
-                    <span className="text-base font-bold text-amber-300 mt-0.5">📍 {info.edificio}</span>
+                  <div className="col-span-2 bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
+                    <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">EDIFICIO</span>
+                    <span className="text-xs font-bold text-safety-orange mt-0.5">📍 {info.edificio}</span>
                   </div>
                 </div>
 
                 <Button 
                   onClick={() => setSelectedMateria(null)}
-                  className="w-full mt-2 font-bold rounded-xl"
-                  variant="default"
+                  className="w-full mt-1 font-bold rounded-sm h-8" 
+                  variant="secondary"
                 >
-                  Cerrar
+                  CERRAR
                 </Button>
               </motion.div>
             </motion.div>

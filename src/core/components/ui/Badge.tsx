@@ -6,15 +6,24 @@ interface BadgeProps {
   className?: string;
 }
 
+const variantClasses: Record<string, string> = {
+  default: 'border-zinc-700 bg-zinc-800 text-zinc-300',
+  success: 'border-acid-green/50 bg-acid-green/15 text-acid-green',
+  warning: 'border-amber-500/50 bg-amber-500/15 text-amber-400',
+  danger: 'border-safety-orange/50 bg-safety-orange/15 text-safety-orange',
+};
+
 /**
  * Badge
  * Etiqueta compacta para indicar estados o prioridades.
- * Variantes: default | success | warning | danger.
- * TODO: aplicar estilos cuando se defina el sistema de diseño.
+ * Estilo terminal industrial con IBM Plex Mono.
  */
-export function Badge({ children, variant = 'default', className }: BadgeProps) {
+export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
   return (
-    <span data-variant={variant} className={className}>
+    <span
+      data-variant={variant}
+      className={`inline-flex items-center rounded-sm border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest ${variantClasses[variant] || variantClasses.default} ${className}`}
+    >
       {children}
     </span>
   );

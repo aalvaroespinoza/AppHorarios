@@ -29,61 +29,61 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
                 (diaCapitalizado.toLowerCase() === 'hoy');
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0a0a0c]/90 backdrop-blur-xl -mx-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-neutral-800/80 shadow-md flex flex-col gap-2 transition-all">
+    <header className="sticky top-0 z-50 bg-[#0A0A0C]/95 backdrop-blur-md -mx-4 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3 border-b border-zinc-800 shadow-none flex flex-col gap-2 transition-all">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-indigo-400 text-[11px] font-black tracking-[0.25em] uppercase mb-0.5 drop-shadow-sm">
-            APP HORARIO
+          <h2 className="text-safety-orange font-mono text-[10px] font-bold tracking-[0.25em] uppercase mb-0.5">
+            SYS.CONSOLE // HORARIOS
           </h2>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-zinc-100 leading-tight uppercase font-mono">
             {diaCapitalizado}
           </h1>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Botón icono miniatura "Volver a hoy" (solo visible cuando NO estamos en hoy) */}
+          {/* Botón icono miniatura "Volver a hoy" */}
           <AnimatePresence>
             {!esHoy && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.8, x: 8 }}
+                initial={{ opacity: 0, scale: 0.9, x: 4 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.8, x: 8 }}
+                exit={{ opacity: 0, scale: 0.9, x: 4 }}
               >
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="w-9 h-9 rounded-full shrink-0 bg-neutral-900 border border-neutral-800 text-cyan-400 hover:bg-neutral-800 hover:text-cyan-300 shadow-sm"
+                  className="w-8 h-8 rounded-sm shrink-0 bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-safety-orange hover:bg-zinc-800 shadow-none"
                   onClick={() => setDiaSeleccionado(diaActualHoy)}
                   title="Volver al día de hoy"
                 >
-                  <Calendar size={16} />
+                  <Calendar size={14} />
                 </Button>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Píldora de la hora (Siempre visible y fija con el header sticky) */}
-          <div className="bg-neutral-900/90 border border-neutral-800 px-3.5 py-1.5 rounded-full flex items-center justify-center shadow-inner pointer-events-auto">
+          {/* Módulo LCD de hora */}
+          <div className="bg-zinc-950 border border-zinc-800 px-3 py-1 rounded-sm flex items-center justify-center pointer-events-auto shadow-none">
             <RelojMinimalista />
           </div>
 
-          {/* Botón circular de 3 puntitos con animación fachera */}
+          {/* Botón mecánico de opciones */}
           <div className="relative">
             <motion.button
-              whileTap={{ scale: 0.9 }}
+              whileTap={{ scale: 0.95 }}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`w-9 h-9 rounded-full bg-neutral-900 border flex items-center justify-center transition-all shadow-md ${
+              className={`w-8 h-8 rounded-sm bg-zinc-900 border flex items-center justify-center transition-colors shadow-none cursor-pointer ${
                 isMenuOpen 
-                  ? 'border-cyan-500 text-cyan-400 bg-cyan-500/10 shadow-[0_0_12px_rgba(6,182,212,0.3)]' 
-                  : 'border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700'
+                  ? 'border-safety-orange text-safety-orange bg-safety-orange/10' 
+                  : 'border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700'
               }`}
               title="Opciones y Horarios"
             >
               <motion.div
                 animate={{ rotate: isMenuOpen ? 90 : 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.15 }}
               >
-                <MoreVertical size={18} />
+                <MoreVertical size={16} />
               </motion.div>
             </motion.button>
 
@@ -91,33 +91,32 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
             <AnimatePresence>
               {isMenuOpen && (
                 <>
-                  {/* Backdrop para cerrar al hacer clic afuera */}
                   <div 
                     className="fixed inset-0 z-40" 
                     onClick={() => setIsMenuOpen(false)} 
                   />
 
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.9, y: -10, originX: 1, originY: 0 }}
+                    initial={{ opacity: 0, scale: 0.98, y: -4, originX: 1, originY: 0 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9, y: -10 }}
-                    transition={{ duration: 0.18, ease: "easeOut" }}
-                    className="absolute right-0 top-11 z-50 w-64 bg-neutral-950/95 border border-neutral-800/90 rounded-2xl p-2 shadow-2xl backdrop-blur-xl flex flex-col gap-1"
+                    exit={{ opacity: 0, scale: 0.98, y: -4 }}
+                    transition={{ duration: 0.15 }}
+                    className="absolute right-0 top-10 z-50 w-64 bg-zinc-950 border border-zinc-700 rounded-sm p-2 shadow-none flex flex-col gap-1"
                   >
                     {/* 1. Gestión de Materias */}
                     <Link
                       href="/configuracion/materias"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-neutral-900/90 transition-colors group text-left"
+                      className="flex items-center gap-3 p-2 rounded-sm hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors group text-left"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <GraduationCap size={16} />
+                      <div className="w-7 h-7 rounded-sm border border-zinc-800 bg-zinc-900 text-zinc-300 flex items-center justify-center">
+                        <GraduationCap size={14} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
-                          Gestión de Materias
+                        <span className="text-xs font-mono font-bold text-zinc-100 group-hover:text-safety-orange transition-colors">
+                          GESTIÓN DE MATERIAS
                         </span>
-                        <span className="text-[10px] text-neutral-400">
+                        <span className="text-[10px] font-mono text-zinc-500">
                           Aulas, cursos y horarios
                         </span>
                       </div>
@@ -127,38 +126,38 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
                     <Link
                       href="/horarios"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-neutral-900/90 transition-colors group text-left"
+                      className="flex items-center gap-3 p-2 rounded-sm hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors group text-left"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <Bus size={16} />
+                      <div className="w-7 h-7 rounded-sm border border-zinc-800 bg-zinc-900 text-zinc-300 flex items-center justify-center">
+                        <Bus size={14} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-white group-hover:text-cyan-300 transition-colors">
-                          Todos los Horarios
+                        <span className="text-xs font-mono font-bold text-zinc-100 group-hover:text-safety-orange transition-colors">
+                          TODOS LOS HORARIOS
                         </span>
-                        <span className="text-[10px] text-neutral-400">
+                        <span className="text-[10px] font-mono text-zinc-500">
                           Grilla completa de colectivos
                         </span>
                       </div>
                     </Link>
 
-                    <div className="h-[1px] bg-neutral-800/70 my-0.5" />
+                    <div className="h-[1px] bg-zinc-800 my-0.5" />
 
                     {/* 3. Ajustes */}
                     <Link
                       href="/configuracion"
                       onClick={() => setIsMenuOpen(false)}
-                      className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-neutral-900/90 transition-colors group text-left"
+                      className="flex items-center gap-3 p-2 rounded-sm hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors group text-left"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-neutral-800 text-neutral-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-                        <Settings size={16} />
+                      <div className="w-7 h-7 rounded-sm border border-zinc-800 bg-zinc-900 text-zinc-400 flex items-center justify-center">
+                        <Settings size={14} />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-neutral-300 group-hover:text-white transition-colors">
-                          Ajustes Generales
+                        <span className="text-xs font-mono font-bold text-zinc-300 group-hover:text-zinc-100 transition-colors">
+                          CONFIGURACIÓN
                         </span>
-                        <span className="text-[10px] text-neutral-500">
-                          Preferencias de la app
+                        <span className="text-[10px] font-mono text-zinc-500">
+                          Preferencias de la consola
                         </span>
                       </div>
                     </Link>

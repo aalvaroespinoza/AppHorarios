@@ -13,7 +13,7 @@ export default function HorariosPage() {
   const escenario = useEscenario();
   const [tab, setTab] = useState<'ida' | 'vuelta'>('ida');
 
-  if (!escenario.isMounted) return <div className="min-h-[100dvh] bg-gray-50 dark:bg-black" />;
+  if (!escenario.isMounted) return <div className="min-h-[100dvh] bg-[#0A0A0C]" />;
 
   const { diaSeleccionado } = escenario;
   
@@ -36,73 +36,89 @@ export default function HorariosPage() {
   });
 
   return (
-    <main className="min-h-[100dvh] bg-gray-50 dark:bg-black text-gray-900 dark:text-white font-sans max-w-md mx-auto ">
-      <header className="pt-10 pb-2 px-4 flex flex-col gap-4">
+    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-24">
+      <header className="pt-8 pb-2 px-4 flex flex-col gap-3">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-xl font-bold text-zinc-100 flex items-center gap-2 mb-1">
-              <Bus className="text-blue-500" />
-              Todos los Horarios
+            <span className="text-[10px] font-mono font-bold text-safety-orange tracking-[0.2em] uppercase block mb-0.5">
+              SYS.DATABASE // HORARIOS
+            </span>
+            <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2 uppercase tracking-tight">
+              <Bus size={18} className="text-safety-orange" />
+              GRILLA DE COLECTIVOS
             </h1>
-            <p className="text-sm text-gray-500 dark:text-zinc-400 leading-tight">Consulta la grilla completa de colectivos.</p>
           </div>
-          <Link href="/configuracion" className="w-10 h-10 bg-gray-200 dark:bg-zinc-800/80 rounded-full flex items-center justify-center text-gray-500 dark:text-zinc-400 hover:text-gray-900 dark:hover:text-white transition-colors">
-            <Settings size={20} />
+          <Link href="/configuracion" className="w-8 h-8 bg-zinc-900 border border-zinc-800 rounded-sm flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors shadow-none">
+            <Settings size={16} />
           </Link>
         </div>
         
         {/* Indicador de Vista Actual */}
-        <div className={`flex items-center justify-center py-2 px-3 rounded-lg border font-bold text-sm tracking-wide ${
+        <div className={`flex items-center justify-between py-1.5 px-3 rounded-sm border font-mono text-xs uppercase tracking-wider ${
           tab === 'ida' 
-            ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' 
-            : 'bg-[#34c759]/10 border-[#34c759]/30 text-[#34c759]'
+            ? 'bg-safety-orange/10 border-safety-orange/40 text-safety-orange' 
+            : 'bg-acid-green/10 border-acid-green/40 text-acid-green'
         }`}>
-          Viendo: {tab === 'ida' ? 'IDA hacia Córdoba' : 'VUELTA hacia Despeñaderos'}
+          <span>SENTIDO: {tab.toUpperCase()}</span>
+          <span className="text-[10px] opacity-80">{tab === 'ida' ? 'DESPEÑADEROS → CBA' : 'CBA → DESPEÑADEROS'}</span>
         </div>
       </header>
 
       {/* Tabs Ida/Vuelta fijados (Sticky) */}
-      <div className="sticky top-0 z-50 bg-gray-50/95 dark:bg-black/95 backdrop-blur-md px-4 py-3 border-b border-gray-200 dark:border-zinc-800/80 shadow-md">
-        <div className="flex bg-gray-200 dark:bg-zinc-800/80 p-1.5 rounded-xl shadow-inner max-w-md mx-auto">
+      <div className="sticky top-0 z-40 bg-[#0A0A0C]/95 backdrop-blur-md px-4 py-2 border-b border-zinc-800 shadow-none">
+        <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm gap-1 max-w-md mx-auto">
           <button 
             onClick={() => setTab('ida')}
-            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'ida' ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'}`}
+            className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer ${
+              tab === 'ida' 
+                ? 'bg-zinc-900 border border-safety-orange/50 text-safety-orange font-bold shadow-none' 
+                : 'border border-transparent text-zinc-500 hover:text-zinc-300'
+            }`}
           >
-            Ida
+            IDA ({horariosDelDia.filter(h => h.sentido === 'ida').length})
           </button>
           <button 
             onClick={() => setTab('vuelta')}
-            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${tab === 'vuelta' ? 'bg-white dark:bg-zinc-700 text-gray-900 dark:text-white shadow-sm' : 'text-gray-500 dark:text-zinc-400 hover:text-gray-700 dark:hover:text-zinc-200'}`}
+            className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer ${
+              tab === 'vuelta' 
+                ? 'bg-zinc-900 border border-acid-green/50 text-acid-green font-bold shadow-none' 
+                : 'border border-transparent text-zinc-500 hover:text-zinc-300'
+            }`}
           >
-            Vuelta
+            VUELTA ({horariosDelDia.filter(h => h.sentido === 'vuelta').length})
           </button>
         </div>
       </div>
 
-      <div className="p-4 space-y-6 mt-2">
+      <div className="p-4 space-y-5 mt-1">
         <ContextualControls />
 
-        <div id="seccion-cursado" className="animate-in fade-in slide-in-from-bottom-4 duration-500 scroll-mt-24">
+        <div id="seccion-cursado" className="animate-in fade-in slide-in-from-bottom-2 duration-300 scroll-mt-24">
           {Object.keys(agrupadosPorEmpresa).length > 0 ? (
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-4">
               {Object.entries(agrupadosPorEmpresa).map(([empresa, horarios]) => (
-                <NativeCard key={empresa} className="p-0 overflow-hidden border border-gray-200 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950">
-                  <div className={`px-4 py-3 border-b border-gray-200 dark:border-zinc-800 font-bold tracking-wide uppercase text-sm flex items-center justify-between ${tab === 'ida' ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400' : 'bg-[#34c759]/10 text-green-600 dark:text-[#34c759]'}`}>
-                    <span>{empresa}</span>
-                    <span className="text-xs font-semibold opacity-70 bg-black/20 px-2 py-0.5 rounded-full">{horarios.length} viajes</span>
+                <NativeCard key={empresa} className="p-0 overflow-hidden border border-zinc-800 bg-zinc-900 rounded-sm shadow-none">
+                  <div className="px-3.5 py-2.5 border-b border-zinc-800 font-mono font-bold tracking-wider uppercase text-xs flex items-center justify-between bg-zinc-950 text-zinc-200">
+                    <span className="flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-safety-orange rounded-none" />
+                      {empresa}
+                    </span>
+                    <span className="text-[10px] font-mono font-semibold text-zinc-400 border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 rounded-sm">
+                      {horarios.length} SERVICIOS
+                    </span>
                   </div>
-                  <div className="p-4">
-                    <div className="grid grid-cols-4 gap-2.5">
+                  <div className="p-3.5">
+                    <div className="grid grid-cols-4 gap-2">
                       {horarios.map((h, idx) => (
                         <div 
                           key={idx} 
-                          className="flex flex-col items-center justify-center py-2.5 rounded-xl bg-gray-100 dark:bg-zinc-900 border border-gray-200 dark:border-zinc-800/80 hover:border-gray-300 dark:hover:border-zinc-600 transition-all cursor-default"
+                          className="flex flex-col items-center justify-center py-2 rounded-sm bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-default"
                         >
-                          <span className="text-lg font-bold text-gray-900 dark:text-zinc-100 tracking-tight">{h.horaSalida}</span>
+                          <span className="text-sm font-bold font-mono text-zinc-100 tracking-tight">{h.horaSalida}</span>
                           {h.notas && (
-                            <div className="flex items-center gap-0.5 mt-1 text-blue-400">
-                              <MapPin size={9} />
-                              <span className="text-[9px] uppercase font-bold tracking-widest leading-none">Info</span>
+                            <div className="flex items-center gap-0.5 mt-0.5 text-safety-orange">
+                              <MapPin size={8} />
+                              <span className="text-[8px] uppercase font-mono font-bold tracking-widest leading-none">Info</span>
                             </div>
                           )}
                         </div>
@@ -113,8 +129,8 @@ export default function HorariosPage() {
               ))}
             </div>
           ) : (
-            <NativeCard className="p-6 text-center text-gray-400 dark:text-zinc-500 text-sm bg-gray-50 dark:bg-zinc-900/20 border-dashed border-gray-200 dark:border-zinc-800">
-              No hay viajes de {tab} programados para este día.
+            <NativeCard className="p-6 text-center text-zinc-500 font-mono text-xs uppercase tracking-wider bg-zinc-900 border border-zinc-800 rounded-sm shadow-none">
+              [NO HAY VIAJES DE {tab.toUpperCase()} PROGRAMADOS PARA ESTE DÍA]
             </NativeCard>
           )}
         </div>
