@@ -147,7 +147,7 @@ export function HorarioCard({
           {isManualOverride && (
             <button
               onClick={handleResetToAutomatic}
-              className="flex items-center gap-1 text-[10px] font-mono font-semibold text-zinc-400 hover:text-safety-orange bg-zinc-950 border border-zinc-800 px-2 py-1 rounded-sm hover:border-zinc-700 transition-colors active:translate-y-[0.5px]"
+              className="flex items-center justify-center gap-1 text-[10px] font-mono font-semibold text-zinc-400 hover:text-safety-orange bg-zinc-950 border border-zinc-800 px-2.5 py-1.5 rounded-sm hover:border-zinc-700 transition-colors active:translate-y-[0.5px] cursor-pointer"
               title="Restablecer al colectivo automático recomendado"
             >
               <RotateCcw size={11} />
@@ -159,7 +159,7 @@ export function HorarioCard({
           <motion.button 
             whileTap={TAP_ANIMATION}
             onClick={toggleTomado}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider transition-all border shadow-none ${
+            className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-sm text-[10px] font-mono font-bold uppercase tracking-wider transition-all border shadow-none cursor-pointer ${
               becUsado 
                 ? 'bg-acid-green/15 text-acid-green border-acid-green/60' 
                 : 'bg-zinc-950 hover:bg-zinc-800 text-zinc-400 border-zinc-800 hover:border-zinc-700'

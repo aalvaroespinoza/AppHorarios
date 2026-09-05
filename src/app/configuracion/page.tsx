@@ -40,14 +40,14 @@ export default function Configuracion() {
   const resumenBec = bec.obtenerResumenMensual(mesNum, year);
 
   return (
-    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-28 relative">
-      {/* Header Sticky */}
-      <header className="bg-[#0A0A0C]/95 backdrop-blur-md pt-8 pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
+    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-safe-nav relative">
+      {/* Header Sticky con soporte para Dynamic Island */}
+      <header className="bg-[#0A0A0C]/95 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
         <button 
           onClick={() => router.back()}
-          className="text-safety-orange font-mono text-xs uppercase tracking-wider p-1 flex items-center gap-1 active:opacity-60 transition-opacity cursor-pointer"
+          className="text-safety-orange font-mono text-xs font-bold uppercase tracking-wider h-9 px-2 rounded-sm border border-transparent hover:border-zinc-800 bg-zinc-950/60 flex items-center justify-center gap-1 active:translate-y-[0.5px] transition-all cursor-pointer"
         >
-          <ChevronLeft size={16} className="-ml-1" />
+          <ChevronLeft size={16} className="-ml-0.5" />
           <span>VOLVER</span>
         </button>
 
@@ -131,7 +131,7 @@ export default function Configuracion() {
                 <button
                   key={mode}
                   onClick={() => setTheme(mode)}
-                  className={`flex-1 py-1.5 text-xs font-mono font-bold uppercase tracking-wider rounded-sm transition-colors cursor-pointer ${
+                  className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-sm transition-colors cursor-pointer flex items-center justify-center ${
                     theme === mode 
                       ? 'bg-zinc-800 text-safety-orange border border-safety-orange/50 shadow-none' 
                       : 'text-zinc-500 hover:text-zinc-300 border border-transparent'

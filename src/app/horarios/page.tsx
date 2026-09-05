@@ -36,9 +36,9 @@ export default function HorariosPage() {
   });
 
   return (
-    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-24">
-      <header className="pt-8 pb-2 px-4 flex flex-col gap-3">
-        <div className="flex justify-between items-start">
+    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-safe-nav">
+      <header className="pt-[max(1.25rem,calc(env(safe-area-inset-top)+0.5rem))] pb-2 px-4 flex flex-col gap-3">
+        <div className="flex justify-between items-center">
           <div>
             <span className="text-[10px] font-mono font-bold text-safety-orange tracking-[0.2em] uppercase block mb-0.5">
               SYS.DATABASE // HORARIOS
@@ -48,7 +48,11 @@ export default function HorariosPage() {
               GRILLA DE COLECTIVOS
             </h1>
           </div>
-          <Link href="/configuracion" className="w-8 h-8 bg-zinc-900 border border-zinc-800 rounded-sm flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors shadow-none">
+          <Link 
+            href="/configuracion" 
+            className="w-9 h-9 bg-zinc-900 border border-zinc-800 rounded-sm flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors shadow-none active:translate-y-[0.5px]"
+            title="Configuración"
+          >
             <Settings size={16} />
           </Link>
         </div>
@@ -59,33 +63,35 @@ export default function HorariosPage() {
             ? 'bg-safety-orange/10 border-safety-orange/40 text-safety-orange' 
             : 'bg-acid-green/10 border-acid-green/40 text-acid-green'
         }`}>
-          <span>SENTIDO: {tab.toUpperCase()}</span>
+          <span className="font-bold">SENTIDO: {tab.toUpperCase()}</span>
           <span className="text-[10px] opacity-80">{tab === 'ida' ? 'DESPEÑADEROS → CBA' : 'CBA → DESPEÑADEROS'}</span>
         </div>
       </header>
 
-      {/* Tabs Ida/Vuelta fijados (Sticky) */}
-      <div className="sticky top-0 z-40 bg-[#0A0A0C]/95 backdrop-blur-md px-4 py-2 border-b border-zinc-800 shadow-none">
+      {/* Tabs Ida/Vuelta fijados (Sticky con soporte Dynamic Island) */}
+      <div className="sticky top-0 z-40 bg-[#0A0A0C]/95 backdrop-blur-md px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 border-b border-zinc-800 shadow-none">
         <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm gap-1 max-w-md mx-auto">
           <button 
             onClick={() => setTab('ida')}
-            className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
               tab === 'ida' 
                 ? 'bg-zinc-900 border border-safety-orange/50 text-safety-orange font-bold shadow-none' 
                 : 'border border-transparent text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            IDA ({horariosDelDia.filter(h => h.sentido === 'ida').length})
+            <span>IDA</span>
+            <span className="text-[10px] opacity-80">({horariosDelDia.filter(h => h.sentido === 'ida').length})</span>
           </button>
           <button 
             onClick={() => setTab('vuelta')}
-            className={`flex-1 py-1.5 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer ${
+            className={`flex-1 py-2 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
               tab === 'vuelta' 
                 ? 'bg-zinc-900 border border-acid-green/50 text-acid-green font-bold shadow-none' 
                 : 'border border-transparent text-zinc-500 hover:text-zinc-300'
             }`}
           >
-            VUELTA ({horariosDelDia.filter(h => h.sentido === 'vuelta').length})
+            <span>VUELTA</span>
+            <span className="text-[10px] opacity-80">({horariosDelDia.filter(h => h.sentido === 'vuelta').length})</span>
           </button>
         </div>
       </div>

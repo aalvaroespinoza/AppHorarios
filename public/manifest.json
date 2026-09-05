@@ -1,18 +1,25 @@
 {
-  "name": "AppHorarios",
+  "name": "App Horarios - Terminal de Cursado",
   "short_name": "Horarios",
-  "description": "Tu recomendador de colectivos personal offline-first",
+  "description": "Terminal industrial de horarios, cursado y colectivos para FCEFYN / UTN",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f8fafc",
-  "theme_color": "#2563eb",
+  "background_color": "#0A0A0C",
+  "theme_color": "#0A0A0C",
   "orientation": "portrait",
+  "categories": ["travel", "education", "utilities"],
   "icons": [
     {
       "src": "/icon",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "/icon",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

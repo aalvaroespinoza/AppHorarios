@@ -135,7 +135,7 @@ export default function GestorMateriasPage() {
   const edificioPreview = !isNaN(aulaParsedNum) ? getEdificioByAula(aulaParsedNum) : null;
 
   return (
-    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-24">
+    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-safe-nav">
       {/* Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
@@ -151,13 +151,13 @@ export default function GestorMateriasPage() {
         )}
       </AnimatePresence>
 
-      {/* Header Sticky */}
-      <header className="bg-[#0A0A0C]/95 backdrop-blur-md pt-8 pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
+      {/* Header Sticky con soporte para Dynamic Island */}
+      <header className="bg-[#0A0A0C]/95 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
         <button 
           onClick={() => router.back()}
-          className="text-safety-orange font-mono text-xs uppercase tracking-wider p-1 flex items-center gap-1 active:opacity-60 transition-opacity cursor-pointer"
+          className="text-safety-orange font-mono text-xs font-bold uppercase tracking-wider h-9 px-2 rounded-sm border border-transparent hover:border-zinc-800 bg-zinc-950/60 flex items-center justify-center gap-1 active:translate-y-[0.5px] transition-all cursor-pointer"
         >
-          <ChevronLeft size={16} className="-ml-1" />
+          <ChevronLeft size={16} className="-ml-0.5" />
           <span>VOLVER</span>
         </button>
 
@@ -165,7 +165,7 @@ export default function GestorMateriasPage() {
           <button
             onClick={handleReset}
             title="Restablecer materias por defecto"
-            className="p-1.5 rounded-sm text-zinc-400 hover:text-safety-orange bg-zinc-900 border border-zinc-800 hover:border-zinc-700 active:translate-y-[0.5px] transition-all cursor-pointer shadow-none"
+            className="w-9 h-9 rounded-sm text-zinc-400 hover:text-safety-orange bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center active:translate-y-[0.5px] transition-all cursor-pointer shadow-none"
           >
             <RotateCcw size={15} />
           </button>
@@ -173,7 +173,7 @@ export default function GestorMateriasPage() {
           <motion.button
             whileTap={TAP_ANIMATION}
             onClick={handleOpenCreateModal}
-            className="bg-safety-orange hover:bg-[#ff681a] text-black px-3 py-1.5 rounded-sm font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-none cursor-pointer transition-all border border-safety-orange active:translate-y-[0.5px]"
+            className="bg-safety-orange hover:bg-[#ff681a] text-black h-9 px-3.5 rounded-sm font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-none cursor-pointer transition-all border border-safety-orange active:translate-y-[0.5px]"
           >
             <Plus size={14} />
             <span>NUEVA</span>
@@ -299,20 +299,20 @@ export default function GestorMateriasPage() {
                     </div>
 
                     {/* Botones mecánicos de acción */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1.5 shrink-0">
                       <button
                         onClick={() => handleOpenEditModal(subject)}
                         title="Editar materia"
-                        className="w-7 h-7 rounded-sm bg-zinc-950 hover:bg-zinc-800 text-zinc-300 hover:text-zinc-100 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center transition-all cursor-pointer active:translate-y-[0.5px]"
+                        className="w-8 h-8 rounded-sm bg-zinc-950 hover:bg-zinc-800 text-zinc-300 hover:text-zinc-100 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center transition-all cursor-pointer active:translate-y-[0.5px]"
                       >
-                        <Pencil size={13} />
+                        <Pencil size={14} />
                       </button>
                       <button
                         onClick={() => setSubjectToDelete(subject)}
                         title="Eliminar materia"
-                        className="w-7 h-7 rounded-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer active:translate-y-[0.5px]"
+                        className="w-8 h-8 rounded-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer active:translate-y-[0.5px]"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>
@@ -489,14 +489,14 @@ export default function GestorMateriasPage() {
                   <button
                     type="button"
                     onClick={handleCloseModal}
-                    className="px-3.5 py-1.5 rounded-sm text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-zinc-100 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer"
+                    className="h-9 px-4 rounded-sm text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-zinc-100 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center transition-colors cursor-pointer active:translate-y-[0.5px]"
                   >
                     CANCELAR
                   </button>
                   <motion.button
                     whileTap={TAP_ANIMATION}
                     type="submit"
-                    className="bg-safety-orange hover:bg-[#ff681a] text-black border border-safety-orange px-4 py-1.5 rounded-sm text-xs font-mono font-bold uppercase tracking-wider shadow-none flex items-center gap-1.5 transition-colors cursor-pointer active:translate-y-[0.5px]"
+                    className="bg-safety-orange hover:bg-[#ff681a] text-black border border-safety-orange h-9 px-4 rounded-sm text-xs font-mono font-bold uppercase tracking-wider shadow-none flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:translate-y-[0.5px]"
                   >
                     <Check size={14} />
                     <span>{editingSubject ? 'GUARDAR' : 'REGISTRAR'}</span>
@@ -537,14 +537,14 @@ export default function GestorMateriasPage() {
                 <button
                   type="button"
                   onClick={() => setSubjectToDelete(null)}
-                  className="flex-1 py-2 rounded-sm text-xs font-mono uppercase tracking-wider bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 transition-colors cursor-pointer"
+                  className="flex-1 h-9 rounded-sm text-xs font-mono uppercase tracking-wider bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 flex items-center justify-center transition-colors cursor-pointer active:translate-y-[0.5px]"
                 >
                   CANCELAR
                 </button>
                 <button
                   type="button"
                   onClick={handleConfirmDelete}
-                  className="flex-1 py-2 rounded-sm text-xs font-mono font-bold uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 transition-colors cursor-pointer"
+                  className="flex-1 h-9 rounded-sm text-xs font-mono font-bold uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 flex items-center justify-center transition-colors cursor-pointer active:translate-y-[0.5px]"
                 >
                   ELIMINAR
                 </button>

@@ -40,7 +40,10 @@ export function Navbar() {
   const isAulasActive = pathname?.startsWith('/aulas') || pathname?.startsWith('/configuracion/materias');
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0C] border-t border-zinc-800 pb-safe shadow-none">
+    <nav 
+      className="fixed bottom-0 left-0 right-0 z-50 bg-[#0A0A0C] border-t border-zinc-800 pb-safe shadow-none"
+      style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+    >
       {/* Indicador Minimalista Offline */}
       {isOffline && (
         <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-amber-400 text-black text-[9px] font-mono font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-none border border-amber-500 shadow-none flex items-center gap-1.5">

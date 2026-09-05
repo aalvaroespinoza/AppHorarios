@@ -1,10 +1,10 @@
-import { ImageResponse } from 'next/og';
+﻿import { ImageResponse } from 'next/og';
 
 export const runtime = 'nodejs';
-export const size = { width: 512, height: 512 };
+export const size = { width: 180, height: 180 };
 export const contentType = 'image/png';
 
-export default function Icon() {
+export default function AppleIcon() {
   return new ImageResponse(
     (
       <div
@@ -16,8 +16,8 @@ export default function Icon() {
           alignItems: 'center',
           justifyContent: 'center',
           background: '#0A0A0C',
-          borderRadius: '110px',
-          border: '12px solid #202024',
+          borderRadius: '38px',
+          border: '4px solid #202024',
           position: 'relative',
         }}
       >
@@ -25,11 +25,11 @@ export default function Icon() {
         <div
           style={{
             position: 'absolute',
-            top: '48px',
-            right: '54px',
-            width: '24px',
-            height: '24px',
-            borderRadius: '12px',
+            top: '16px',
+            right: '18px',
+            width: '8px',
+            height: '8px',
+            borderRadius: '4px',
             background: '#00E599',
           }}
         />
@@ -40,10 +40,10 @@ export default function Icon() {
           viewBox="0 0 24 24"
           fill="none"
           stroke="#FF5500"
-          strokeWidth="1.75"
+          strokeWidth="1.8"
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ width: '220px', height: '220px' }}
+          style={{ width: '84px', height: '84px' }}
         >
           <path d="M8 6v6" />
           <path d="M15 6v6" />
@@ -54,15 +54,15 @@ export default function Icon() {
           <circle cx="16" cy="18" r="2" />
         </svg>
 
-        {/* Micro Telemetry Text */}
+        {/* Label */}
         <div
           style={{
-            marginTop: '20px',
+            marginTop: '6px',
             color: '#F4F4F6',
-            fontSize: '32px',
+            fontSize: '12px',
             fontWeight: 800,
             fontFamily: 'monospace',
-            letterSpacing: '0.25em',
+            letterSpacing: '0.2em',
           }}
         >
           HORARIOS

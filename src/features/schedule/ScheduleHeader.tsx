@@ -52,18 +52,18 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="w-8 h-8 rounded-sm shrink-0 bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-safety-orange hover:bg-zinc-800 shadow-none"
+                  className="w-9 h-9 rounded-sm shrink-0 bg-zinc-900 border border-zinc-700 text-zinc-300 hover:text-safety-orange hover:bg-zinc-800 shadow-none flex items-center justify-center"
                   onClick={() => setDiaSeleccionado(diaActualHoy)}
                   title="Volver al día de hoy"
                 >
-                  <Calendar size={14} />
+                  <Calendar size={15} />
                 </Button>
               </motion.div>
             )}
           </AnimatePresence>
 
           {/* Módulo LCD de hora */}
-          <div className="bg-zinc-950 border border-zinc-800 px-3 py-1 rounded-sm flex items-center justify-center pointer-events-auto shadow-none">
+          <div className="bg-zinc-950 border border-zinc-800 px-3 h-9 rounded-sm flex items-center justify-center pointer-events-auto shadow-none">
             <RelojMinimalista />
           </div>
 
@@ -72,7 +72,7 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`w-8 h-8 rounded-sm bg-zinc-900 border flex items-center justify-center transition-colors shadow-none cursor-pointer ${
+              className={`w-9 h-9 rounded-sm bg-zinc-900 border flex items-center justify-center transition-colors shadow-none cursor-pointer ${
                 isMenuOpen 
                   ? 'border-safety-orange text-safety-orange bg-safety-orange/10' 
                   : 'border-zinc-800 text-zinc-400 hover:text-zinc-100 hover:border-zinc-700'

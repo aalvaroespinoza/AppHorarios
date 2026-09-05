@@ -209,13 +209,13 @@ export function ClassTimeline({
 
                   <div className="flex gap-2 pt-1 border-t border-zinc-800">
                     <Button 
-                      className="flex-1 font-bold text-[10px] rounded-sm h-7" 
+                      className="flex-1 font-bold text-[10px] rounded-sm h-8 flex items-center justify-center gap-1.5" 
                       onClick={() => setSelectedMateria(cls)} 
                       variant="outline"
                       size="sm"
                     >
-                      <Sparkles size={11} className="mr-1 text-safety-orange" />
-                      DETALLE
+                      <Sparkles size={12} className="text-safety-orange shrink-0" />
+                      <span>DETALLE</span>
                     </Button>
                     <Button
                       size="sm"
@@ -225,16 +225,19 @@ export function ClassTimeline({
                         handleAttendance(info.nombre, idx);
                       }}
                       disabled={!!attended[`class-${idx}`]}
-                      className={`text-[10px] rounded-sm font-bold shrink-0 h-7 border transition-all ${
+                      className={`text-[10px] rounded-sm font-bold shrink-0 h-8 px-3 border transition-all flex items-center justify-center gap-1.5 ${
                         attended[`class-${idx}`]
                           ? 'text-acid-green bg-acid-green/15 border-acid-green/60 cursor-default'
                           : 'text-zinc-300 bg-zinc-900 border-zinc-800 hover:bg-zinc-800 hover:border-zinc-700'
                       }`}
                     >
                       {attended[`class-${idx}`] ? (
-                        <><CheckCircle2 size={12} className="mr-1 text-acid-green" /> ASISTIDO</>
+                        <>
+                          <CheckCircle2 size={12} className="text-acid-green shrink-0" />
+                          <span>ASISTIDO</span>
+                        </>
                       ) : (
-                        '[ REGISTRAR ]'
+                        <span>[ REGISTRAR ]</span>
                       )}
                     </Button>
                   </div>

@@ -28,12 +28,19 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "App Horarios",
-  description: "Horarios y recomendaciones de colectivos para FCEFYN",
+  title: "App Horarios - Terminal de Cursado",
+  description: "Terminal industrial de horarios, cursado y colectivos para FCEFYN / UTN",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
     title: "Horarios",
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  icons: {
+    icon: "/icon",
+    apple: "/apple-icon",
   },
   manifest: "/manifest.json",
 };

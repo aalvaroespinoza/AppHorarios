@@ -31,7 +31,7 @@ export default function HomePage() {
   return (
     <motion.div 
       {...PAGE_TRANSITION}
-      className="px-4 max-w-md mx-auto flex flex-col gap-6 pb-28 min-h-[100dvh]"
+      className="px-4 max-w-md mx-auto flex flex-col gap-6 pb-safe-nav min-h-[100dvh]"
     >
       <ScheduleHeader 
         diaCapitalizado={diaCapitalizado} 

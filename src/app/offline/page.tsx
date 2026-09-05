@@ -43,11 +43,13 @@ export default function OfflinePage() {
         <Link
           href="/"
           className="
-            mt-2 px-5 py-2
+            mt-2 px-6 h-10
+            inline-flex items-center justify-center
             bg-safety-orange text-black border border-safety-orange
             rounded-sm
             text-xs font-bold uppercase tracking-wider
             transition-colors hover:bg-[#ff681a] active:bg-[#e64d00]
+            cursor-pointer select-none
           "
         >
           RECONECTAR
