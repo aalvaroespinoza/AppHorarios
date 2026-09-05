@@ -7,7 +7,7 @@ import { formatTimeRange } from '@/core/utils/date';
 import { SPRING_CONFIG } from '@/lib/animations';
 import { parseMateriaRawText } from '@/core/utils/materiaParser';
 import { parseMateriaInfo } from '@/core/utils/edificio';
-import { FileText } from 'lucide-react';
+import { GraduationCap } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from "@/components/ui/button";
 
@@ -153,10 +153,10 @@ export function SubjectCard({ subject }: SubjectCardProps) {
                 </div>
 
                 <div className="flex gap-2 mt-2">
-                  <Link href={`/boveda?subject=${encodeURIComponent(info.nombre)}`} className="w-full">
+                  <Link href="/aulas" className="w-full">
                     <Button size="sm" variant="secondary" className="w-full rounded-xl flex items-center justify-center gap-2">
-                      <FileText size={14} className="text-teal-400" />
-                      <span>Abrir en Bóveda (Notas)</span>
+                      <GraduationCap size={14} className="text-cyan-400" />
+                      <span>Gestionar en Aulas</span>
                     </Button>
                   </Link>
                 </div>
