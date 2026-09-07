@@ -4,7 +4,6 @@ import type { Subject } from '@/types/subject';
 import { rawScheduleEntries } from '@/data/schedules';
 import { getStoredSubjectsSync } from '@/core/services/subject.service';
 
-// Funciones puras para manipulación de horas (formato "HH:MM")
 export const OFFSET_PARADA_VUELTA_MIN = 10;
 
 export const timeToMins = (timeHHMM: string): number => {
@@ -13,22 +12,11 @@ export const timeToMins = (timeHHMM: string): number => {
 };
 
 export const addMinutes = (timeHHMM: string, minsToAdd: number): string => {
-  const [hours, minutes] = timeHHMM.split(':').map(Number);
-  let totalMins = hours * 60 + minutes + minsToAdd;
-  const h = Math.floor(totalMins / 60) % 24;
-  const m = totalMins % 60;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+  const total = ((timeToMins(timeHHMM) + minsToAdd) % 1440 + 1440) % 1440;
+  return Math.floor(total / 60).toString().padStart(2, '0') + ':' + (total % 60).toString().padStart(2, '0');
 };
 
-const subMinutes = (timeHHMM: string, minsToSub: number): string => {
-  const [hours, minutes] = timeHHMM.split(':').map(Number);
-  let totalMins = hours * 60 + minutes - minsToSub;
-  if (totalMins < 0) totalMins += 24 * 60;
-  const h = Math.floor(totalMins / 60) % 24;
-  const m = totalMins % 60;
-  return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-};
-
+/** Suggest a service only when it is still boardable and fits the class schedule. */
 export const calcularColectivos = (
   dia: DayOfWeek,
   tipo: Direction,
@@ -36,93 +24,41 @@ export const calcularColectivos = (
   duermeEnCordoba: boolean,
   horaActualHHMM: string,
   providedSubjects?: Subject[]
-): { recomendado: RawScheduleEntry | null, alternativas: RawScheduleEntry[] } => {
-  
-  const subjectsToUse = providedSubjects ?? getStoredSubjectsSync();
-
-  // Filtrar bloques de cursada para el día solicitado
-  let classBlocks = subjectsToUse
-    .filter(s => {
-      // Excluir Arquitectura si no la cursa en martes
-      if (dia === 'martes' && !cursaArquitectura && s.name.toLowerCase().includes('arquitectura')) {
-        return false;
-      }
-      return true;
-    })
-    .flatMap(s => s.classBlocks)
-    .filter(cb => cb.day.toLowerCase() === dia.toLowerCase());
-
-  if (classBlocks.length === 0) {
+): { recomendado: RawScheduleEntry | null; alternativas: RawScheduleEntry[] } => {
+  const subjects = providedSubjects ?? getStoredSubjectsSync();
+  const blocks = subjects
+    .filter(subject => !(dia === 'martes' && !cursaArquitectura && subject.name.toLowerCase().includes('arquitectura')))
+    .flatMap(subject => subject.classBlocks)
+    .filter(block => block.day.toLowerCase() === dia.toLowerCase());
+  if (!blocks.length || (tipo === 'vuelta' && dia === 'viernes' && duermeEnCordoba)) {
     return { recomendado: null, alternativas: [] };
   }
 
-  classBlocks.sort((a, b) => timeToMins(a.startTime) - timeToMins(b.startTime));
-
-  // Todos los horarios disponibles en ese día y dirección
-  const todasOpciones = rawScheduleEntries.filter(
-    (h) => h.dia === dia && h.sentido === tipo
-  );
-
-  if (todasOpciones.length === 0) {
-    return { recomendado: null, alternativas: [] };
-  }
-
-  let idealBus: RawScheduleEntry | null = null;
+  const now = timeToMins(horaActualHHMM);
+  const boardingMinutes = (entry: RawScheduleEntry) => timeToMins(entry.horaSalida) + (tipo === 'vuelta' ? OFFSET_PARADA_VUELTA_MIN : 0);
+  const future = rawScheduleEntries
+    .filter(entry => entry.dia === dia && entry.sentido === tipo && boardingMinutes(entry) >= now)
+    .sort((a, b) => boardingMinutes(a) - boardingMinutes(b));
+  let recommended: RawScheduleEntry | null = null;
 
   if (tipo === 'ida') {
-    const primerBloque = classBlocks[0];
-    const limiteLlegadaTerminal = timeToMins(primerBloque.startTime);
-    
-    // Buses que llegan antes o a la misma hora que empieza la clase
-    let validas = todasOpciones.filter(h => timeToMins(h.horaLlegada) <= limiteLlegadaTerminal);
-    if (validas.length > 0) {
-      // Ordenamos descendente para encontrar el que llega más cerca a la hora de cursar (el más tarde posible)
-      validas.sort((a, b) => timeToMins(b.horaSalida) - timeToMins(a.horaSalida));
-      idealBus = validas[0];
-
-      // OVERRIDE: Preferencia explícita del usuario por el Canelo de las 06:30 cuando cursa a las 08:00
-      if (primerBloque.startTime === '08:00') {
-        const canelo0630 = validas.find(h => h.empresa === 'canelo' && h.horaSalida === '06:30');
-        if (canelo0630) {
-          idealBus = canelo0630;
-        }
-      }
-    }
+    const firstStart = Math.min(...blocks.map(block => timeToMins(block.startTime)));
+    const feasible = future.filter(entry => {
+      const arrival = timeToMins(entry.horaLlegada);
+      // An arrival after midnight belongs to the next day, not before today's class.
+      return arrival >= timeToMins(entry.horaSalida) && arrival <= firstStart;
+    });
+    recommended = feasible.at(-1) ?? null;
+    // Preserve the user's explicit 06:30 Canelo preference for an 08:00 class.
+    if (firstStart === 8 * 60) recommended = feasible.find(entry => entry.empresa === 'canelo' && entry.horaSalida === '06:30') ?? recommended;
   } else {
-    // VUELTA
-    if (dia === 'viernes' && duermeEnCordoba) {
-      return { recomendado: null, alternativas: [] };
-    }
-    const ultimoBloque = classBlocks[classBlocks.length - 1];
-    let limiteSalidaTerminal = timeToMins(ultimoBloque.endTime);
-    
-    // Buses que salen después de la clase
-    let validas = todasOpciones.filter(h => timeToMins(h.horaSalida) >= limiteSalidaTerminal);
-    
-    if (validas.length > 0) {
-      // Ordenamos ascendente para agarrar el primero que sale después de clases
-      validas.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
-      idealBus = validas[0];
-    } else {
-      // Si no hay buses válidos después de la clase (ej. clase termina 23:05 y el último bus es antes)
-      // Agarra el último bus disponible de ese día ("me trato de tomar todos los anteriores")
-      let todasOrdenadas = [...todasOpciones].sort((a, b) => timeToMins(b.horaSalida) - timeToMins(a.horaSalida));
-      idealBus = todasOrdenadas[0];
-    }
+    const lastEnd = Math.max(...blocks.map(block => timeToMins(block.endTime)));
+    // Retain the existing conservative terminal-departure rule; no walking time is invented.
+    recommended = future.find(entry => timeToMins(entry.horaSalida) >= lastEnd) ?? null;
   }
 
-  // Si no se encontró un ideal (caso extremo donde ningún colectivo cumple las condiciones)
-  if (!idealBus) {
-    let todasOrdenadas = [...todasOpciones].sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
-    idealBus = todasOrdenadas[0]; // Fallback genérico al primer colectivo del día
-  }
-
-  // Filtrado de las opciones que todavía no pasaron en el día real para mostrarlas como alternativas
-  let opcionesFuturas = todasOpciones.filter((h) => timeToMins(h.horaSalida) >= timeToMins(horaActualHHMM));
-
-  // Las alternativas son todas las futuras EXCEPT el recomendado actual (si es que no pasó)
-  let alternativas = opcionesFuturas.filter(h => h.horaSalida !== idealBus!.horaSalida);
-  alternativas.sort((a, b) => timeToMins(a.horaSalida) - timeToMins(b.horaSalida));
-
-  return { recomendado: idealBus, alternativas };
+  return {
+    recomendado: recommended,
+    alternativas: future.filter(entry => entry !== recommended),
+  };
 };

@@ -21,10 +21,10 @@ export function Header() {
         {/* Ícono placeholder — se reemplazará por el ícono real */}
         <span
           className="
-            w-7 h-7 rounded-sm
-            bg-safety-orange border border-safety-orange
+            w-7 h-7 rounded-2xl
+            bg-accent border border-accent
             flex items-center justify-center
-            text-black text-xs font-mono font-bold
+            text-black text-xs font-sans font-bold
             select-none shadow-none
           "
           aria-hidden="true"

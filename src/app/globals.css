@@ -1,154 +1,180 @@
 @import "tailwindcss";
-@variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *));
 
-@theme {
-  --color-safety-orange: #FF5500;
-  --color-acid-green: #00E599;
-  --color-asfalto: #0A0A0C;
-  --color-grafito: #18181B;
-  --color-off-white: #F4F4F6;
-  --color-zinc-850: #202024;
-  --font-sans: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-muted: var(--muted);
+  --color-ink: var(--ink);
+  --color-subtle: var(--subtle);
+  --color-muted-ink: var(--muted-ink);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-mono: ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+
+:root {
+  color-scheme: light;
+  --canvas: #f4f6fc;
+  --surface: #ffffff;
+  --elevated: #ffffff;
+  --muted: #e9edf7;
+  --ink: #152039;
+  --subtle: #4e5c76;
+  --muted-ink: #647089;
+  --line: #d7dfed;
+  --accent: #4659d7;
+  --success: #147a65;
+  --danger: #bf3251;
+  --warning: #876017;
+  --glass: rgb(255 255 255 / .8);
+  --glass-border: rgb(255 255 255 / .95);
+  --glass-shadow: 0 16px 48px -28px rgb(38 52 102 / .28), 0 2px 8px rgb(38 52 102 / .04);
+  --aurora-blue: rgb(145 183 255 / .19);
+  --aurora-pink: rgb(211 171 255 / .15);
+  --color-bg: var(--canvas);
+  --color-surface: var(--surface);
+  --color-border: var(--line);
+  --color-text-primary: var(--ink);
+  --color-text-secondary: var(--subtle);
+  --color-accent: var(--accent);
+}
+
+.dark {
+  color-scheme: dark;
+  --canvas: #0b1020;
+  --surface: #151d32;
+  --elevated: #202a44;
+  --muted: #26304a;
+  --ink: #f1f5ff;
+  --subtle: #b1bed7;
+  --muted-ink: #99a8c3;
+  --line: #34415d;
+  --accent: #a4b2ff;
+  --success: #78d7bf;
+  --danger: #ff9aaf;
+  --warning: #efce8a;
+  --glass: rgb(21 29 50 / .87);
+  --glass-border: rgb(172 190 255 / .16);
+  --glass-shadow: 0 18px 48px -24px rgb(0 0 0 / .55), inset 0 1px 0 rgb(255 255 255 / .04);
+  --aurora-blue: rgb(80 106 220 / .16);
+  --aurora-pink: rgb(140 80 193 / .12);
 }
 
 @layer base {
-  :root {
-    --background: 240 20% 98%;
-    --foreground: 240 10% 10%;
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 10%;
-    --primary: 21 100% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 94%;
-    --secondary-foreground: 240 10% 10%;
-    --muted: 240 5% 94%;
-    --muted-foreground: 240 4% 40%;
-    --accent: 21 100% 50%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 84%;
-    --input: 240 6% 84%;
-    --ring: 21 100% 50%;
-    --radius: 0.125rem;
-
-    --color-bg: #F8F8FA;
-    --color-surface: #FFFFFF;
-    --color-border: #D4D4D8;
-    --color-text-primary: #18181B;
-    --color-text-secondary: #52525B;
-    --color-accent: #FF5500;
-    --color-acid-green: #00E599;
-    color-scheme: light;
+  * { -webkit-tap-highlight-color: transparent; }
+  html { min-height: 100%; scroll-padding-top: 6rem; }
+  body {
+    min-height: 100dvh;
+    margin: 0;
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
   }
-
-  .dark {
-    --background: 240 10% 4%;
-    --foreground: 240 5% 96%;
-    --card: 240 5% 10%;
-    --card-foreground: 240 5% 96%;
-    --popover: 240 10% 4%;
-    --popover-foreground: 240 5% 96%;
-    --primary: 21 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 240 5% 96%;
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 21 100% 50%;
-    --accent-foreground: 0 0% 0%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
-    --ring: 21 100% 50%;
-    --color-bg: #0A0A0C;
-    --color-surface: #18181B;
-    --color-border: #27272A;
-    --color-text-primary: #F4F4F6;
-    --color-text-secondary: #71717A;
-    color-scheme: dark;
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 4% 0%, var(--aurora-blue), transparent 52%), radial-gradient(ellipse at 98% 35%, var(--aurora-pink), transparent 55%);
   }
+  button, input, select, textarea { font: inherit; }
+  button:not(:disabled), summary { cursor: pointer; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  button, a, input, select, textarea, summary { touch-action: manipulation; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+  ::selection { background: #6778dd; color: white; }
+  input, textarea, select { accent-color: var(--accent); }
+  input::placeholder, textarea::placeholder { color: var(--muted-ink); opacity: 1; }
 }
 
-/*
- * La interfaz existente utiliza utilidades de color explícitas. Esta capa las
- * adapta al tema claro sin duplicar cada componente y mantiene los acentos de
- * estado (naranja y verde) inalterados.
- */
-html:not(.dark) .bg-\[\#0A0A0C\] { background-color: #F8F8FA !important; }
-html:not(.dark) .bg-zinc-950 { background-color: #FFFFFF !important; }
-html:not(.dark) .bg-zinc-950\/60 { background-color: rgb(255 255 255 / 0.6) !important; }
-html:not(.dark) .bg-zinc-900 { background-color: #F4F4F5 !important; }
-html:not(.dark) .bg-zinc-900\/80 { background-color: rgb(244 244 245 / 0.8) !important; }
-html:not(.dark) .bg-zinc-800 { background-color: #E4E4E7 !important; }
-html:not(.dark) .bg-zinc-700 { background-color: #D4D4D8 !important; }
-html:not(.dark) .bg-zinc-600 { background-color: #A1A1AA !important; }
-html:not(.dark) .hover\:bg-zinc-900:hover,
-html:not(.dark) .hover\:bg-zinc-900\/90:hover { background-color: #E4E4E7 !important; }
-html:not(.dark) .hover\:bg-zinc-800:hover,
-html:not(.dark) .hover\:bg-zinc-800\/80:hover { background-color: #D4D4D8 !important; }
-html:not(.dark) .hover\:bg-zinc-700:hover { background-color: #A1A1AA !important; }
-
-html:not(.dark) .text-\[\#F4F4F6\],
-html:not(.dark) .text-zinc-100,
-html:not(.dark) .text-zinc-200 { color: #18181B !important; }
-html:not(.dark) .text-zinc-300 { color: #27272A !important; }
-html:not(.dark) .text-zinc-400 { color: #3F3F46 !important; }
-html:not(.dark) .text-zinc-500 { color: #52525B !important; }
-html:not(.dark) .text-zinc-600 { color: #71717A !important; }
-html:not(.dark) .text-zinc-700 { color: #A1A1AA !important; }
-html:not(.dark) .hover\:text-zinc-100:hover,
-html:not(.dark) .hover\:text-zinc-200:hover,
-html:not(.dark) .hover\:text-zinc-300:hover { color: #18181B !important; }
-
-html:not(.dark) .border-zinc-900,
-html:not(.dark) .border-zinc-800,
-html:not(.dark) .border-zinc-800\/80,
-html:not(.dark) .border-zinc-800\/90,
-html:not(.dark) .border-zinc-700 { border-color: #D4D4D8 !important; }
-html:not(.dark) .border-zinc-600 { border-color: #A1A1AA !important; }
-html:not(.dark) .hover\:border-zinc-800:hover,
-html:not(.dark) .hover\:border-zinc-700:hover,
-html:not(.dark) .hover\:border-zinc-600:hover { border-color: #A1A1AA !important; }
-
-/* Ocultar barra de scroll para carruseles */
-.hide-scrollbar::-webkit-scrollbar,
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.hide-scrollbar,
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* iOS Safe Area & PWA Utilities */
-.pt-safe {
-  padding-top: env(safe-area-inset-top, 0px);
-}
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 0px);
-}
-.pl-safe {
-  padding-left: env(safe-area-inset-left, 0px);
-}
-.pr-safe {
-  padding-right: env(safe-area-inset-right, 0px);
-}
-.pb-safe-nav {
-  padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+@layer components {
+  .page-shell {
+    width: 100%;
+    max-width: 480px;
+    margin-inline: auto;
+    padding: max(1.25rem, env(safe-area-inset-top)) 1.25rem calc(7rem + env(safe-area-inset-bottom));
+    min-height: 100dvh;
+  }
+  .glass-panel {
+    border: 1px solid var(--glass-border);
+    border-radius: 28px;
+    background: var(--glass);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+  }
+  .glass-toolbar {
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(24px) saturate(135%);
+    backdrop-filter: blur(24px) saturate(135%);
+    box-shadow: var(--glass-shadow);
+  }
+  .glass-pill {
+    min-height: 44px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: .6rem 1rem;
+    background: var(--glass);
+    color: var(--subtle);
+    font-size: .875rem;
+    font-weight: 600;
+    transition: background-color 160ms, color 160ms, transform 160ms;
+  }
+  .glass-button, .glass-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    min-height: 44px;
+    border-radius: 18px;
+    padding: .7rem 1rem;
+    font-size: .9375rem;
+    font-weight: 600;
+    transition: transform 160ms, background-color 160ms, box-shadow 160ms;
+  }
+  .glass-button { color: var(--ink); border: 1px solid var(--line); background: var(--surface); }
+  .glass-primary { color: #fff; border: 1px solid rgb(255 255 255 / .25); background: linear-gradient(115deg, #405bd0, #7350c8); box-shadow: 0 6px 18px -10px #6055db; }
+  .glass-button:active, .glass-primary:active, .glass-pill:active { transform: scale(.98); }
+  .aurora-border {
+    border: 1px solid transparent;
+    background: linear-gradient(var(--surface), var(--surface)) padding-box, linear-gradient(125deg, #77c9ee88, #9298ffbb 38%, #c193faaa 65%, #f3a0c577) border-box;
+  }
+  .glass-primary.aurora-border {
+    background: linear-gradient(115deg, #405bd0, #7350c8) padding-box, linear-gradient(125deg, #77c9ee, #9298ff 38%, #c193fa 65%, #f3a0c5) border-box;
+  }
+  .section-label { color: var(--subtle); font-size: .875rem; font-weight: 600; letter-spacing: .01em; }
+  .time-display { font-variant-numeric: tabular-nums; font-weight: 700; letter-spacing: -.055em; line-height: 1.05; font-size: clamp(2.75rem, 12vw, 4rem); }
+  .glass-input { width: 100%; border: 1px solid var(--line); border-radius: 16px; padding: .85rem 1rem; min-height: 48px; background: var(--surface); color: var(--ink); font-size: 1rem; }
 }
 
-/* iOS PWA Tactile Optimizations */
-* {
-  -webkit-tap-highlight-color: transparent;
+@media (hover: hover) {
+  .glass-button:hover, .glass-pill:hover { background-color: var(--muted); }
+  .glass-primary:hover { box-shadow: 0 8px 24px -8px #6055db80; }
 }
-
-html, body {
-  overscroll-behavior-y: none;
-  -webkit-text-size-adjust: 100%;
+@supports not (backdrop-filter: blur(1px)) {
+  .glass-panel, .glass-toolbar { background: var(--surface); }
 }
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .glass-panel, .glass-toolbar, .glass-pill { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; border-color: var(--line); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+.hide-scrollbar::-webkit-scrollbar, .no-scrollbar::-webkit-scrollbar { display: none; }
+.hide-scrollbar, .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+.pt-safe { padding-top: env(safe-area-inset-top, 0px); }
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+.pl-safe { padding-left: env(safe-area-inset-left, 0px); }
+.pr-safe { padding-right: env(safe-area-inset-right, 0px); }
+.pb-safe-nav { padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px)); }

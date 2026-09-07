@@ -1,146 +1,46 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { Settings, ArrowRight, Bus } from 'lucide-react';
 import { useEscenario } from '@/hooks/useEscenario';
 import { rawScheduleEntries } from '@/data/schedules';
-import NativeCard from '@/core/components/ui/NativeCard';
-import { Bus, MapPin, Settings } from 'lucide-react';
-import Link from 'next/link';
 import ContextualControls from '@/features/schedule/ContextualControls';
 import type { RawScheduleEntry } from '@/types/schedule';
 
 export default function HorariosPage() {
   const escenario = useEscenario();
   const [tab, setTab] = useState<'ida' | 'vuelta'>('ida');
-
-  if (!escenario.isMounted) return <div className="min-h-[100dvh] bg-[#0A0A0C]" />;
-
-  const { diaSeleccionado } = escenario;
-  
-  const horariosDelDia = rawScheduleEntries.filter(h => h.dia === diaSeleccionado) || [];
-  const horariosFiltrados = horariosDelDia.filter(h => h.sentido === tab);
-
-  // Agrupar por empresa (capitalizando el nombre)
-  const agrupadosPorEmpresa = horariosFiltrados.reduce((acc, curr) => {
-    const empresaCapitalized = curr.empresa.charAt(0).toUpperCase() + curr.empresa.slice(1);
-    if (!acc[empresaCapitalized]) {
-      acc[empresaCapitalized] = [];
-    }
-    acc[empresaCapitalized].push(curr);
-    return acc;
+  const schedules = rawScheduleEntries.filter(entry => entry.dia === escenario.diaSeleccionado);
+  const groups = schedules.filter(entry => entry.sentido === tab).reduce((result, entry) => {
+    (result[entry.empresa] ??= []).push(entry);
+    return result;
   }, {} as Record<string, RawScheduleEntry[]>);
-
-  // Ordenar horarios dentro de cada empresa de menor a mayor
-  Object.keys(agrupadosPorEmpresa).forEach(empresa => {
-    agrupadosPorEmpresa[empresa].sort((a, b) => a.horaSalida.localeCompare(b.horaSalida));
-  });
+  Object.values(groups).forEach(entries => entries.sort((a, b) => a.horaSalida.localeCompare(b.horaSalida)));
 
   return (
-    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-safe-nav">
-      <header className="pt-[max(1.25rem,calc(env(safe-area-inset-top)+0.5rem))] pb-2 px-4 flex flex-col gap-3">
-        <div className="flex justify-between items-center">
-          <div>
-            <span className="text-[10px] font-mono font-bold text-safety-orange tracking-[0.2em] uppercase block mb-0.5">
-              SYS.DATABASE // HORARIOS
-            </span>
-            <h1 className="text-xl font-mono font-bold text-zinc-100 flex items-center gap-2 uppercase tracking-tight">
-              <Bus size={18} className="text-safety-orange" />
-              GRILLA DE COLECTIVOS
-            </h1>
-          </div>
-          <Link 
-            href="/configuracion" 
-            className="w-9 h-9 bg-zinc-900 border border-zinc-800 rounded-sm flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 transition-colors shadow-none active:translate-y-[0.5px]"
-            title="Configuración"
-          >
-            <Settings size={16} />
-          </Link>
-        </div>
-        
-        {/* Indicador de Vista Actual */}
-        <div className={`flex items-center justify-between py-1.5 px-3 rounded-sm border font-mono text-xs uppercase tracking-wider ${
-          tab === 'ida' 
-            ? 'bg-safety-orange/10 border-safety-orange/40 text-safety-orange' 
-            : 'bg-acid-green/10 border-acid-green/40 text-acid-green'
-        }`}>
-          <span className="font-bold">SENTIDO: {tab.toUpperCase()}</span>
-          <span className="text-[10px] opacity-80">{tab === 'ida' ? 'DESPEÑADEROS → CBA' : 'CBA → DESPEÑADEROS'}</span>
-        </div>
+    <main className="page-shell flex min-h-[100dvh] flex-col gap-5">
+      <header className="flex items-center justify-between gap-3 pt-[max(1rem,env(safe-area-inset-top))]">
+        <div><p className="section-label mb-1">Para planear tu camino</p><h1 className="text-3xl font-bold tracking-tight text-ink">Horarios</h1></div>
+        <Link href="/configuracion" aria-label="Configuración" className="glass-button aurora-border w-11 p-0"><Settings size={20} /></Link>
       </header>
-
-      {/* Tabs Ida/Vuelta fijados (Sticky con soporte Dynamic Island) */}
-      <div className="sticky top-0 z-40 bg-[#0A0A0C]/95 backdrop-blur-md px-4 pt-[max(0.5rem,env(safe-area-inset-top))] pb-2 border-b border-zinc-800 shadow-none">
-        <div className="flex bg-zinc-950 border border-zinc-800 p-1 rounded-sm gap-1 max-w-md mx-auto">
-          <button 
-            onClick={() => setTab('ida')}
-            className={`flex-1 py-2 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
-              tab === 'ida' 
-                ? 'bg-zinc-900 border border-safety-orange/50 text-safety-orange font-bold shadow-none' 
-                : 'border border-transparent text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            <span>IDA</span>
-            <span className="text-[10px] opacity-80">({horariosDelDia.filter(h => h.sentido === 'ida').length})</span>
-          </button>
-          <button 
-            onClick={() => setTab('vuelta')}
-            className={`flex-1 py-2 text-xs font-mono uppercase tracking-wider rounded-sm transition-colors cursor-pointer flex items-center justify-center gap-1.5 ${
-              tab === 'vuelta' 
-                ? 'bg-zinc-900 border border-acid-green/50 text-acid-green font-bold shadow-none' 
-                : 'border border-transparent text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            <span>VUELTA</span>
-            <span className="text-[10px] opacity-80">({horariosDelDia.filter(h => h.sentido === 'vuelta').length})</span>
-          </button>
-        </div>
+      <ContextualControls showScenarios={false} />
+      <div className="glass-toolbar flex gap-1 rounded-full p-1" aria-label="Sentido del viaje">
+        {(['ida', 'vuelta'] as const).map(direction => <button type="button" key={direction} aria-pressed={tab === direction} onClick={() => setTab(direction)} className={'min-h-11 flex-1 rounded-full px-3 text-sm font-semibold ' + (tab === direction ? 'glass-primary' : 'text-subtle hover:bg-muted')}>{direction === 'ida' ? 'Ida' : 'Vuelta'} <span className="font-normal">· {schedules.filter(entry => entry.sentido === direction).length}</span></button>)}
       </div>
-
-      <div className="p-4 space-y-5 mt-1">
-        <ContextualControls />
-
-        <div id="seccion-cursado" className="animate-in fade-in slide-in-from-bottom-2 duration-300 scroll-mt-24">
-          {Object.keys(agrupadosPorEmpresa).length > 0 ? (
-            <div className="flex flex-col gap-4">
-              {Object.entries(agrupadosPorEmpresa).map(([empresa, horarios]) => (
-                <NativeCard key={empresa} className="p-0 overflow-hidden border border-zinc-800 bg-zinc-900 rounded-sm shadow-none">
-                  <div className="px-3.5 py-2.5 border-b border-zinc-800 font-mono font-bold tracking-wider uppercase text-xs flex items-center justify-between bg-zinc-950 text-zinc-200">
-                    <span className="flex items-center gap-2">
-                      <span className="w-1.5 h-1.5 bg-safety-orange rounded-none" />
-                      {empresa}
-                    </span>
-                    <span className="text-[10px] font-mono font-semibold text-zinc-400 border border-zinc-800 bg-zinc-900 px-1.5 py-0.5 rounded-sm">
-                      {horarios.length} SERVICIOS
-                    </span>
-                  </div>
-                  <div className="p-3.5">
-                    <div className="grid grid-cols-4 gap-2">
-                      {horarios.map((h, idx) => (
-                        <div 
-                          key={idx} 
-                          className="flex flex-col items-center justify-center py-2 rounded-sm bg-zinc-950 border border-zinc-800 hover:border-zinc-700 transition-colors cursor-default"
-                        >
-                          <span className="text-sm font-bold font-mono text-zinc-100 tracking-tight">{h.horaSalida}</span>
-                          {h.notas && (
-                            <div className="flex items-center gap-0.5 mt-0.5 text-safety-orange">
-                              <MapPin size={8} />
-                              <span className="text-[8px] uppercase font-mono font-bold tracking-widest leading-none">Info</span>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </NativeCard>
-              ))}
-            </div>
-          ) : (
-            <NativeCard className="p-6 text-center text-zinc-500 font-mono text-xs uppercase tracking-wider bg-zinc-900 border border-zinc-800 rounded-sm shadow-none">
-              [NO HAY VIAJES DE {tab.toUpperCase()} PROGRAMADOS PARA ESTE DÍA]
-            </NativeCard>
-          )}
-        </div>
-      </div>
+      <div className="flex flex-wrap items-center gap-2 text-sm font-medium text-subtle"><span>{tab === 'ida' ? 'Despeñaderos' : 'Córdoba'}</span><ArrowRight size={15} /><span>{tab === 'ida' ? 'Córdoba' : 'Despeñaderos'}</span></div>
+      <p className="-mt-2 text-sm text-subtle">Salidas programadas {tab === 'vuelta' ? 'desde la terminal de Córdoba' : 'desde Despeñaderos'}. {tab === 'vuelta' && 'Por Ministerio, aproximadamente 10 min después.'}</p>
+      {!escenario.isMounted ? <div className="glass-panel p-6 text-subtle" role="status">Cargando horarios…</div> : Object.keys(groups).length ? Object.entries(groups).map(([company, entries]) => (
+        <section key={company} className="glass-panel overflow-hidden">
+          <div className="flex items-center justify-between gap-2 border-b border-line px-5 py-4"><h2 className="flex items-center gap-2 text-base font-semibold capitalize text-ink"><Bus size={19} className="text-accent" />{company}</h2><span className="text-sm text-subtle">{entries.length} servicios</span></div>
+          <div className="grid grid-cols-3 gap-2 p-4 min-[390px]:grid-cols-4">
+            {entries.map((entry, index) => <div key={entry.horaSalida + index} className="min-w-0 rounded-2xl border border-line bg-elevated px-2 py-3 text-center">
+              <time className="text-lg font-semibold tabular-nums text-ink">{entry.horaSalida}</time>
+              {entry.notas && <details className="mt-1 text-sm text-subtle"><summary className="cursor-pointer py-1 text-accent">Detalle</summary><p className="mt-1 break-words text-left">{entry.notas}</p></details>}
+            </div>)}
+          </div>
+        </section>
+      )) : <div className="glass-panel p-6 text-center text-subtle">No hay servicios de {tab} para este día.</div>}
     </main>
   );
 }

@@ -1,558 +1,145 @@
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ChevronLeft, 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Clock, 
-  MapPin, 
-  Building2, 
-  RotateCcw, 
-  BookOpen, 
-  Check, 
-  GraduationCap
-} from 'lucide-react';
-import NativeCard from '@/core/components/ui/NativeCard';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { ChevronLeft, Plus, Pencil, Trash2, Clock, MapPin, RotateCcw, BookOpen, Check, X, Settings2 } from 'lucide-react';
 import { useSubjects, SubjectFormData, subjectToFormData } from '@/hooks/useSubjects';
 import { Subject } from '@/types/subject';
 import { DayOfWeek } from '@/core/types/common';
 import { parseMateriaInfo, getEdificioByAula } from '@/core/utils/edificio';
-import { SPRING_CONFIG, TAP_ANIMATION } from '@/lib/animations';
 
-const DIAS_OPTIONS: { value: DayOfWeek; label: string }[] = [
-  { value: 'lunes', label: 'Lunes' },
-  { value: 'martes', label: 'Martes' },
-  { value: 'miercoles', label: 'Miércoles' },
-  { value: 'jueves', label: 'Jueves' },
-  { value: 'viernes', label: 'Viernes' },
-  { value: 'sabado', label: 'Sábado' },
+const DAYS: { value: DayOfWeek; label: string }[] = [
+  { value: 'lunes', label: 'Lunes' }, { value: 'martes', label: 'Martes' },
+  { value: 'miercoles', label: 'Miércoles' }, { value: 'jueves', label: 'Jueves' },
+  { value: 'viernes', label: 'Viernes' }, { value: 'sabado', label: 'Sábado' },
 ];
-
-const INITIAL_FORM: SubjectFormData = {
-  nombre: '',
-  dia: 'lunes',
-  horaInicio: '08:00',
-  horaFin: '11:10',
-  curso: '',
-  aula: '',
-};
+const INITIAL: SubjectFormData = { nombre: '', dia: 'lunes', horaInicio: '08:00', horaFin: '11:10', curso: '', aula: '' };
+const inputClass = 'mt-1.5 min-h-11 w-full min-w-0 rounded-2xl border border-line bg-muted px-3 py-2 text-base text-ink';
+const dialogClass = 'm-auto w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto rounded-[28px] border border-line bg-elevated p-5 text-ink shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-sm';
 
 export default function GestorMateriasPage() {
-  const router = useRouter();
-  const { 
-    subjects, 
-    loading, 
-    isMounted, 
-    addSubject, 
-    updateSubject, 
-    deleteSubject, 
-    resetToDefaults 
-  } = useSubjects();
+  const { subjects, loading, isMounted, addSubject, updateSubject, deleteSubject, resetToDefaults } = useSubjects();
+  const [filter, setFilter] = useState<string>('todos');
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Subject | null>(null);
+  const [form, setForm] = useState<SubjectFormData>(INITIAL);
+  const [pendingDelete, setPendingDelete] = useState<Subject | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [toast, setToast] = useState('');
+  const editorDialog = useRef<HTMLDialogElement>(null);
+  const deleteDialog = useRef<HTMLDialogElement>(null);
 
-  // Estados de interfaz y filtrado
-  const [selectedDayFilter, setSelectedDayFilter] = useState<string>('todos');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
-  const [formData, setFormData] = useState<SubjectFormData>(INITIAL_FORM);
-  const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
-  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  useEffect(() => {
+    if (open && !editorDialog.current?.open) editorDialog.current?.showModal();
+    if (!open && editorDialog.current?.open) editorDialog.current.close();
+  }, [open]);
+  useEffect(() => {
+    if (pendingDelete && !deleteDialog.current?.open) deleteDialog.current?.showModal();
+    if (!pendingDelete && deleteDialog.current?.open) deleteDialog.current.close();
+  }, [pendingDelete]);
+  useEffect(() => {
+    if (!toast) return;
+    const timer = window.setTimeout(() => setToast(''), 3500);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
-  const showToast = (msg: string) => {
-    setToastMessage(msg);
-    setTimeout(() => {
-      setToastMessage(null);
-    }, 3000);
+  const startEditor = (subject?: Subject) => {
+    setEditing(subject || null);
+    setForm(subject ? subjectToFormData(subject) : { ...INITIAL, dia: (filter === 'todos' ? 'lunes' : filter) as DayOfWeek });
+    setError('');
+    setOpen(true);
   };
-
-  const handleOpenCreateModal = () => {
-    setEditingSubject(null);
-    setFormData({
-      ...INITIAL_FORM,
-      dia: (selectedDayFilter !== 'todos' ? selectedDayFilter : 'lunes') as DayOfWeek
-    });
-    setIsModalOpen(true);
+  const closeEditor = () => { if (!busy) setOpen(false); };
+  const save = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
+    if (!form.nombre.trim()) { setError('Escribí el nombre de la materia.'); return; }
+    if (form.horaFin <= form.horaInicio) { setError('La hora de fin debe ser posterior al inicio.'); return; }
+    setBusy(true);
+    setError('');
+    try {
+      if (editing) await updateSubject(editing.id, form);
+      else await addSubject(form);
+      setOpen(false);
+      setToast(editing ? 'Materia actualizada' : 'Materia agregada');
+    } catch { setError('No se pudo guardar la materia. Tus cambios siguen en el formulario.'); }
+    finally { setBusy(false); }
   };
-
-  const handleOpenEditModal = (subject: Subject) => {
-    setEditingSubject(subject);
-    setFormData(subjectToFormData(subject));
-    setIsModalOpen(true);
+  const remove = async () => {
+    if (!pendingDelete || busy) return;
+    setBusy(true);
+    setError('');
+    try { await deleteSubject(pendingDelete.id); setPendingDelete(null); setToast('Materia eliminada'); }
+    catch { setError('No se pudo eliminar. Probá de nuevo.'); }
+    finally { setBusy(false); }
   };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setEditingSubject(null);
-    setFormData(INITIAL_FORM);
+  const reset = async () => {
+    if (!window.confirm('¿Restablecer las materias iniciales? Se reemplazarán tus materias y cambios personalizados.')) return;
+    setBusy(true);
+    try { await resetToDefaults(); setToast('Materias iniciales restauradas'); setError(''); }
+    catch { setError('No se pudieron restablecer las materias.'); }
+    finally { setBusy(false); }
   };
+  const filtered = subjects.filter((subject) => filter === 'todos' || subject.classBlocks.some((block) => block.day === filter));
+  const aulaNumber = Number.parseInt(form.aula, 10);
+  const building = Number.isFinite(aulaNumber) && aulaNumber > 0 ? getEdificioByAula(aulaNumber) : '';
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!formData.nombre.trim()) return;
+  if (!isMounted || loading) return <main className="page-shell" aria-busy="true"><p className="text-subtle">Cargando tus materias…</p></main>;
 
-    if (editingSubject) {
-      await updateSubject(editingSubject.id, formData);
-      showToast(`Materia "${formData.nombre}" actualizada`);
-    } else {
-      await addSubject(formData);
-      showToast(`Materia "${formData.nombre}" agregada`);
-    }
-
-    handleCloseModal();
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!subjectToDelete) return;
-    await deleteSubject(subjectToDelete.id);
-    setSubjectToDelete(null);
-    showToast(`Materia eliminada`);
-  };
-
-  const handleReset = async () => {
-    if (window.confirm('¿Seguro que querés restablecer las materias por defecto? Se perderán las modificaciones personalizadas.')) {
-      await resetToDefaults();
-      showToast('Materias restablecidas a valores iniciales');
-    }
-  };
-
-  // Filtrado de materias según día seleccionado
-  const filteredSubjects = subjects.filter((subject) => {
-    if (selectedDayFilter === 'todos') return true;
-    return subject.classBlocks.some(
-      (b) => b.day.toLowerCase() === selectedDayFilter.toLowerCase()
-    );
-  });
-
-  if (!isMounted || loading) {
-    return <div className="min-h-[100dvh] bg-zinc-950" />;
-  }
-
-  // Previsualización de edificio según aula ingresada en modal
-  const aulaParsedNum = parseInt(formData.aula, 10);
-  const edificioPreview = !isNaN(aulaParsedNum) ? getEdificioByAula(aulaParsedNum) : null;
-
-  return (
-    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-safe-nav">
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {toastMessage && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-5 left-1/2 -translate-x-1/2 z-50 bg-acid-green text-black px-3.5 py-1.5 rounded-sm border border-acid-green shadow-none font-mono text-xs font-bold uppercase tracking-wider flex items-center gap-2"
-          >
-            <Check size={14} />
-            <span>{toastMessage}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Header Sticky con soporte para Dynamic Island */}
-      <header className="bg-[#0A0A0C]/95 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
-        <button 
-          onClick={() => router.back()}
-          className="text-safety-orange font-mono text-xs font-bold uppercase tracking-wider h-9 px-2 rounded-sm border border-transparent hover:border-zinc-800 bg-zinc-950/60 flex items-center justify-center gap-1 active:translate-y-[0.5px] transition-all cursor-pointer"
-        >
-          <ChevronLeft size={16} className="-ml-0.5" />
-          <span>VOLVER</span>
-        </button>
-
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleReset}
-            title="Restablecer materias por defecto"
-            className="w-9 h-9 rounded-sm text-zinc-400 hover:text-safety-orange bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center active:translate-y-[0.5px] transition-all cursor-pointer shadow-none"
-          >
-            <RotateCcw size={15} />
-          </button>
-          
-          <motion.button
-            whileTap={TAP_ANIMATION}
-            onClick={handleOpenCreateModal}
-            className="bg-safety-orange hover:bg-[#ff681a] text-black h-9 px-3.5 rounded-sm font-mono text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-none cursor-pointer transition-all border border-safety-orange active:translate-y-[0.5px]"
-          >
-            <Plus size={14} />
-            <span>NUEVA</span>
-          </motion.button>
-        </div>
-      </header>
-
-      <div className="px-4 pt-4 flex flex-col gap-4">
-        {/* Título & Resumen */}
-        <div>
-          <span className="text-[10px] font-mono font-bold text-safety-orange tracking-[0.2em] uppercase block mb-0.5">
-            SYS.DATABASE // MATERIAS
-          </span>
-          <h1 className="text-2xl font-mono font-black tracking-tight text-zinc-100 uppercase">
-            GESTOR DE AULAS
-          </h1>
-          <p className="text-xs text-zinc-400 font-mono mt-0.5">
-            CONFIGURACIÓN ACADÉMICA Y TELEMETRÍA DE CURSADO.
-          </p>
-        </div>
-
-        {/* Barra de Filtros por Día */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1 -mx-4 px-4 font-mono">
-          <button
-            onClick={() => setSelectedDayFilter('todos')}
-            className={`px-3 py-1 rounded-sm text-xs font-mono uppercase tracking-wider whitespace-nowrap transition-colors border select-none cursor-pointer ${
-              selectedDayFilter === 'todos'
-                ? 'bg-zinc-800 text-zinc-100 border-zinc-600 font-bold shadow-none'
-                : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700'
-            }`}
-          >
-            TODOS ({subjects.length})
-          </button>
-          {DIAS_OPTIONS.map((d) => {
-            const count = subjects.filter((s) =>
-              s.classBlocks.some((b) => b.day === d.value)
-            ).length;
-            const isSelected = selectedDayFilter === d.value;
-            return (
-              <button
-                key={d.value}
-                onClick={() => setSelectedDayFilter(d.value)}
-                className={`px-3 py-1 rounded-sm text-xs font-mono uppercase tracking-wider whitespace-nowrap transition-colors flex items-center gap-1.5 border select-none cursor-pointer ${
-                  isSelected
-                    ? 'bg-zinc-800 text-safety-orange border-safety-orange/60 font-bold shadow-none'
-                    : 'bg-zinc-950 text-zinc-400 border-zinc-800 hover:bg-zinc-900 hover:border-zinc-700'
-                }`}
-              >
-                <span>{d.label}</span>
-                {count > 0 && (
-                  <span className={`text-[10px] px-1 py-0.5 rounded-sm font-mono ${isSelected ? 'bg-safety-orange/20 text-safety-orange border border-safety-orange/40' : 'bg-zinc-900 text-zinc-500 border border-zinc-800'}`}>
-                    {count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Lista de Materias */}
-        {filteredSubjects.length === 0 ? (
-          <NativeCard className="flex flex-col items-center justify-center py-10 text-center gap-2.5 bg-zinc-900 border border-zinc-800 rounded-sm shadow-none">
-            <div className="w-10 h-10 rounded-sm bg-zinc-950 border border-zinc-800 flex items-center justify-center text-zinc-500">
-              <BookOpen size={18} />
-            </div>
-            <div>
-              <p className="font-mono text-xs font-bold uppercase tracking-widest text-zinc-400">[SIN REGISTROS ACADÉMICOS]</p>
-              <p className="text-[11px] text-zinc-500 font-mono mt-0.5">
-                {selectedDayFilter !== 'todos'
-                  ? `No hay materias cargadas para el día ${selectedDayFilter}.`
-                  : 'Presioná "+ NUEVA" para ingresar una materia.'}
-              </p>
-            </div>
-            <motion.button
-              whileTap={TAP_ANIMATION}
-              onClick={handleOpenCreateModal}
-              className="mt-1 text-xs font-mono font-bold uppercase tracking-wider text-safety-orange bg-safety-orange/10 border border-safety-orange/40 px-3.5 py-1.5 rounded-sm hover:bg-safety-orange/20 transition-colors cursor-pointer"
-            >
-              + REGISTRAR MATERIA
-            </motion.button>
-          </NativeCard>
-        ) : (
-          <div className="flex flex-col gap-2.5">
-            {filteredSubjects.map((subject) => {
-              const info = parseMateriaInfo(subject.name);
-              const block = subject.classBlocks[0] || {
-                day: 'lunes',
-                startTime: '08:00',
-                endTime: '11:10',
-                classroom: 'N/A'
-              };
-              const aula = block.classroom || (info.aula !== 'N/A' ? info.aula : '');
-              const aulaNum = parseInt(aula, 10);
-              const edificio = !isNaN(aulaNum) && aulaNum > 0 ? getEdificioByAula(aulaNum) : (info.edificio !== 'N/A' ? info.edificio : '');
-
-              return (
-                <NativeCard 
-                  key={subject.id}
-                  className="bg-zinc-900 border border-zinc-800 hover:border-zinc-700 transition-colors p-3.5 flex flex-col gap-2.5 rounded-sm shadow-none overflow-hidden"
-                >
-                  {/* Header de la tarjeta */}
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5 flex-wrap mb-1">
-                        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-safety-orange bg-safety-orange/10 border border-safety-orange/40 px-1.5 py-0.5 rounded-sm">
-                          {block.day}
-                        </span>
-                        {subject.shift && (
-                          <span className="text-[10px] font-mono text-zinc-400 bg-zinc-950 border border-zinc-800 px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
-                            TURNO {subject.shift}
-                          </span>
-                        )}
-                        {subject.modality && (
-                          <span className="text-[10px] font-mono text-zinc-400 bg-zinc-950 border border-zinc-800 px-1.5 py-0.5 rounded-sm uppercase tracking-wider">
-                            {subject.modality}
-                          </span>
-                        )}
-                      </div>
-
-                      <h3 className="font-mono font-bold text-sm sm:text-base text-zinc-100 uppercase tracking-tight leading-snug">
-                        {info.nombre}
-                      </h3>
-                    </div>
-
-                    {/* Botones mecánicos de acción */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={() => handleOpenEditModal(subject)}
-                        title="Editar materia"
-                        className="w-8 h-8 rounded-sm bg-zinc-950 hover:bg-zinc-800 text-zinc-300 hover:text-zinc-100 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center transition-all cursor-pointer active:translate-y-[0.5px]"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => setSubjectToDelete(subject)}
-                        title="Eliminar materia"
-                        className="w-8 h-8 rounded-sm bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer active:translate-y-[0.5px]"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Detalles de Cursado Técnico */}
-                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-zinc-800/80 text-xs font-mono">
-                    <div className="flex items-center gap-1.5 bg-zinc-950 p-2 rounded-sm border border-zinc-800 text-zinc-300">
-                      <Clock size={12} className="text-zinc-500 shrink-0" />
-                      <span className="font-semibold text-zinc-200">
-                        {block.startTime} a {block.endTime} HS
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 bg-zinc-950 p-2 rounded-sm border border-zinc-800 text-zinc-300">
-                      <GraduationCap size={12} className="text-safety-orange shrink-0" />
-                      <span className="font-semibold text-zinc-200 truncate">
-                        {info.curso && info.curso !== 'Consultar' ? `CURSO ${info.curso}` : 'SIN CURSO'}
-                      </span>
-                    </div>
-
-                    <div className="col-span-2 flex items-center justify-between bg-zinc-950 p-2 rounded-sm border border-zinc-800 text-zinc-300">
-                      <div className="flex items-center gap-1.5 truncate">
-                        <MapPin size={12} className="text-acid-green shrink-0" />
-                        <span className="font-bold text-acid-green uppercase">
-                          {aula ? `AULA ${aula}` : 'AULA NO ASIGNADA'}
-                        </span>
-                      </div>
-                      {edificio && (
-                        <span className="text-[10px] font-mono text-safety-orange bg-safety-orange/10 border border-safety-orange/40 px-1.5 py-0.5 rounded-sm uppercase tracking-wide truncate ml-2">
-                          📍 {edificio}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </NativeCard>
-              );
-            })}
+  return <main className="page-shell text-ink">
+    {toast && <div role="status" className="glass-toolbar fixed left-1/2 top-5 z-50 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 items-center gap-2 rounded-2xl p-4 text-sm font-medium text-ink shadow-lg"><Check size={18} className="text-success" />{toast}</div>}
+    <header className="mb-6 flex items-center justify-between gap-3">
+      <div><p className="section-label">Todo a mano</p><h1 className="text-3xl font-semibold tracking-tight">Tus aulas</h1></div>
+      <Link href="/configuracion" aria-label="Configuración" className="glass-button h-11 w-11 p-0"><Settings2 size={21} /></Link>
+    </header>
+    <div className="mb-5 flex items-center justify-between gap-3">
+      <p className="text-sm text-subtle">{subjects.length} {subjects.length === 1 ? 'materia en tu semana' : 'materias en tu semana'}</p>
+      <button type="button" onClick={() => startEditor()} className="glass-primary shrink-0 px-4"><Plus size={18} />Nueva</button>
+    </div>
+    <div role="group" aria-label="Filtrar materias por día" className="-mx-1 mb-5 flex gap-2 overflow-x-auto px-1 pb-2">
+      {[{ value: 'todos', label: 'Todos' }, ...DAYS].map(({ value, label }) => <button type="button" key={value} onClick={() => setFilter(value)} aria-pressed={filter === value} className={`glass-pill min-h-11 shrink-0 border px-4 text-sm font-medium ${filter === value ? 'aurora-border border-accent bg-accent/10 text-accent' : 'border-line bg-surface text-subtle'}`}>{label}</button>)}
+    </div>
+    {error && !open && !pendingDelete && <p role="alert" className="mb-4 text-sm text-danger">{error}</p>}
+    {filtered.length === 0 ? <div className="glass-panel p-8 text-center"><BookOpen size={30} className="mx-auto mb-3 text-accent" /><h2 className="text-lg font-semibold">Un poco de tiempo libre</h2><p className="mt-2 text-sm text-subtle">No tenés materias {filter === 'todos' ? 'guardadas' : 'para este día'}.</p><button type="button" onClick={() => startEditor()} className="glass-button mt-5">Agregar materia</button></div> :
+      <div className="space-y-4">{filtered.map((subject) => {
+        const info = parseMateriaInfo(subject.name);
+        return <article key={subject.id} className="glass-panel p-5">
+          <div className="flex items-start justify-between gap-2">
+            <h2 className="min-w-0 flex-1 text-lg font-semibold leading-snug">{info.nombre}</h2>
+            <button type="button" onClick={() => startEditor(subject)} aria-label={`Editar ${info.nombre}`} className="glass-button h-11 w-11 shrink-0 p-0"><Pencil size={17} /></button>
           </div>
-        )}
-      </div>
+          <div className="mt-3 space-y-3">{subject.classBlocks.map((block, index) => {
+            const aula = block.classroom || (info.aula !== 'N/A' ? info.aula : '');
+            const number = Number.parseInt(aula, 10);
+            const location = number > 0 ? getEdificioByAula(number) : '';
+            return <div key={index} className="rounded-2xl bg-muted p-3.5">
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm"><span className="font-medium capitalize text-accent">{DAYS.find((day) => day.value === block.day)?.label || block.day}</span><span className="flex items-center gap-1.5 tabular-nums text-subtle"><Clock size={14} />{block.startTime} a {block.endTime}</span></p>
+              <p className="mt-2 flex items-start gap-1.5 text-sm font-medium"><MapPin size={16} className="mt-0.5 shrink-0 text-accent" /><span>{aula && !['-', 'Consultar'].includes(aula) ? `Aula ${aula}` : 'Aula sin asignar'}{location && location !== 'N/A' ? ` · ${location}` : ''}</span></p>
+            </div>;
+          })}</div>
+          <div className="mt-3 flex items-center justify-between gap-3"><p className="text-sm capitalize text-subtle">{info.curso !== 'Consultar' ? info.curso : subject.modality}</p><button type="button" aria-label={`Eliminar ${info.nombre}`} onClick={() => { setError(''); setPendingDelete(subject); }} className="flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-sm text-danger"><Trash2 size={16} />Eliminar</button></div>
+        </article>;
+      })}</div>}
+    <button type="button" disabled={busy} onClick={reset} className="mx-auto mt-6 flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 text-sm text-subtle"><RotateCcw size={16} />Restablecer materias iniciales</button>
+    <Link href="/" className="mx-auto mt-2 flex min-h-11 items-center justify-center gap-1 text-sm text-accent"><ChevronLeft size={16} />Volver a Viajes</Link>
 
-      {/* MODAL: Crear / Editar Materia */}
-      <AnimatePresence>
-        {isModalOpen && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={SPRING_CONFIG}
-              className="bg-zinc-900 border border-zinc-700 rounded-sm w-full max-w-md p-5 shadow-none relative max-h-[90vh] overflow-y-auto no-scrollbar font-mono text-zinc-100"
-            >
-              {/* Header Modal */}
-              <div className="flex items-center justify-between pb-3 border-b border-zinc-800 mb-4">
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-safety-orange uppercase tracking-widest block">
-                    SYS.INPUT // {editingSubject ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO'}
-                  </span>
-                  <h2 className="text-base font-mono font-bold text-zinc-100 leading-tight uppercase mt-0.5">
-                    {editingSubject ? 'Modificar Materia' : 'Ingresar Materia'}
-                  </h2>
-                </div>
-                <button
-                  onClick={handleCloseModal}
-                  className="w-6 h-6 rounded-sm bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-100 flex items-center justify-center font-mono text-xs cursor-pointer active:translate-y-[0.5px]"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Formulario Reactivo */}
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
-                {/* Campo: Nombre */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-                    NOMBRE DE LA MATERIA *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ej: Análisis de Sistemas"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-sm px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-safety-orange transition-colors"
-                  />
-                </div>
-
-                {/* Campo: Día */}
-                <div>
-                  <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-                    DÍA DE CURSADA *
-                  </label>
-                  <select
-                    value={formData.dia}
-                    onChange={(e) => setFormData({ ...formData, dia: e.target.value as DayOfWeek })}
-                    className="w-full bg-zinc-950 border border-zinc-800 rounded-sm px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-safety-orange transition-colors capitalize"
-                  >
-                    {DIAS_OPTIONS.map((d) => (
-                      <option key={d.value} value={d.value}>
-                        {d.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Campos: Horarios (Inicio y Fin) */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-                      HORA INICIO *
-                    </label>
-                    <input
-                      type="time"
-                      required
-                      value={formData.horaInicio}
-                      onChange={(e) => setFormData({ ...formData, horaInicio: e.target.value })}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-sm px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-safety-orange transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-                      HORA FIN *
-                    </label>
-                    <input
-                      type="time"
-                      required
-                      value={formData.horaFin}
-                      onChange={(e) => setFormData({ ...formData, horaFin: e.target.value })}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-sm px-3 py-2 text-xs font-mono text-zinc-100 focus:outline-none focus:border-safety-orange transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* Campos: Curso y Aula */}
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-                      CURSO / COMISIÓN
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej: 2K3"
-                      value={formData.curso}
-                      onChange={(e) => setFormData({ ...formData, curso: e.target.value })}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-sm px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-safety-orange transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-mono uppercase tracking-widest text-zinc-400 mb-1">
-                      AULA
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Ej: 400"
-                      value={formData.aula}
-                      onChange={(e) => setFormData({ ...formData, aula: e.target.value })}
-                      className="w-full bg-zinc-950 border border-zinc-800 rounded-sm px-3 py-2 text-xs font-mono text-zinc-100 placeholder-zinc-600 focus:outline-none focus:border-safety-orange transition-colors"
-                    />
-                  </div>
-                </div>
-
-                {/* Previsualización del Edificio */}
-                {edificioPreview && (
-                  <div className="p-2.5 bg-zinc-950 border border-zinc-800 rounded-sm flex items-center gap-2 text-xs font-mono text-acid-green">
-                    <Building2 size={14} className="shrink-0" />
-                    <span>EDIFICIO DETECTADO: <strong className="text-zinc-100">{edificioPreview.toUpperCase()}</strong></span>
-                  </div>
-                )}
-
-                {/* Botones de acción del Modal */}
-                <div className="flex items-center justify-end gap-2 pt-3 mt-1 border-t border-zinc-800">
-                  <button
-                    type="button"
-                    onClick={handleCloseModal}
-                    className="h-9 px-4 rounded-sm text-xs font-mono uppercase tracking-wider text-zinc-400 hover:text-zinc-100 bg-zinc-950 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center transition-colors cursor-pointer active:translate-y-[0.5px]"
-                  >
-                    CANCELAR
-                  </button>
-                  <motion.button
-                    whileTap={TAP_ANIMATION}
-                    type="submit"
-                    className="bg-safety-orange hover:bg-[#ff681a] text-black border border-safety-orange h-9 px-4 rounded-sm text-xs font-mono font-bold uppercase tracking-wider shadow-none flex items-center justify-center gap-1.5 transition-colors cursor-pointer active:translate-y-[0.5px]"
-                  >
-                    <Check size={14} />
-                    <span>{editingSubject ? 'GUARDAR' : 'REGISTRAR'}</span>
-                  </motion.button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* MODAL: Confirmación de Eliminación */}
-      <AnimatePresence>
-        {subjectToDelete && (
-          <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={SPRING_CONFIG}
-              className="bg-zinc-900 border border-zinc-700 rounded-sm w-full max-w-sm p-5 shadow-none text-center flex flex-col items-center gap-3 font-mono text-zinc-100"
-            >
-              <div className="w-10 h-10 rounded-sm bg-red-500/10 text-red-400 flex items-center justify-center border border-red-500/30 text-sm font-bold">
-                [!]
-              </div>
-              
-              <div>
-                <span className="text-[10px] uppercase font-bold tracking-widest text-zinc-500 block mb-1">
-                  SYS.CONFIRM // ELIMINAR
-                </span>
-                <h3 className="text-base font-bold text-zinc-100 uppercase tracking-tight">¿CONFIRMAR ELIMINACIÓN?</h3>
-                <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
-                  Se removerá <strong className="text-zinc-200">&quot;{parseMateriaInfo(subjectToDelete.name).nombre}&quot;</strong> del sistema de cursado.
-                </p>
-              </div>
-
-              <div className="flex items-center gap-2 w-full pt-2">
-                <button
-                  type="button"
-                  onClick={() => setSubjectToDelete(null)}
-                  className="flex-1 h-9 rounded-sm text-xs font-mono uppercase tracking-wider bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:border-zinc-700 flex items-center justify-center transition-colors cursor-pointer active:translate-y-[0.5px]"
-                >
-                  CANCELAR
-                </button>
-                <button
-                  type="button"
-                  onClick={handleConfirmDelete}
-                  className="flex-1 h-9 rounded-sm text-xs font-mono font-bold uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 flex items-center justify-center transition-colors cursor-pointer active:translate-y-[0.5px]"
-                >
-                  ELIMINAR
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-    </main>
-  );
+    <dialog ref={editorDialog} aria-labelledby="subject-editor-title" onCancel={(event) => { event.preventDefault(); closeEditor(); }} onClose={() => setOpen(false)} className={dialogClass}>
+      <div className="mb-5 flex items-center justify-between gap-3"><h2 id="subject-editor-title" className="text-xl font-semibold">{editing ? 'Editar materia' : 'Nueva materia'}</h2><button type="button" onClick={closeEditor} disabled={busy} aria-label="Cerrar formulario" className="glass-button h-11 w-11 p-0"><X size={20} /></button></div>
+      <form onSubmit={save} className="space-y-4">
+        <label className="block text-sm font-medium">Nombre de la materia<input autoFocus required type="text" value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} placeholder="Ej. Análisis de Sistemas" className={inputClass} /></label>
+        <label className="block text-sm font-medium">Día de cursado<select value={form.dia} onChange={(event) => setForm({ ...form, dia: event.target.value as DayOfWeek })} className={inputClass}>{DAYS.map((day) => <option key={day.value} value={day.value}>{day.label}</option>)}</select></label>
+        <div className="grid grid-cols-2 gap-3"><label className="min-w-0 text-sm font-medium">Inicio<input required type="time" value={form.horaInicio} onChange={(event) => setForm({ ...form, horaInicio: event.target.value })} className={inputClass} /></label><label className="min-w-0 text-sm font-medium">Fin<input required type="time" value={form.horaFin} onChange={(event) => setForm({ ...form, horaFin: event.target.value })} className={inputClass} /></label></div>
+        <div className="grid grid-cols-2 gap-3"><label className="min-w-0 text-sm font-medium">Curso<input type="text" value={form.curso} onChange={(event) => setForm({ ...form, curso: event.target.value })} placeholder="Ej. 2K3" className={inputClass} /></label><label className="min-w-0 text-sm font-medium">Aula<input type="text" value={form.aula} onChange={(event) => setForm({ ...form, aula: event.target.value })} placeholder="Ej. 400" className={inputClass} /></label></div>
+        {building && <p className="flex items-center gap-2 rounded-2xl bg-muted p-3 text-sm text-accent"><MapPin size={17} />{building}</p>}
+        {error && <p role="alert" className="text-sm text-danger">{error}</p>}
+        <div className="flex gap-3 pt-2"><button type="button" disabled={busy} onClick={closeEditor} className="glass-button flex-1">Cancelar</button><button type="submit" disabled={busy} className="glass-primary flex-1">{busy ? 'Guardando…' : 'Guardar'}</button></div>
+      </form>
+    </dialog>
+    <dialog ref={deleteDialog} aria-labelledby="delete-subject-title" onCancel={(event) => { event.preventDefault(); if (!busy) setPendingDelete(null); }} onClose={() => setPendingDelete(null)} className={dialogClass}>
+      <h2 id="delete-subject-title" className="text-xl font-semibold">¿Eliminar esta materia?</h2><p className="mt-3 text-sm leading-relaxed text-subtle">Se quitará {pendingDelete ? parseMateriaInfo(pendingDelete.name).nombre : 'la materia'} de tu cursado semanal.</p>
+      {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
+      <div className="mt-6 flex gap-3"><button autoFocus type="button" disabled={busy} onClick={() => setPendingDelete(null)} className="glass-button flex-1">Cancelar</button><button type="button" disabled={busy} onClick={remove} className="glass-button flex-1 text-danger">{busy ? 'Eliminando…' : 'Eliminar'}</button></div>
+    </dialog>
+  </main>;
 }

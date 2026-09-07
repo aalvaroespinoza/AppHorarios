@@ -7,11 +7,11 @@ interface CardProps {
 
 /**
  * Card
- * Contenedor visual base estilo Industrial Hardware Console.
+ * Contenedor visual compartido.
  */
 export function Card({ children, className = '' }: CardProps) {
   return (
-    <div className={`rounded-sm border border-zinc-800 bg-zinc-900 p-4 text-zinc-100 shadow-none ${className}`}>
+    <div className={`glass-panel p-4 text-ink shadow-none ${className}`}>
       {children}
     </div>
   );

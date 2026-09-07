@@ -13,9 +13,7 @@ export function useTodaySchedule() {
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      const h = now.getHours().toString().padStart(2, '0');
-      const m = now.getMinutes().toString().padStart(2, '0');
-      setHoraActualHHMM(`${h}:${m}`);
+      setHoraActualHHMM(new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Cordoba' }).format(now));
     };
     updateTime();
     setTimeMounted(true);
@@ -67,7 +65,8 @@ export function useTodaySchedule() {
     return (h1 * 60 + m1) - (h2 * 60 + m2);
   });
 
-  const isToday = new Date().getDay() === targetDay;
+  const localWeekday = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'America/Argentina/Cordoba' }).format(new Date());
+  const isToday = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(localWeekday) === targetDay;
   const horaParaFiltro = isToday ? horaActualHHMM : '00:00';
 
   let activeIndex = -1;

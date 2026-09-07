@@ -4,18 +4,17 @@ import { useEffect } from 'react';
 
 export default function ServiceWorkerRegister() {
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
+    if (process.env.NODE_ENV !== 'production' || !('serviceWorker' in navigator)) return;
+    const register = () => {
         navigator.serviceWorker
-          .register('/OneSignalSDKWorker.js')
-          .then((registration) => {
-            console.log('Service Worker registered successfully with scope:', registration.scope);
-          })
+          .register('/OneSignalSDKWorker.js', { updateViaCache: 'none' })
           .catch((error) => {
             console.error('Service Worker registration failed:', error);
           });
-      });
-    }
+    };
+    if (document.readyState === 'complete') register();
+    else window.addEventListener('load', register, { once: true });
+    return () => window.removeEventListener('load', register);
   }, []);
 
   return null;

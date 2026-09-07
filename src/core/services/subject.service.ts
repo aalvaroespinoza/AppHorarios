@@ -17,7 +17,7 @@ export function getStoredSubjectsSync(): Subject[] {
     const raw = localStorage.getItem(SUBJECTS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed)) {
         return parsed;
       }
     }
@@ -36,17 +36,17 @@ export async function getStoredSubjects(): Promise<Subject[]> {
   }
   try {
     const idbData = await idb.get<Subject[]>(SUBJECTS_STORAGE_KEY);
-    if (idbData && Array.isArray(idbData) && idbData.length > 0) {
+    if (Array.isArray(idbData)) {
+      // Refresh the synchronous mirror used by the recommendation engine.
+      try {
+        localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(idbData));
+      } catch { /* IndexedDB remains the source of truth if the mirror is full. */ }
       return idbData;
-    }
-    const syncData = getStoredSubjectsSync();
-    if (syncData && syncData.length > 0) {
-      return syncData;
     }
   } catch (e) {
     console.error('Error al obtener materias desde IndexedDB:', e);
   }
-  return defaultSubjectData.subjects;
+  return getStoredSubjectsSync();
 }
 
 /**
@@ -54,13 +54,13 @@ export async function getStoredSubjects(): Promise<Subject[]> {
  * emitiendo un evento global para actualizar reactivamente todas las vistas.
  */
 export async function saveStoredSubjects(subjects: Subject[]): Promise<void> {
+  await idb.set(SUBJECTS_STORAGE_KEY, subjects);
   if (typeof window !== 'undefined') {
     try {
       localStorage.setItem(SUBJECTS_STORAGE_KEY, JSON.stringify(subjects));
-      window.dispatchEvent(new CustomEvent(SUBJECTS_UPDATED_EVENT, { detail: subjects }));
     } catch (e) {
       console.error('Error al guardar materias en localStorage:', e);
     }
+    window.dispatchEvent(new CustomEvent(SUBJECTS_UPDATED_EVENT, { detail: subjects }));
   }
-  await idb.set(SUBJECTS_STORAGE_KEY, subjects);
 }

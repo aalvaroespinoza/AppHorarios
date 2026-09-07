@@ -4,12 +4,12 @@ import { cn } from "@/lib/utils";
 export type BadgeVariant = "default" | "secondary" | "destructive" | "outline" | "success" | "warning";
 
 const badgeVariantStyles: Record<BadgeVariant, string> = {
-  default: "border-safety-orange/50 bg-safety-orange/15 text-safety-orange",
-  secondary: "border-zinc-700 bg-zinc-800 text-zinc-200",
-  destructive: "border-red-500/40 bg-red-500/10 text-red-400",
-  outline: "border-zinc-800 text-zinc-400 bg-zinc-950/60",
-  success: "border-acid-green/50 bg-acid-green/15 text-acid-green",
-  warning: "border-amber-500/50 bg-amber-500/15 text-amber-400",
+  default: "border-accent/50 bg-accent/15 text-accent",
+  secondary: "border-line bg-muted text-ink",
+  destructive: "border-danger/40 bg-danger/10 text-danger",
+  outline: "border-line text-subtle bg-surface/60",
+  success: "border-success/50 bg-success/15 text-success",
+  warning: "border-warning/50 bg-warning/15 text-warning",
 };
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -20,7 +20,7 @@ function Badge({ className, variant = "default", ...props }: BadgeProps) {
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-sm border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest transition-colors shadow-none select-none",
+        "inline-flex items-center rounded-2xl border px-2 py-0.5 font-sans text-xs font-bold   transition-colors shadow-none select-none",
         badgeVariantStyles[variant] || badgeVariantStyles.default,
         className
       )}

@@ -15,15 +15,13 @@ export function useCountdown(horaSalida: string | undefined) {
     }
 
     const calculate = () => {
-      const ahora = new Date();
-      const [h, m] = horaSalida.split(':').map(Number);
-      
-      const salida = new Date();
-      salida.setHours(h, m, 0, 0);
-
-      // Si ya pasó, la diferencia será negativa
-      const diffMs = salida.getTime() - ahora.getTime();
-      const diffMins = Math.ceil(diffMs / 60000);
+      const localTime = new Intl.DateTimeFormat('es-AR', {
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hourCycle: 'h23', timeZone: 'America/Argentina/Cordoba',
+      }).format(new Date());
+      const [hours, minutes, seconds] = localTime.split(':').map(Number);
+      const [departureHours, departureMinutes] = horaSalida.split(':').map(Number);
+      const diffMins = Math.ceil((departureHours * 3600 + departureMinutes * 60 - hours * 3600 - minutes * 60 - seconds) / 60);
       
       setMinutosFaltantes(diffMins);
     };

@@ -78,7 +78,7 @@ export class SyncQueue {
       const queue = await getQueue();
       if (queue.length === 0) {
         this.isProcessing = false;
-        syncObserver.notify('idle', 'Todo sincronizado.');
+        syncObserver.notify('idle', 'No hay envíos pendientes en la cola.');
         return true;
       }
 
@@ -102,18 +102,15 @@ export class SyncQueue {
             body: mutation.body ? JSON.stringify(mutation.body) : undefined
           });
 
-          if (response.ok || response.status === 404) {
+          if (response.ok) {
             // Éxito o recurso no aplicable: quitar de la cola
             await removeFromQueue(mutation.id);
           } else {
             console.warn(`[SyncQueue] Error al procesar mutación ${mutation.id}: ${response.status}`);
             mutation.retryCount += 1;
-            if (mutation.retryCount > 5) {
-              // Descartar tras 5 intentos fallidos para evitar bloqueo
-              await removeFromQueue(mutation.id);
-            } else {
-              await saveToQueue(mutation);
-            }
+            // Un error persistente no confirma una escritura remota. Conservar
+            // el cambio para poder recuperarlo; nunca descartarlo en silencio.
+            await saveToQueue(mutation);
           }
         } catch (err) {
           console.error(`[SyncQueue] Error de red en mutación ${mutation.id}:`, err);
@@ -125,7 +122,7 @@ export class SyncQueue {
       this.isProcessing = false;
       const remaining = await getQueue();
       if (remaining.length === 0) {
-        syncObserver.notify('idle', 'Sincronización completada.');
+        syncObserver.notify('idle', 'Envíos de la cola completados.');
         return true;
       } else {
         syncObserver.notify('error', `${remaining.length} cambios pendientes.`);

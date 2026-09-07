@@ -7,22 +7,22 @@ interface BadgeProps {
 }
 
 const variantClasses: Record<string, string> = {
-  default: 'border-zinc-700 bg-zinc-800 text-zinc-300',
-  success: 'border-acid-green/50 bg-acid-green/15 text-acid-green',
-  warning: 'border-amber-500/50 bg-amber-500/15 text-amber-400',
-  danger: 'border-safety-orange/50 bg-safety-orange/15 text-safety-orange',
+  default: 'border-line bg-muted text-subtle',
+  success: 'border-success/50 bg-success/15 text-success',
+  warning: 'border-warning/50 bg-warning/15 text-warning',
+  danger: 'border-accent/50 bg-accent/15 text-accent',
 };
 
 /**
  * Badge
  * Etiqueta compacta para indicar estados o prioridades.
- * Estilo terminal industrial con IBM Plex Mono.
+ * Colores semánticos con contraste en ambos temas.
  */
 export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
   return (
     <span
       data-variant={variant}
-      className={`inline-flex items-center rounded-sm border px-2 py-0.5 font-mono text-[10px] font-bold uppercase tracking-widest ${variantClasses[variant] || variantClasses.default} ${className}`}
+      className={`inline-flex items-center rounded-2xl border px-2 py-0.5 font-sans text-xs font-bold   ${variantClasses[variant] || variantClasses.default} ${className}`}
     >
       {children}
     </span>

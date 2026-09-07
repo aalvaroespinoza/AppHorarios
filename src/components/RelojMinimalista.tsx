@@ -3,57 +3,12 @@
 import { useState, useEffect } from 'react';
 
 export default function RelojMinimalista() {
-  const [hora, setHora] = useState<string>('');
-  const [clics, setClics] = useState(0);
-
+  const [hora, setHora] = useState('');
   useEffect(() => {
-    // Función para actualizar la hora
-    const actualizarHora = () => {
-      const ahora = new Date();
-      // Formatear la hora en HH:MM
-      const horas = ahora.getHours().toString().padStart(2, '0');
-      const minutos = ahora.getMinutes().toString().padStart(2, '0');
-      setHora(`${horas}:${minutos}`);
-    };
-
-    // Actualizar de inmediato
-    actualizarHora();
-
-    // Configurar el intervalo para actualizar cada minuto (o cada segundo para ser exactos al cambio de minuto)
-    const intervalo = setInterval(actualizarHora, 1000);
-
-    return () => clearInterval(intervalo);
+    const update = () => setHora(new Intl.DateTimeFormat('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23', timeZone: 'America/Argentina/Cordoba' }).format(new Date()));
+    update();
+    const interval = setInterval(update, 1000);
+    return () => clearInterval(interval);
   }, []);
-
-  useEffect(() => {
-    if (clics > 0) {
-      const timer = setTimeout(() => {
-        setClics(0);
-      }, 500);
-
-      if (clics >= 3) {
-        if (typeof navigator !== 'undefined' && navigator.vibrate) {
-          navigator.vibrate(50);
-        }
-        window.location.reload();
-        setClics(0);
-      }
-
-      return () => clearTimeout(timer);
-    }
-  }, [clics]);
-
-  // Para evitar destellos de hidratación en SSR, no mostramos nada hasta que esté montado
-  if (!hora) {
-    return <span className="text-zinc-100 font-mono text-sm font-bold tracking-wider tabular-nums opacity-0 select-none">00:00</span>;
-  }
-
-  return (
-    <span 
-      onClick={() => setClics(c => c + 1)}
-      className="text-zinc-100 font-mono text-sm font-bold tracking-wider tabular-nums cursor-default select-none"
-    >
-      {hora}
-    </span>
-  );
+  return <time className="tabular-nums text-subtle" aria-label="Hora de Córdoba">{hora || '—:—'}</time>;
 }

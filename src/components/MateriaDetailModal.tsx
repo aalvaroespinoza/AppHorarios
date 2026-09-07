@@ -1,88 +1,53 @@
 "use client";
 
-import { motion, AnimatePresence } from 'framer-motion';
-import { parseMateriaInfo } from '@/core/utils/edificio';
-import { Clock, MapPin } from 'lucide-react';
+import { useEffect, useId, useRef } from 'react';
+import { Clock, MapPin, X } from 'lucide-react';
+import { getEdificioByAula, parseMateriaInfo } from '@/core/utils/edificio';
 
-interface MateriaDetailModalProps {
-  materia: any | null;
-  onClose: () => void;
+export interface MateriaDetail {
+  nombre?: string; title?: string; rawText?: string; name?: string; titulo?: string;
+  horaInicio?: string; timeStart?: string; startTime?: string;
+  horaFin?: string; timeEnd?: string; endTime?: string;
+  aula?: string; curso?: string;
+  classBlocks?: { startTime: string; endTime: string; classroom?: string; day?: string }[];
 }
 
-export function MateriaDetailModal({ materia, onClose }: MateriaDetailModalProps) {
+export function MateriaDetailModal({ materia, onClose }: { materia: MateriaDetail | null; onClose: () => void }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const element = dialog.current;
+    if (materia && element && !element.open) element.showModal();
+    if (!materia && element?.open) element.close();
+  }, [materia]);
+  const info = parseMateriaInfo(materia?.nombre || materia?.title || materia?.rawText || materia?.name || materia?.titulo || '');
+  const block = materia?.classBlocks?.[0];
+  const start = materia?.horaInicio || materia?.timeStart || materia?.startTime || block?.startTime;
+  const end = materia?.horaFin || materia?.timeEnd || materia?.endTime || block?.endTime;
+  const aula = materia?.aula || block?.classroom || info.aula;
+  const known = (value?: string) => Boolean(value && !['N/A', '-', 'Consultar'].includes(value));
+  const classroomNumber = Number.parseInt(aula, 10);
+  const building = classroomNumber > 0 ? getEdificioByAula(classroomNumber) : '';
+
   return (
-    <AnimatePresence>
-      {materia && (() => {
-        const rawString = materia.nombre || materia.title || materia.rawText || materia.name || materia.titulo || '';
-        const info = parseMateriaInfo(rawString);
-
-        // Fallback para horarios
-        const firstBlock = materia.classBlocks && materia.classBlocks[0];
-        const horaInicio = materia.horaInicio || materia.timeStart || materia.startTime || (firstBlock ? firstBlock.startTime : "08:00");
-        const horaFin = materia.horaFin || materia.timeEnd || materia.endTime || (firstBlock ? firstBlock.endTime : "11:10");
-
-        return (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[99999] bg-black/80 flex items-center justify-center p-4"
-            onClick={onClose}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="w-full max-w-sm bg-zinc-900 border border-zinc-700 rounded-sm p-5 shadow-none flex flex-col gap-4 text-zinc-100 relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Header del Pop-up */}
-              <div className="flex items-center justify-between border-b border-zinc-800 pb-2.5">
-                <span className="text-[10px] font-mono font-bold text-safety-orange uppercase tracking-widest">
-                  SYS.MATERIA // DETALLE DE CURSADO
-                </span>
-                <button
-                  onClick={onClose}
-                  className="w-6 h-6 rounded-sm text-zinc-400 hover:text-zinc-100 bg-zinc-950 border border-zinc-800 flex items-center justify-center font-mono text-xs cursor-pointer active:translate-y-[0.5px]"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {/* Nombre de la Materia & Horario */}
-              <div className="flex flex-col gap-1">
-                <h3 className="text-base font-mono font-bold leading-tight text-zinc-100 uppercase">{info.nombre}</h3>
-                <p className="text-xs text-zinc-400 font-mono mt-1 flex items-center gap-1.5">
-                  <Clock size={12} className="text-zinc-500" />
-                  <span>HORARIO:</span>
-                  <span className="text-zinc-200 font-semibold">{horaInicio} a {horaFin} HS</span>
-                </p>
-              </div>
-
-              {/* Grid de Detalles Técnico */}
-              <div className="grid grid-cols-2 gap-2 mt-1">
-                <div className="bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
-                  <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">CURSO</span>
-                  <span className="text-sm font-bold text-zinc-200 mt-0.5">{info.curso || '—'}</span>
-                </div>
-
-                <div className="bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
-                  <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">AULA</span>
-                  <span className="text-sm font-bold text-acid-green mt-0.5">{info.aula ? `AULA ${info.aula}` : '—'}</span>
-                </div>
-
-                <div className="col-span-2 bg-zinc-950 rounded-sm p-3 flex flex-col border border-zinc-800 font-mono">
-                  <span className="text-[9px] text-zinc-500 uppercase font-semibold tracking-widest">UBICACIÓN / EDIFICIO</span>
-                  <span className="text-xs font-bold text-safety-orange mt-0.5 flex items-center gap-1.5">
-                    <MapPin size={12} className="shrink-0" /> {info.edificio || 'Campus Universitario'}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        );
-      })()}
-    </AnimatePresence>
+    <dialog ref={dialog} aria-labelledby={titleId} onCancel={onClose} onClose={onClose}
+      onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
+      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-[28px] border border-line bg-elevated p-0 text-ink shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-sm">
+      {materia && <div className="p-6">
+        <div className="mb-5 flex items-center justify-between gap-2">
+          <p className="section-label">Tu clase</p>
+          <button type="button" onClick={onClose} aria-label="Cerrar detalle" className="glass-button h-11 w-11 p-0"><X size={20} /></button>
+        </div>
+        <h2 id={titleId} className="text-2xl font-semibold tracking-tight">{info.nombre}</h2>
+        <p className="mt-3 flex items-center gap-2 text-sm text-subtle"><Clock size={17} />{start && end ? `${start} a ${end}` : 'Horario sin asignar'}</p>
+        <dl className="mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-muted p-4"><dt className="text-sm text-subtle">Curso</dt><dd className="mt-1 text-lg font-semibold">{known(materia.curso || info.curso) ? materia.curso || info.curso : 'Sin asignar'}</dd></div>
+          <div className="rounded-2xl bg-muted p-4"><dt className="text-sm text-subtle">Aula</dt><dd className="mt-1 text-lg font-semibold text-accent">{known(aula) ? aula : 'Sin asignar'}</dd></div>
+          <div className="col-span-2 rounded-2xl bg-muted p-4"><dt className="text-sm text-subtle">Edificio</dt><dd className="mt-1 flex items-center gap-2 font-medium"><MapPin size={17} className="shrink-0 text-accent" />{known(building) ? building : 'Ubicación por confirmar'}</dd></div>
+        </dl>
+        {(materia.classBlocks?.length || 0) > 1 && <ul className="mt-4 space-y-2 text-sm text-subtle">{materia.classBlocks?.map((item, index) => <li key={index} className="capitalize">{item.day}: {item.startTime} a {item.endTime}{item.classroom ? ` · Aula ${item.classroom}` : ''}</li>)}</ul>}
+        <button type="button" onClick={onClose} className="glass-primary mt-6 w-full">Listo</button>
+      </div>}
+    </dialog>
   );
 }

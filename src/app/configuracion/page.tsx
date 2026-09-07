@@ -1,215 +1,89 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
-  RefreshCw, Moon, Sun, ChevronLeft, Ticket, 
-  ChevronRight, BookOpen, Clock
-} from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { RefreshCw, Moon, Sun, ChevronLeft, Ticket, ChevronRight, BookOpen, Clock, Monitor } from 'lucide-react';
 import Link from 'next/link';
 import { useBec } from '@/hooks/useBec';
 import { useTheme, ThemeMode } from '@/context/ThemeContext';
 
+const MODES: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
+  { value: 'light', label: 'Claro', icon: Sun },
+  { value: 'dark', label: 'Oscuro', icon: Moon },
+  { value: 'auto', label: 'Auto', icon: Monitor },
+];
+
 export default function Configuracion() {
-  const router = useRouter();
   const bec = useBec();
-  const { theme, isDark, setTheme } = useTheme();
-  const [isMounted, setIsMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => { setMounted(true); }, []);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  const handleForzarRecarga = () => {
-    if (window.confirm('¿Seguro que querés limpiar caché y forzar la recarga? Esto actualizará la app y sincronizará los estados.')) {
+  const refreshApp = async () => {
+    if (!window.confirm('¿Actualizar los archivos de la app? Tus materias y registros se conservan. Necesitás conexión.')) return;
+    if (!navigator.onLine) { setError('Conectate a internet para actualizar la app.'); return; }
+    setRefreshing(true);
+    try {
       if ('caches' in window) {
-        caches.keys().then((names) => {
-          names.forEach(name => caches.delete(name));
-        });
+        const names = await caches.keys();
+        await Promise.all(names.filter((name) => /lifeos|app-?horarios/i.test(name)).map((name) => caches.delete(name)));
+      }
+      if ('serviceWorker' in navigator) {
+        const registration = await navigator.serviceWorker.getRegistration();
+        await registration?.update();
       }
       window.location.reload();
+    } catch {
+      setRefreshing(false);
+      setError('No se pudo actualizar. Tus datos siguen guardados en este dispositivo.');
     }
   };
 
-  if (!isMounted) return <div className="min-h-[100dvh] bg-[var(--color-bg)]" />;
-
+  if (!mounted) return <main className="page-shell" aria-busy="true"><p className="text-subtle">Cargando configuración…</p></main>;
   const currentDate = new Date();
-  const mesNum = currentDate.getMonth() + 1;
+  const month = currentDate.toLocaleString('es-AR', { month: 'long' });
   const year = currentDate.getFullYear();
-  const mesString = currentDate.toLocaleString('es-AR', { month: 'long' });
-  const resumenBec = bec.obtenerResumenMensual(mesNum, year);
+  const summary = bec.obtenerResumenMensual(currentDate.getMonth() + 1, year);
 
-  return (
-    <main className="min-h-[100dvh] bg-[var(--color-bg)] text-[var(--color-text-primary)] font-sans max-w-md mx-auto pb-safe-nav relative">
-      {/* Header Sticky con soporte para Dynamic Island */}
-      <header className="bg-[var(--color-bg)]/95 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
-        <button 
-          onClick={() => router.back()}
-          className="text-safety-orange font-mono text-xs font-bold uppercase tracking-wider h-9 px-2 rounded-sm border border-transparent hover:border-zinc-800 bg-zinc-950/60 flex items-center justify-center gap-1 active:translate-y-[0.5px] transition-all cursor-pointer"
-        >
-          <ChevronLeft size={16} className="-ml-0.5" />
-          <span>VOLVER</span>
+  return <main className="page-shell text-ink">
+    <header className="mb-6 flex items-center gap-3">
+      <Link href="/" aria-label="Volver a Viajes" className="glass-button h-11 w-11 p-0"><ChevronLeft size={22} /></Link>
+      <div><p className="section-label">A tu manera</p><h1 className="text-3xl font-semibold tracking-tight">Configuración</h1></div>
+    </header>
+    <div className="space-y-6">
+      <section aria-labelledby="appearance-title">
+        <h2 id="appearance-title" className="section-label mb-3">Apariencia</h2>
+        <div className="glass-panel p-5">
+          <p className="mb-4 text-sm text-subtle">Elegí cómo se ve LifeOS.</p>
+          <div className="grid grid-cols-3 gap-2" role="group" aria-label="Tema de pantalla">
+            {MODES.map(({ value, label, icon: Icon }) => <button key={value} type="button" onClick={() => setTheme(value)} aria-pressed={theme === value} className={`flex min-h-20 flex-col items-center justify-center gap-2 rounded-2xl border text-sm font-medium transition-colors ${theme === value ? 'aurora-border border-accent bg-accent/10 text-accent' : 'border-line bg-muted text-subtle'}`}><Icon size={22} />{label}</button>)}
+          </div>
+          <p className="mt-3 text-sm text-subtle">Auto sigue la luz del día o, si falta el clima, la apariencia de tu dispositivo.</p>
+        </div>
+      </section>
+      <section aria-labelledby="access-title">
+        <h2 id="access-title" className="section-label mb-3">Tu día a día</h2>
+        <div className="glass-panel divide-y divide-line overflow-hidden">
+          {[{ href: '/aulas', icon: BookOpen, title: 'Aulas y materias', detail: 'Editá tu cursado' }, { href: '/horarios', icon: Clock, title: 'Horarios de colectivos', detail: 'Consultá todos los servicios' }].map(({ href, icon: Icon, title, detail }) => <Link key={href} href={href} className="flex items-center gap-3 p-5"><Icon className="text-accent" size={22} /><div className="flex-1"><p className="font-medium">{title}</p><p className="text-sm text-subtle">{detail}</p></div><ChevronRight size={18} className="text-subtle" /></Link>)}
+        </div>
+      </section>
+      <section aria-labelledby="bec-title">
+        <h2 id="bec-title" className="section-label mb-3">Boleto educativo</h2>
+        <div className="glass-panel p-5">
+          <div className="flex items-center gap-3"><Ticket size={22} className="text-accent" /><div><p className="font-medium">Tus viajes con BEC</p><p className="text-sm capitalize text-subtle">{month} {year}</p></div></div>
+          <div className="mt-5 flex items-end gap-3"><span className="text-5xl font-semibold tracking-tight tabular-nums">{summary.totalCombinado}</span><span className="pb-1 text-sm text-subtle">viajes registrados</span></div>
+          <div className="mt-4 flex gap-3 text-sm"><span className="glass-pill bg-muted px-3 py-2">{summary.idaTotal} de ida</span><span className="glass-pill bg-muted px-3 py-2">{summary.vueltaTotal} de vuelta</span></div>
+        </div>
+      </section>
+      <section aria-labelledby="maintenance-title">
+        <h2 id="maintenance-title" className="section-label mb-3">La app</h2>
+        <button type="button" onClick={refreshApp} disabled={refreshing} className="glass-panel flex w-full items-center gap-3 p-5 text-left">
+          <RefreshCw size={21} className="shrink-0 text-accent" /><span className="flex-1"><span className="block font-medium">{refreshing ? 'Actualizando…' : 'Actualizar la app'}</span><span className="text-sm text-subtle">Conserva tus materias y registros</span></span><ChevronRight size={18} className="text-subtle" />
         </button>
-
-        <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-zinc-500">
-          SYS.CONFIG // AJUSTES
-        </span>
-      </header>
-      
-      <div className="p-4 flex flex-col gap-5">
-        <div>
-          <span className="text-[10px] font-mono font-bold text-safety-orange tracking-[0.2em] uppercase block mb-0.5">
-            PREFERENCIAS DE HARDWARE
-          </span>
-          <h1 className="text-2xl font-mono font-black tracking-tight text-zinc-100 uppercase">
-            CONFIGURACIÓN
-          </h1>
-          <p className="text-xs text-zinc-400 font-mono mt-0.5">
-            PARÁMETROS DEL SISTEMA Y TELEMETRÍA LOCAL.
-          </p>
-        </div>
-
-        {/* SECCIÓN 1: Accesos de Gestión */}
-        <section className="flex flex-col gap-2">
-          <h2 className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-widest px-0.5">
-            [ MÓDULOS DE NAVEGACIÓN ]
-          </h2>
-
-          <div className="grid grid-cols-2 gap-2">
-            {/* Aulas y Materias */}
-            <Link href="/aulas" className="group">
-              <div className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-sm p-3.5 flex flex-col justify-between h-24 transition-colors shadow-none cursor-pointer">
-                <div className="w-7 h-7 rounded-sm border border-zinc-700 bg-zinc-950 text-zinc-300 flex items-center justify-center">
-                  <BookOpen size={14} />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-xs font-mono font-bold text-zinc-100 block truncate group-hover:text-safety-orange transition-colors">
-                    AULAS
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-500 truncate block">
-                    Gestión de materias
-                  </span>
-                </div>
-              </div>
-            </Link>
-
-            {/* Colectivos */}
-            <Link href="/horarios" className="group">
-              <div className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 rounded-sm p-3.5 flex flex-col justify-between h-24 transition-colors shadow-none cursor-pointer">
-                <div className="w-7 h-7 rounded-sm border border-zinc-700 bg-zinc-950 text-zinc-300 flex items-center justify-center">
-                  <Clock size={14} />
-                </div>
-                <div className="min-w-0">
-                  <span className="text-xs font-mono font-bold text-zinc-100 block truncate group-hover:text-safety-orange transition-colors">
-                    HORARIOS
-                  </span>
-                  <span className="text-[10px] font-mono text-zinc-500 truncate block">
-                    Grilla completa
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </section>
-
-        {/* SECCIÓN 2: Apariencia */}
-        <section className="flex flex-col gap-2">
-          <h2 className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-widest px-0.5">
-            [ TEMA Y DISPLAY ]
-          </h2>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-3.5 flex flex-col gap-3 shadow-none">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-sm border border-zinc-700 bg-zinc-950 text-zinc-300 flex items-center justify-center">
-                {isDark ? <Moon size={13} /> : <Sun size={13} />}
-              </div>
-              <span className="text-xs font-mono font-bold text-zinc-200 uppercase">MODO DE PANTALLA</span>
-            </div>
-            
-            <div className="flex bg-zinc-950 p-1 rounded-sm border border-zinc-800 gap-1">
-              {(['light', 'dark', 'auto'] as ThemeMode[]).map((mode) => (
-                <button
-                  key={mode}
-                  onClick={() => setTheme(mode)}
-                  className={`flex-1 py-2 text-xs font-mono font-bold uppercase tracking-wider rounded-sm transition-colors cursor-pointer flex items-center justify-center ${
-                    theme === mode 
-                      ? 'bg-zinc-800 text-safety-orange border border-safety-orange/50 shadow-none' 
-                      : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
-                  }`}
-                >
-                  {mode === 'light' && 'CLARO'}
-                  {mode === 'dark' && 'OSCURO'}
-                  {mode === 'auto' && 'AUTO'}
-                </button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* SECCIÓN 3: Boleto Educativo */}
-        <section className="flex flex-col gap-2">
-          <h2 className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-widest px-0.5">
-            [ TELEMETRÍA BEC // BOLETO EDUCATIVO ]
-          </h2>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-sm p-3.5 flex flex-col gap-3 shadow-none">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded-sm border border-zinc-700 bg-zinc-950 text-zinc-300 flex items-center justify-center">
-                <Ticket size={13} />
-              </div>
-              <div>
-                <span className="text-xs font-mono font-bold text-zinc-200 uppercase block">RESUMEN MENSUAL</span>
-                <span className="text-[10px] font-mono text-zinc-500 uppercase">{mesString} {year}</span>
-              </div>
-            </div>
-            
-            <div className="bg-zinc-950 rounded-sm p-3 flex flex-col items-center justify-center text-center border border-zinc-800">
-              <span className="text-[9px] text-zinc-500 uppercase font-mono tracking-widest font-bold mb-1">
-                TOTAL VIAJES REGISTRADOS
-              </span>
-              <div className="text-4xl font-mono font-bold text-zinc-100 mb-1">
-                {resumenBec.totalCombinado}
-              </div>
-              <div className="text-xs font-mono text-zinc-400 flex gap-3 items-center">
-                <span className="text-safety-orange font-semibold">IDAS: {resumenBec.idaTotal}</span>
-                <span className="text-zinc-700">{"//"}</span>
-                <span className="text-acid-green font-semibold">VUELTAS: {resumenBec.vueltaTotal}</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* SECCIÓN 4: Caché y Mantenimiento */}
-        <section className="flex flex-col gap-2">
-          <h2 className="text-[10px] font-mono uppercase text-zinc-500 font-bold tracking-widest px-0.5">
-            [ DIAGNÓSTICO Y MANTENIMIENTO ]
-          </h2>
-
-          <div className="bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden shadow-none">
-            <button 
-              onClick={handleForzarRecarga}
-              className="w-full flex items-center justify-between p-3.5 hover:bg-zinc-800 transition-colors text-left cursor-pointer"
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-7 h-7 rounded-sm border border-zinc-700 bg-zinc-950 text-zinc-300 flex items-center justify-center">
-                  <RefreshCw size={13} />
-                </div>
-                <div>
-                  <span className="text-xs font-mono font-bold text-zinc-100 block uppercase">LIMPIAR CACHÉ // SYNC FORZADO</span>
-                  <span className="text-[10px] font-mono text-zinc-500">Purga service worker y regenera stores locales</span>
-                </div>
-              </div>
-              <ChevronRight size={14} className="text-zinc-500" />
-            </button>
-          </div>
-        </section>
-
-        {/* Footer info */}
-        <div className="mt-2 text-center flex flex-col gap-0.5 text-zinc-600 pb-4 font-mono">
-          <p className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">SYS.LIFEOS // APPHORARIOS</p>
-          <p className="text-[9px] uppercase tracking-wider text-zinc-600">HARDWARE CONSOLE EDITION</p>
-        </div>
-      </div>
-    </main>
-  );
+        {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
+      </section>
+      <p className="py-2 text-center text-sm text-subtle">LifeOS · Un día más simple</p>
+    </div>
+  </main>;
 }

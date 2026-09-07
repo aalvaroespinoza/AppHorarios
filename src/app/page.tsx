@@ -1,77 +1,38 @@
 "use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Bus } from 'lucide-react';
+import { useState } from 'react';
 import { useEscenario } from '@/hooks/useEscenario';
 import { useBec } from '@/hooks/useBec';
 import { useTodaySchedule } from '@/hooks/useTodaySchedule';
 import ContextualControls from '@/features/schedule/ContextualControls';
-import EntertainmentSelector from '@/components/EntertainmentSelector';
 import { HorarioCard } from '@/features/schedule/HorarioCard';
 import { ClassTimeline } from '@/features/schedule/ClassTimeline';
 import { ScheduleHeader } from '@/features/schedule/ScheduleHeader';
-import { PAGE_TRANSITION } from '@/lib/animations';
 
 export default function HomePage() {
   const { diaSeleccionado, setDiaSeleccionado } = useEscenario();
   const bec = useBec();
-  const {
-    materiasDelDia,
-    isToday,
-    horaActualHHMM,
-    linePosition,
-    activeIndex,
-    recomendacionIda,
-    recomendacionVuelta
-  } = useTodaySchedule();
-
-  const diaCapitalizado = diaSeleccionado ? diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1) : 'Hoy';
+  const schedule = useTodaySchedule();
+  const { materiasDelDia, isToday, horaActualHHMM, linePosition, activeIndex, recomendacionIda, recomendacionVuelta, timeMounted } = schedule;
+  const [lockedTrip, setLockedTrip] = useState<{ day: string; direction: 'ida' | 'vuelta' } | null>(null);
+  const contextualDirection = isToday && (materiasDelDia.some(m => horaActualHHMM >= m.horaInicio) || !recomendacionIda.recomendado) ? 'vuelta' : 'ida';
+  const primary = lockedTrip?.day === diaSeleccionado ? lockedTrip.direction : contextualDirection;
+  const secondary = primary === 'ida' ? 'vuelta' : 'ida';
+  const trip = (direction: 'ida' | 'vuelta', compact: boolean) => (
+    <HorarioCard key={diaSeleccionado + direction} titulo={direction === 'ida' ? 'Hacia Córdoba' : 'Volver a Despeñaderos'} recomendacion={direction === 'ida' ? recomendacionIda : recomendacionVuelta} direction={direction} bec={bec} isToday={isToday} diaSeleccionado={diaSeleccionado} compact={compact} onInteraction={() => setLockedTrip({ day: diaSeleccionado, direction: primary })} />
+  );
 
   return (
-    <motion.div 
-      {...PAGE_TRANSITION}
-      className="px-4 max-w-md mx-auto flex flex-col gap-6 pb-safe-nav min-h-[100dvh]"
-    >
-      <ScheduleHeader 
-        diaCapitalizado={diaCapitalizado} 
-        diaSeleccionado={diaSeleccionado}
-        setDiaSeleccionado={setDiaSeleccionado} 
-      />
-
+    <main className="page-shell flex min-h-[100dvh] flex-col gap-5">
+      <ScheduleHeader diaCapitalizado={diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1)} diaSeleccionado={diaSeleccionado} setDiaSeleccionado={setDiaSeleccionado} />
       <ContextualControls />
-
-      <div className="flex flex-col gap-6 mt-1">
-        <HorarioCard 
-          titulo="Ida hacia Córdoba"
-          recomendacion={recomendacionIda} 
-          icon={Bus} 
-          direction="ida"
-          bec={bec}
-          isToday={isToday}
-          diaSeleccionado={diaSeleccionado}
-        />
-        
-        <EntertainmentSelector />
-        
-        <ClassTimeline 
-          materiasDelDia={materiasDelDia}
-          isToday={isToday}
-          horaActualHHMM={horaActualHHMM}
-          linePosition={linePosition}
-          activeIndex={activeIndex}
-        />
-
-        <HorarioCard 
-          titulo="Vuelta a Despeñaderos"
-          recomendacion={recomendacionVuelta} 
-          icon={Bus} 
-          direction="vuelta"
-          bec={bec}
-          isToday={isToday}
-          diaSeleccionado={diaSeleccionado}
-        />
-      </div>
-    </motion.div>
+      {timeMounted ? (
+        <>
+          {trip(primary, false)}
+          <ClassTimeline materiasDelDia={materiasDelDia} isToday={isToday} horaActualHHMM={horaActualHHMM} linePosition={linePosition} activeIndex={activeIndex} compact />
+          {trip(secondary, true)}
+        </>
+      ) : <div className="glass-panel h-80 p-6 text-subtle" role="status">Preparando tus viajes…</div>}
+    </main>
   );
 }

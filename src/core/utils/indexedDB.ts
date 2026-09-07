@@ -1,6 +1,16 @@
 export const DB_NAME = 'LifeOS-LocalDB';
 export const DB_VERSION = 2;
 
+// A successful request can still be rolled back. Only transaction completion
+// confirms durable storage (including quota failures and explicit aborts).
+function transactionDone(transaction: IDBTransaction): Promise<void> {
+  return new Promise((resolve, reject) => {
+    transaction.oncomplete = () => resolve();
+    transaction.onerror = () => reject(transaction.error ?? new Error('No se pudo guardar en el dispositivo.'));
+    transaction.onabort = () => reject(transaction.error ?? new Error('Se canceló el guardado en el dispositivo.'));
+  });
+}
+
 export interface QueuedMutation {
   id: string;
   endpoint: string;
@@ -29,8 +39,17 @@ export const idb = {
             db.createObjectStore('sync-queue', { keyPath: 'id' });
           }
         };
-        request.onsuccess = () => resolve(request.result);
-        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+          request.result.onversionchange = () => {
+            request.result.close();
+            this.dbPromise = null;
+          };
+          resolve(request.result);
+        };
+        request.onerror = () => {
+          this.dbPromise = null;
+          reject(request.error);
+        };
       });
     }
     return this.dbPromise;
@@ -51,13 +70,10 @@ export const idb = {
   async set<T>(key: string, value: T): Promise<void> {
     const db = await this.init();
     if (!db) return;
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction('keyval', 'readwrite');
-      const store = transaction.objectStore('keyval');
-      const request = store.put(value, key);
-      request.onsuccess = () => resolve();
-      request.onerror = () => reject(request.error);
-    });
+    const transaction = db.transaction('keyval', 'readwrite');
+    const done = transactionDone(transaction);
+    transaction.objectStore('keyval').put(value, key);
+    return done;
   }
 };
 
@@ -67,13 +83,10 @@ export const idb = {
 export async function saveToQueue(mutation: QueuedMutation): Promise<void> {
   const db = await idb.init();
   if (!db) return;
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction('sync-queue', 'readwrite');
-    const store = transaction.objectStore('sync-queue');
-    const request = store.put(mutation);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  const transaction = db.transaction('sync-queue', 'readwrite');
+  const done = transactionDone(transaction);
+  transaction.objectStore('sync-queue').put(mutation);
+  return done;
 }
 
 /**
@@ -97,13 +110,10 @@ export async function getQueue(): Promise<QueuedMutation[]> {
 export async function removeFromQueue(id: string): Promise<void> {
   const db = await idb.init();
   if (!db) return;
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction('sync-queue', 'readwrite');
-    const store = transaction.objectStore('sync-queue');
-    const request = store.delete(id);
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  const transaction = db.transaction('sync-queue', 'readwrite');
+  const done = transactionDone(transaction);
+  transaction.objectStore('sync-queue').delete(id);
+  return done;
 }
 
 /**
@@ -112,11 +122,8 @@ export async function removeFromQueue(id: string): Promise<void> {
 export async function clearQueue(): Promise<void> {
   const db = await idb.init();
   if (!db) return;
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction('sync-queue', 'readwrite');
-    const store = transaction.objectStore('sync-queue');
-    const request = store.clear();
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
-  });
+  const transaction = db.transaction('sync-queue', 'readwrite');
+  const done = transactionDone(transaction);
+  transaction.objectStore('sync-queue').clear();
+  return done;
 }
