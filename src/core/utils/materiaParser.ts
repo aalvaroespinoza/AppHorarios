@@ -29,7 +29,7 @@ export function parseMateriaInfo(rawText: string | undefined | null): ParsedMate
   const num = parseInt(aula, 10);
 
   let edificio = "Edificio Central";
-  if (num >= 400 && num <= 499) edificio = "I. Chaurrondo";
+  if (num >= 400 && num <= 499) edificio = "Ichaurrondo";
   else if (num >= 500 && num <= 599) edificio = "Gallardo";
   else if (num >= 600 && num <= 899) edificio = "Soro";
   else if (num >= 900 && num <= 999) edificio = "Poseto";

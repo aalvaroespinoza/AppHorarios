@@ -1,6 +1,6 @@
 export function getEdificioByAula(aulaNum: number): string {
   if (aulaNum >= 200 && aulaNum <= 299) return "Edificio Central";
-  if (aulaNum >= 400 && aulaNum <= 499) return "Edificio I. Chaurrondo";
+  if (aulaNum >= 400 && aulaNum <= 499) return "Edificio Ichaurrondo";
   if (aulaNum >= 500 && aulaNum <= 599) return "Edificio Gallardo";
   if (aulaNum >= 600 && aulaNum <= 899) return "Edificio Soro";
   if (aulaNum >= 900 && aulaNum <= 999) return "Edificio Poseto";
