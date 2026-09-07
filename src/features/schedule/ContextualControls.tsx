@@ -21,6 +21,7 @@ export default function ContextualControls({ showScenarios = true }: { showScena
   }, [diaSeleccionado, isMounted]);
 
   if (!isMounted) return <div className="glass-toolbar h-14 rounded-full" aria-label="Cargando días" />;
+  const today = getDiaActual();
   const showArchitecture = showScenarios && diaSeleccionado === 'martes';
   const showStay = showScenarios && diaSeleccionado === 'viernes';
   const enabled = showArchitecture ? cursaArquitectura : duermeEnCordoba;
@@ -29,11 +30,16 @@ export default function ContextualControls({ showScenarios = true }: { showScena
   return (
     <div className="flex min-w-0 flex-col gap-3">
       <div ref={container} className="glass-toolbar relative flex gap-1 overflow-x-auto rounded-full p-1 no-scrollbar" aria-label="Día de la semana">
-        {DAYS.map(day => (
-          <button type="button" key={day.id} aria-pressed={diaSeleccionado === day.id} aria-label={day.id + (getDiaActual() === day.id ? ', día actual' : '')} onClick={() => setDiaSeleccionado(day.id)} className={'min-h-11 min-w-11 flex-1 rounded-full px-2 text-sm font-semibold transition-colors ' + (diaSeleccionado === day.id ? 'glass-primary' : 'text-subtle hover:bg-muted')}>
-            {day.label}
-          </button>
-        ))}
+        {DAYS.map(day => {
+          const isSelected = diaSeleccionado === day.id;
+          const isToday = today === day.id;
+          return (
+            <button type="button" key={day.id} aria-pressed={isSelected} aria-label={day.id + (isToday ? ', día actual' : '')} onClick={() => setDiaSeleccionado(day.id)} className={'relative min-h-11 min-w-11 flex-1 rounded-full px-2 text-sm font-semibold transition-colors ' + (isSelected ? 'glass-primary' : isToday ? 'text-accent hover:bg-muted' : 'text-subtle hover:bg-muted')}>
+              <span>{day.label}</span>
+              {isToday && <span aria-hidden="true" className={'absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ' + (isSelected ? 'bg-white shadow-[0_0_10px_rgb(255_255_255_/_0.75)]' : 'bg-accent shadow-[0_0_10px_var(--accent)]')} />}
+            </button>
+          );
+        })}
       </div>
       {(showArchitecture || showStay) && (
         <button type="button" aria-pressed={enabled} onClick={() => showArchitecture ? setCursaArquitectura(!cursaArquitectura) : setDuermeEnCordoba(!duermeEnCordoba)} className={'glass-panel flex w-full items-center gap-3 px-4 py-3 text-left ' + (enabled ? 'aurora-border' : '')}>
