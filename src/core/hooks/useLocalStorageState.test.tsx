@@ -13,14 +13,14 @@ describe('keyed local state', () => {
     vi.spyOn(idb, 'get').mockImplementation(async key => key === 'monday' ? 'saved bus' : null);
     const container = document.createElement('div');
     const root = createRoot(container);
-    function Harness({ storageKey }: { storageKey: string }) {
-      const [value, , loaded] = useLocalStorageState<string | null>(storageKey, null);
+    function Harness({ storageKey, fallback }: { storageKey: string; fallback: string | null }) {
+      const [value, , loaded] = useLocalStorageState<string | null>(storageKey, fallback);
       return <span>{loaded ? value || 'default' : 'loading'}</span>;
     }
-    await act(async () => { root.render(<Harness storageKey="monday" />); });
+    await act(async () => { root.render(<Harness storageKey="monday" fallback="monday default" />); });
     expect(container.textContent).toBe('saved bus');
-    await act(async () => { root.render(<Harness storageKey="tuesday" />); });
-    expect(container.textContent).toBe('default');
+    await act(async () => { root.render(<Harness storageKey="tuesday" fallback="tuesday default" />); });
+    expect(container.textContent).toBe('tuesday default');
     expect(writes).not.toHaveBeenCalled();
     await act(async () => { root.unmount(); });
   });

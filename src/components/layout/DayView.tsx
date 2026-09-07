@@ -20,7 +20,7 @@ interface DayViewProps {
 }
 
 /**
- * DayView — Server Component compartido
+ * DayView — vista de cliente compartida
  *
  * Encapsula el pipeline completo para un día:
  *   date → escenario → materias → horarios → UI

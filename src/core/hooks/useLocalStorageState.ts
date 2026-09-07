@@ -4,13 +4,19 @@ import { useState, useEffect, useRef, useCallback, type SetStateAction } from 'r
 import { idb } from '@/core/utils/indexedDB';
 
 export function useLocalStorageState<T>(key: string, initialValue: T) {
-  const initial = useRef(initialValue);
+  // Keep the fallback aligned with the active key without reading a ref during
+  // render. A component can reuse this hook with another key and default.
+  const fallback = useRef({ key, value: initialValue });
   const [snapshot, setSnapshot] = useState({ key, value: initialValue, loaded: false, edited: false });
+
+  useEffect(() => {
+    fallback.current = { key, value: initialValue };
+  }, [key, initialValue]);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
-      let value = initial.current;
+      let value = fallback.current.value;
       try {
         const stored = await idb.get<T>(key);
         if (stored !== null) value = stored;
@@ -29,7 +35,7 @@ export function useLocalStorageState<T>(key: string, initialValue: T) {
 
   const setState = useCallback((action: SetStateAction<T>) => {
     setSnapshot(previous => {
-      const current = previous.key === key ? previous.value : initial.current;
+      const current = previous.key === key ? previous.value : fallback.current.value;
       const value = typeof action === 'function' ? (action as (value: T) => T)(current) : action;
       return { key, value, loaded: true, edited: true };
     });
