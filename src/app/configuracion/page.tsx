@@ -31,7 +31,7 @@ export default function Configuracion() {
     }
   };
 
-  if (!isMounted) return <div className="min-h-[100dvh] bg-[#0A0A0C]" />;
+  if (!isMounted) return <div className="min-h-[100dvh] bg-[var(--color-bg)]" />;
 
   const currentDate = new Date();
   const mesNum = currentDate.getMonth() + 1;
@@ -40,9 +40,9 @@ export default function Configuracion() {
   const resumenBec = bec.obtenerResumenMensual(mesNum, year);
 
   return (
-    <main className="min-h-[100dvh] bg-[#0A0A0C] text-[#F4F4F6] font-sans max-w-md mx-auto pb-safe-nav relative">
+    <main className="min-h-[100dvh] bg-[var(--color-bg)] text-[var(--color-text-primary)] font-sans max-w-md mx-auto pb-safe-nav relative">
       {/* Header Sticky con soporte para Dynamic Island */}
-      <header className="bg-[#0A0A0C]/95 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
+      <header className="bg-[var(--color-bg)]/95 backdrop-blur-md pt-[max(1rem,env(safe-area-inset-top))] pb-3 px-4 sticky top-0 z-20 flex items-center justify-between border-b border-zinc-800 shadow-none">
         <button 
           onClick={() => router.back()}
           className="text-safety-orange font-mono text-xs font-bold uppercase tracking-wider h-9 px-2 rounded-sm border border-transparent hover:border-zinc-800 bg-zinc-950/60 flex items-center justify-center gap-1 active:translate-y-[0.5px] transition-all cursor-pointer"

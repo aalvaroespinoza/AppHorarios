@@ -16,13 +16,13 @@ try {
  * El SW nunca interfiere con el HMR ni las rutas internas de Next.js.
  */
 
-const CACHE_NAME = 'app-horarios-v1';
+const CACHE_NAME = 'app-horarios-v2';
 
 // Assets garantizados en caché tras la instalación
 const PRE_CACHE = [
   '/manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
+  '/icon',
+  '/apple-icon',
 ];
 
 // HTML de página offline (inline, no depende del servidor)

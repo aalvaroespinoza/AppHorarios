@@ -16,6 +16,14 @@ const ThemeContext = createContext<ThemeContextProps>({
   setTheme: () => {},
 });
 
+function applyDocumentTheme(isDark: boolean) {
+  document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+  document.documentElement.classList.toggle('dark', isDark);
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute('content', isDark ? '#0A0A0C' : '#F8F8FA');
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>('dark');
   const [isDark, setIsDark] = useState<boolean>(true);
@@ -51,12 +59,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const activeIsDark = evaluateTheme(theme);
     setIsDark(activeIsDark);
-    
-    if (activeIsDark) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    applyDocumentTheme(activeIsDark);
   }, [theme]);
 
   useEffect(() => {
@@ -67,11 +70,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const activeIsDark = evaluateTheme('auto');
       if (activeIsDark !== isDark) {
         setIsDark(activeIsDark);
-        if (activeIsDark) {
-          document.documentElement.classList.add('dark');
-        } else {
-          document.documentElement.classList.remove('dark');
-        }
+        applyDocumentTheme(activeIsDark);
       }
     }, 5 * 60 * 1000);
 

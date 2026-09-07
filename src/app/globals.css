@@ -14,34 +14,35 @@
 
 @layer base {
   :root {
-    --background: 240 10% 4%;
-    --foreground: 240 5% 96%;
-    --card: 240 5% 10%;
-    --card-foreground: 240 5% 96%;
-    --popover: 240 10% 4%;
-    --popover-foreground: 240 5% 96%;
+    --background: 240 20% 98%;
+    --foreground: 240 10% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 10%;
     --primary: 21 100% 50%;
-    --primary-foreground: 0 0% 0%;
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 240 5% 96%;
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 94%;
+    --secondary-foreground: 240 10% 10%;
+    --muted: 240 5% 94%;
+    --muted-foreground: 240 4% 40%;
     --accent: 21 100% 50%;
-    --accent-foreground: 0 0% 0%;
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 4% 16%;
-    --input: 240 4% 16%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 84%;
+    --input: 240 6% 84%;
     --ring: 21 100% 50%;
     --radius: 0.125rem;
 
-    --color-bg: #0A0A0C;
-    --color-surface: #18181B;
-    --color-border: #27272A;
-    --color-text-primary: #F4F4F6;
-    --color-text-secondary: #71717A;
+    --color-bg: #F8F8FA;
+    --color-surface: #FFFFFF;
+    --color-border: #D4D4D8;
+    --color-text-primary: #18181B;
+    --color-text-secondary: #52525B;
     --color-accent: #FF5500;
     --color-acid-green: #00E599;
+    color-scheme: light;
   }
 
   .dark {
@@ -64,8 +65,55 @@
     --border: 240 4% 16%;
     --input: 240 4% 16%;
     --ring: 21 100% 50%;
+    --color-bg: #0A0A0C;
+    --color-surface: #18181B;
+    --color-border: #27272A;
+    --color-text-primary: #F4F4F6;
+    --color-text-secondary: #71717A;
+    color-scheme: dark;
   }
 }
+
+/*
+ * La interfaz existente utiliza utilidades de color explícitas. Esta capa las
+ * adapta al tema claro sin duplicar cada componente y mantiene los acentos de
+ * estado (naranja y verde) inalterados.
+ */
+html:not(.dark) .bg-\[\#0A0A0C\] { background-color: #F8F8FA !important; }
+html:not(.dark) .bg-zinc-950 { background-color: #FFFFFF !important; }
+html:not(.dark) .bg-zinc-950\/60 { background-color: rgb(255 255 255 / 0.6) !important; }
+html:not(.dark) .bg-zinc-900 { background-color: #F4F4F5 !important; }
+html:not(.dark) .bg-zinc-900\/80 { background-color: rgb(244 244 245 / 0.8) !important; }
+html:not(.dark) .bg-zinc-800 { background-color: #E4E4E7 !important; }
+html:not(.dark) .bg-zinc-700 { background-color: #D4D4D8 !important; }
+html:not(.dark) .bg-zinc-600 { background-color: #A1A1AA !important; }
+html:not(.dark) .hover\:bg-zinc-900:hover,
+html:not(.dark) .hover\:bg-zinc-900\/90:hover { background-color: #E4E4E7 !important; }
+html:not(.dark) .hover\:bg-zinc-800:hover,
+html:not(.dark) .hover\:bg-zinc-800\/80:hover { background-color: #D4D4D8 !important; }
+html:not(.dark) .hover\:bg-zinc-700:hover { background-color: #A1A1AA !important; }
+
+html:not(.dark) .text-\[\#F4F4F6\],
+html:not(.dark) .text-zinc-100,
+html:not(.dark) .text-zinc-200 { color: #18181B !important; }
+html:not(.dark) .text-zinc-300 { color: #27272A !important; }
+html:not(.dark) .text-zinc-400 { color: #3F3F46 !important; }
+html:not(.dark) .text-zinc-500 { color: #52525B !important; }
+html:not(.dark) .text-zinc-600 { color: #71717A !important; }
+html:not(.dark) .text-zinc-700 { color: #A1A1AA !important; }
+html:not(.dark) .hover\:text-zinc-100:hover,
+html:not(.dark) .hover\:text-zinc-200:hover,
+html:not(.dark) .hover\:text-zinc-300:hover { color: #18181B !important; }
+
+html:not(.dark) .border-zinc-900,
+html:not(.dark) .border-zinc-800,
+html:not(.dark) .border-zinc-800\/80,
+html:not(.dark) .border-zinc-800\/90,
+html:not(.dark) .border-zinc-700 { border-color: #D4D4D8 !important; }
+html:not(.dark) .border-zinc-600 { border-color: #A1A1AA !important; }
+html:not(.dark) .hover\:border-zinc-800:hover,
+html:not(.dark) .hover\:border-zinc-700:hover,
+html:not(.dark) .hover\:border-zinc-600:hover { border-color: #A1A1AA !important; }
 
 /* Ocultar barra de scroll para carruseles */
 .hide-scrollbar::-webkit-scrollbar,
