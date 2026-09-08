@@ -30,18 +30,10 @@ export function MateriaDetailModal({ materia, eventDate, onClose }: { materia: M
   const classroomNumber = Number.parseInt(aula, 10);
   const building = classroomNumber > 0 ? getEdificioByAula(classroomNumber) : '';
   const calendarEvent = { title: info.nombre, date: eventDate || '', start: start || '', end: end || '', location: [known(aula) ? `Aula ${aula}` : '', known(building) ? building : ''].filter(Boolean).join(' · ') };
-  let calendar = '';
+  let canDownloadCalendar = false;
   if (eventDate) {
-    try { calendar = createClassCalendar(calendarEvent); } catch { /* Incomplete schedules cannot be exported. */ }
+    try { createClassCalendar(calendarEvent); canDownloadCalendar = true; } catch { /* Incomplete schedules cannot be exported. */ }
   }
-  const downloadCalendar = () => {
-    const url = URL.createObjectURL(new Blob([calendar], { type: 'text/calendar;charset=utf-8' }));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `clase-${eventDate}.ics`;
-    link.click();
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
-  };
 
   return (
     <dialog ref={dialog} aria-labelledby={titleId} onCancel={onClose} onClose={onClose}
@@ -62,13 +54,12 @@ export function MateriaDetailModal({ materia, eventDate, onClose }: { materia: M
         {(materia.classBlocks?.length || 0) > 1 && <ul className="mt-4 space-y-2 text-sm text-subtle">{materia.classBlocks?.map((item, index) => <li key={index} className="capitalize">{item.day}: {item.startTime} a {item.endTime}{item.classroom ? ` · Aula ${item.classroom}` : ''}</li>)}</ul>}
         {eventDate && <div className="mt-6">
           <p className="text-sm text-subtle">Solo el {new Intl.DateTimeFormat('es-AR', { dateStyle: 'full', timeZone: 'UTC' }).format(new Date(`${eventDate}T12:00:00Z`))}. Sin repetición.</p>
-          {calendar ? <>
-            <form action="/api/calendar/class" method="post" target="_blank" rel="noopener noreferrer" className="mt-3">
+          {canDownloadCalendar ? <>
+            <form action="/api/calendar/class" method="post" className="mt-3">
               {Object.entries(calendarEvent).map(([name, value]) => <input key={name} type="hidden" name={name} value={value} />)}
-              <button type="submit" className="glass-primary w-full"><CalendarPlus size={18} /> Agregar a Calendario</button>
+              <button type="submit" className="glass-primary w-full"><CalendarPlus size={18} /> Descargar evento (.ics)</button>
             </form>
-            <p className="mt-3 text-xs leading-relaxed text-subtle">Confirmá el evento en tu calendario. Si usás iPhone y no aparece Agregar, abrí LifeOS en Safari. También podés importar el archivo desde Mail.</p>
-            <button type="button" onClick={downloadCalendar} className="glass-button mt-3 w-full text-sm">Descargar evento (.ics)</button>
+            <p className="mt-3 text-xs leading-relaxed text-subtle">Después abrilo desde Descargas, Archivos o Mail e importalo en Calendario. Incluye solo esta clase.</p>
           </> : <p className="mt-3 text-sm text-subtle">Completá el horario de la materia para agregarla al calendario.</p>}
         </div>}
         <button type="button" onClick={onClose} className="glass-button mt-6 w-full">Listo</button>
