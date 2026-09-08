@@ -7,7 +7,7 @@ it('serves a private calendar response from form data', async () => {
   const response = await POST(new Request('https://lifeos.test/api/calendar/class', { method: 'POST', body }));
   expect(response.status).toBe(200);
   expect(response.headers.get('Content-Type')).toBe('text/calendar; charset=utf-8');
-  expect(response.headers.get('Content-Disposition')).toContain('clase-2026-09-08.ics');
+  expect(response.headers.get('Content-Disposition')).toBe('attachment; filename="clase-2026-09-08.ics"');
   expect(response.headers.get('Cache-Control')).toContain('no-store');
   expect(await response.text()).toContain('SUMMARY:Inglés I');
 });

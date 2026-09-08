@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     const calendar = createClassCalendar({ title: value('title'), date, start: value('start'), end: value('end'), location: value('location') });
     return new Response(calendar, { headers: {
       'Content-Type': 'text/calendar; charset=utf-8',
-      'Content-Disposition': `inline; filename="clase-${date}.ics"`,
+      'Content-Disposition': `attachment; filename="clase-${date}.ics"`,
       'Cache-Control': 'private, no-store',
       'X-Content-Type-Options': 'nosniff',
     } });
