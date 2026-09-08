@@ -55,6 +55,8 @@ export default function ViajesPage() {
         <EntertainmentSelector />
         
         <ClassTimeline 
+          key={diaSeleccionado}
+          selectedDay={diaSeleccionado}
           materiasDelDia={materiasDelDia}
           isToday={isToday}
           horaActualHHMM={horaActualHHMM}
