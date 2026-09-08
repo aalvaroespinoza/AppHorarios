@@ -29,7 +29,7 @@ export default function HomePage() {
       {timeMounted ? (
         <>
           {trip(primary, false)}
-          <ClassTimeline materiasDelDia={materiasDelDia} isToday={isToday} horaActualHHMM={horaActualHHMM} linePosition={linePosition} activeIndex={activeIndex} compact />
+          <ClassTimeline key={diaSeleccionado} selectedDay={diaSeleccionado} materiasDelDia={materiasDelDia} isToday={isToday} horaActualHHMM={horaActualHHMM} linePosition={linePosition} activeIndex={activeIndex} compact />
           {trip(secondary, true)}
         </>
       ) : <div className="glass-panel h-80 p-6 text-subtle" role="status">Preparando tus viajes…</div>}
