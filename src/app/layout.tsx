@@ -11,11 +11,11 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#0b1020",
+  themeColor: "#181b19",
 };
 
 export const metadata: Metadata = {
-  title: "LifeOS · Viajes y aulas",
+  title: "LifeOS · Viajes, agenda y aulas",
   description: "Tus colectivos, clases y aulas. Todo a mano para moverte por Córdoba.",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "LifeOS" },
   formatDetection: { telephone: false },

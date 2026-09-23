@@ -15,7 +15,7 @@ const DAYS: { value: DayOfWeek; label: string }[] = [
 ];
 const INITIAL: SubjectFormData = { nombre: '', dia: 'lunes', horaInicio: '08:00', horaFin: '11:10', curso: '', aula: '' };
 const inputClass = 'mt-1.5 min-h-11 w-full min-w-0 rounded-2xl border border-line bg-muted px-3 py-2 text-base text-ink';
-const dialogClass = 'm-auto w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto rounded-[28px] border border-line bg-elevated p-5 text-ink shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-sm';
+const dialogClass = 'm-auto w-[calc(100%-2rem)] max-w-md max-h-[90dvh] overflow-y-auto rounded-[20px] border border-line bg-elevated p-5 text-ink shadow-2xl backdrop:bg-black/40';
 
 export default function GestorMateriasPage() {
   const { subjects, loading, isMounted, addSubject, updateSubject, deleteSubject, resetToDefaults } = useSubjects();

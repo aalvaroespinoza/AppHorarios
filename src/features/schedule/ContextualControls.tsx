@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useId } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Building2, Bed, Check } from 'lucide-react';
 import { useEscenario } from '@/hooks/useEscenario';
 import { getDiaActual } from '@/context/EscenarioContext';
@@ -14,6 +15,8 @@ const DAYS: { id: DayOfWeek; label: string }[] = [
 
 export default function ContextualControls({ showScenarios = true }: { showScenarios?: boolean }) {
   const { diaSeleccionado, setDiaSeleccionado, cursaArquitectura, setCursaArquitectura, duermeEnCordoba, setDuermeEnCordoba, isMounted } = useEscenario();
+  const selectionId = useId();
+  const reduced = useReducedMotion();
   const container = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const active = container.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]');
@@ -34,9 +37,10 @@ export default function ContextualControls({ showScenarios = true }: { showScena
           const isSelected = diaSeleccionado === day.id;
           const isToday = today === day.id;
           return (
-            <button type="button" key={day.id} aria-pressed={isSelected} aria-label={day.id + (isToday ? ', día actual' : '')} onClick={() => setDiaSeleccionado(day.id)} className={'relative min-h-11 min-w-11 flex-1 rounded-full px-2 text-sm font-semibold transition-colors ' + (isSelected ? 'glass-primary' : isToday ? 'text-accent hover:bg-muted' : 'text-subtle hover:bg-muted')}>
-              <span>{day.label}</span>
-              {isToday && <span aria-hidden="true" className={'absolute bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ' + (isSelected ? 'bg-white shadow-[0_0_10px_rgb(255_255_255_/_0.75)]' : 'bg-accent shadow-[0_0_10px_var(--accent)]')} />}
+            <button type="button" key={day.id} aria-pressed={isSelected} aria-label={day.id + (isToday ? ', día actual' : '')} onClick={() => setDiaSeleccionado(day.id)} className={'relative min-h-11 min-w-11 flex-1 rounded-full px-2 text-sm font-semibold transition-colors ' + (isSelected ? 'text-surface' : isToday ? 'text-accent hover:bg-muted' : 'text-subtle hover:bg-muted')}>
+              <span className="relative z-10">{day.label}</span>
+              {isSelected && <motion.span layoutId={selectionId} className="absolute inset-0 rounded-xl bg-ink" transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 36 }} />}
+              {isToday && <span aria-hidden="true" className={'absolute z-10 bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ' + (isSelected ? 'bg-surface' : 'bg-accent')} />}
             </button>
           );
         })}
@@ -45,7 +49,7 @@ export default function ContextualControls({ showScenarios = true }: { showScena
         <button type="button" aria-pressed={enabled} onClick={() => showArchitecture ? setCursaArquitectura(!cursaArquitectura) : setDuermeEnCordoba(!duermeEnCordoba)} className={'glass-panel flex w-full items-center gap-3 px-4 py-3 text-left ' + (enabled ? 'aurora-border' : '')}>
           <Icon className="shrink-0 text-accent" size={20} />
           <span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-ink">{showArchitecture ? 'Cursar Arquitectura' : 'Me quedo en Córdoba'}</span><span className="block text-sm text-subtle">{showArchitecture ? (enabled ? 'Incluida en tus viajes' : 'Sin esta clase') : (enabled ? 'Sin viaje de vuelta' : 'Con viaje de vuelta')}</span></span>
-          <span className={'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ' + (enabled ? 'border-transparent bg-accent text-white' : 'border-line bg-muted')}>{enabled && <Check size={15} />}</span>
+          <span className={'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border ' + (enabled ? 'border-transparent bg-ink text-surface' : 'border-line bg-muted')}>{enabled && <Check size={15} />}</span>
         </button>
       )}
     </div>

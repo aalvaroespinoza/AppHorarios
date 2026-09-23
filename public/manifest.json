@@ -1,14 +1,14 @@
 {
   "id": "/",
-  "name": "LifeOS — Viajes y aulas",
+  "name": "LifeOS — Viajes, agenda y aulas",
   "short_name": "LifeOS",
   "description": "Tus colectivos, clases y aulas, a un toque.",
   "lang": "es-AR",
   "scope": "/",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0b1020",
-  "theme_color": "#0b1020",
+  "background_color": "#181b19",
+  "theme_color": "#181b19",
   "orientation": "portrait",
   "categories": ["travel", "education", "utilities"],
   "icons": [
