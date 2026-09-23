@@ -1,5 +1,7 @@
 "use client";
 
+import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
 import { useEscenario } from '@/hooks/useEscenario';
 import { useBec } from '@/hooks/useBec';
 import { useTodaySchedule } from '@/hooks/useTodaySchedule';
@@ -21,6 +23,7 @@ export default function HomePage() {
     <main className="page-shell flex min-h-[100dvh] flex-col gap-5">
       <ScheduleHeader diaCapitalizado={diaSeleccionado.charAt(0).toUpperCase() + diaSeleccionado.slice(1)} diaSeleccionado={diaSeleccionado} setDiaSeleccionado={setDiaSeleccionado} />
       <ContextualControls />
+      <Link href="/horarios" className="flex min-h-11 items-center justify-between gap-2 text-sm font-medium text-accent">Todos los horarios de colectivos<ArrowUpRight size={17} /></Link>
       {timeMounted ? (
         <>
           {trip('ida', false)}

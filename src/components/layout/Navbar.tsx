@@ -4,12 +4,12 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Bus, Clock, GraduationCap, WifiOff } from 'lucide-react';
+import { Bus, CalendarDays, GraduationCap, WifiOff } from 'lucide-react';
 import { syncEngine } from '@/core/sync/engine';
 
 const tabs = [
   { href: '/', label: 'Viajes', Icon: Bus },
-  { href: '/horarios', label: 'Horarios', Icon: Clock },
+  { href: '/agenda', label: 'Agenda', Icon: CalendarDays },
   { href: '/aulas', label: 'Aulas', Icon: GraduationCap },
 ];
 
@@ -31,7 +31,7 @@ export function Navbar() {
     };
   }, []);
   const active = pathname.startsWith('/aulas') || pathname.startsWith('/configuracion/materias')
-    ? '/aulas' : pathname.startsWith('/horarios') ? '/horarios' : pathname === '/' || pathname.startsWith('/viajes') ? '/' : '';
+    ? '/aulas' : pathname.startsWith('/agenda') ? '/agenda' : pathname === '/' || pathname.startsWith('/viajes') || pathname.startsWith('/horarios') ? '/' : '';
 
   return (
     <nav aria-label="Navegación principal" className="fixed z-40 inset-x-4 mx-auto max-w-[448px]"

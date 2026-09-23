@@ -9,7 +9,7 @@ import type { DayOfWeek } from '@/core/types/common';
 const DAYS: { id: DayOfWeek; label: string }[] = [
   { id: 'lunes', label: 'Lun' }, { id: 'martes', label: 'Mar' },
   { id: 'miercoles', label: 'Mié' }, { id: 'jueves', label: 'Jue' },
-  { id: 'viernes', label: 'Vie' }, { id: 'sabado', label: 'Sáb' },
+  { id: 'viernes', label: 'Vie' }, { id: 'sabado', label: 'Sáb' }, { id: 'domingo', label: 'Dom' },
 ];
 
 export default function ContextualControls({ showScenarios = true }: { showScenarios?: boolean }) {

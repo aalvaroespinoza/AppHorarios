@@ -17,6 +17,7 @@ export interface ClassTimelineProps {
   horaActualHHMM?: string; linePosition?: "none" | "before" | "inside" | "after";
   activeIndex?: number; compact?: boolean;
   selectedDay?: string;
+  allowCollapse?: boolean;
 }
 const dateKey = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Argentina/Cordoba', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 const nameOf = (item: ClassItem) => item.nombre || item.name || item.title || item.rawText || '';
@@ -24,7 +25,7 @@ const startOf = (item: ClassItem) => item.horaInicio || item.timeStart || '';
 const endOf = (item: ClassItem) => item.horaFin || item.timeEnd || '';
 const attendanceKey = (item: ClassItem, index: number) => item.id ? `${item.id}-${startOf(item)}` : `class-${index}`;
 
-export function ClassTimeline({ materiasDelDia, classes, isToday, horaActualHHMM = '00:00', compact = true, selectedDay }: ClassTimelineProps) {
+export function ClassTimeline({ materiasDelDia, classes, isToday, horaActualHHMM = '00:00', compact = true, selectedDay, allowCollapse = true }: ClassTimelineProps) {
   const items = materiasDelDia || classes || [];
   const [selectedMateria, setSelectedMateria] = useState<ClassItem | null>(null);
   const [expanded, setExpanded] = useState(!compact);
@@ -82,7 +83,7 @@ export function ClassTimeline({ materiasDelDia, classes, isToday, horaActualHHMM
       })}
     </div>
     {error && <p role="alert" className="mt-3 text-sm text-danger">{error}</p>}
-    {items.length > 0 && <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 text-sm font-medium text-accent">{expanded ? 'Ver resumen' : 'Ver cursado del día'}<ChevronDown size={16} className={expanded ? 'rotate-180' : ''} /></button>}
+    {items.length > 0 && allowCollapse && <button type="button" onClick={() => setExpanded(!expanded)} aria-expanded={expanded} className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 text-sm font-medium text-accent">{expanded ? 'Ver resumen' : 'Ver cursado del día'}<ChevronDown size={16} className={expanded ? 'rotate-180' : ''} /></button>}
     <MateriaDetailModal materia={selectedMateria} eventDate={selectedDay ? classDateForDay(selectedDay) : undefined} onClose={() => setSelectedMateria(null)} />
   </section>;
 }
