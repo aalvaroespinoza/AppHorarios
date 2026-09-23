@@ -5,12 +5,12 @@ try {
 }
 
 const CACHE_PREFIX = 'app-horarios-';
-const CACHE_NAME = `${CACHE_PREFIX}glass-v3`;
+const CACHE_NAME = `${CACHE_PREFIX}minimal-v1`;
 const DOCUMENT_CACHE = `${CACHE_NAME}-documents`;
-const CORE_ROUTES = ['/', '/viajes', '/horarios', '/aulas', '/configuracion', '/configuracion/materias', '/offline'];
+const CORE_ROUTES = ['/', '/agenda', '/viajes', '/horarios', '/aulas', '/configuracion', '/configuracion/materias', '/offline'];
 const PRE_CACHE = ['/manifest.json', '/icon', '/apple-icon', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/apple-touch-icon.png'];
 
-const OFFLINE_HTML = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#0b1020"><title>Sin conexión — LifeOS</title><style>*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px;background:#f4f6fc;color:#14213b;font:16px/1.5 system-ui,sans-serif}.card{max-width:360px;padding:32px;border:1px solid #dbe2f3;border-radius:32px;background:#ffffffd9;box-shadow:0 20px 70px #536cb31a}h1{font-size:26px;letter-spacing:-.04em}p{color:#56617a}a,button{display:inline-block;min-height:44px;padding:12px 20px;border:0;border-radius:24px;background:#465dde;color:white;font:inherit;text-decoration:none}button{margin-top:12px}@media(prefers-color-scheme:dark){body{background:#0b1020;color:#eef3ff}.card{background:#182239;border-color:#334366}p{color:#b6c2d9}}</style></head><body><main class="card"><h1>Sin conexión</h1><p>Esta pantalla todavía no está disponible sin internet. Tus datos guardados siguen en este dispositivo.</p><a href="/">Volver a Viajes</a><br><button onclick="location.reload()">Reintentar</button></main></body></html>`;
+const OFFLINE_HTML = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#181b19"><title>Sin conexión — LifeOS</title><style>*{box-sizing:border-box}body{margin:0;min-height:100dvh;display:grid;place-items:center;padding:24px;background:#f6f5f1;color:#242824;font:16px/1.5 system-ui,sans-serif}.card{max-width:360px;padding:32px;border:1px solid #dbe2f3;border-radius:20px;background:#ffffff}h1{font-size:26px;letter-spacing:-.04em}p{color:#56617a}a,button{display:inline-block;min-height:44px;padding:12px 20px;border:0;border-radius:24px;background:#3f6554;color:white;font:inherit;text-decoration:none}button{margin-top:12px}@media(prefers-color-scheme:dark){body{background:#181b19;color:#eff1e9}.card{background:#202421;border-color:#3c443b}p{color:#b7bfb3}}</style></head><body><main class="card"><h1>Sin conexión</h1><p>Esta pantalla todavía no está disponible sin internet. Tus datos guardados siguen en este dispositivo.</p><a href="/">Volver a Viajes</a><br><button onclick="location.reload()">Reintentar</button></main></body></html>`;
 
 function canStore(response) {
   return response.ok && !response.redirected && !/no-store|private/i.test(response.headers.get('cache-control') || '');

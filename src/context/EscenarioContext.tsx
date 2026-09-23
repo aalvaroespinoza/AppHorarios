@@ -22,8 +22,8 @@ export interface EscenarioContextProps {
 
 export const getDiaActual = (): DayOfWeek => {
   const dias = ['domingo', 'lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'];
-  const diaIndex = new Date().getDay();
-  if (diaIndex === 0) return 'lunes'; // Si es domingo, por defecto mostramos lunes
+  const weekday = new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'America/Argentina/Cordoba' }).format(new Date());
+  const diaIndex = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].indexOf(weekday);
   return dias[diaIndex] as DayOfWeek;
 };
 

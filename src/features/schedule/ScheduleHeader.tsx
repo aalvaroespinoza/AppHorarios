@@ -33,9 +33,9 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
     <header className="flex items-center justify-between gap-3 pt-[max(1rem,env(safe-area-inset-top))] pb-1">
       <div className="min-w-0">
         <button type="button" onClick={refreshWithSecretGesture} className="section-label mb-1 cursor-default" aria-label="LifeOS">
-          LifeOS · Tu día, más simple
+          LifeOS
         </button>
-        <h1 className="text-3xl font-bold tracking-tight text-ink">Tus viajes</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">Tus viajes</h1>
         <p className="mt-1 text-sm text-subtle">{diaCapitalizado.replace('Miercoles', 'Miércoles').replace('Sabado', 'Sábado')} <span aria-hidden="true">·</span> <RelojMinimalista /></p>
       </div>
       <div className="flex shrink-0 items-center gap-2">

@@ -28,7 +28,7 @@ export function readBrowserTheme(mode?: ThemeMode): { theme: ThemeMode; isDark: 
 export function applyBrowserTheme(isDark: boolean) {
   document.documentElement.classList.toggle('dark', isDark);
   document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
-  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#0b1020' : '#f4f6fc');
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', isDark ? '#181b19' : '#f6f5f1');
 }
 
 export const themeInitScript = `try { (${applyBrowserTheme.toString()})((${readBrowserTheme.toString()})().isDark); } catch {}`;

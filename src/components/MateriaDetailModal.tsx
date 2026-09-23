@@ -38,7 +38,7 @@ export function MateriaDetailModal({ materia, eventDate, onClose }: { materia: M
   return (
     <dialog ref={dialog} aria-labelledby={titleId} onCancel={onClose} onClose={onClose}
       onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
-      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-[28px] border border-line bg-elevated p-0 text-ink shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-sm">
+      className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-[20px] border border-line bg-elevated p-0 text-ink shadow-2xl backdrop:bg-black/40">
       {materia && <div className="p-6">
         <div className="mb-5 flex items-center justify-between gap-2">
           <p className="section-label">Tu clase</p>
