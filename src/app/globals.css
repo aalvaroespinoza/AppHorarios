@@ -20,16 +20,16 @@
 
 :root {
   color-scheme: light;
-  --canvas: #f6f5f1;
+  --canvas: #f7f8fc;
   --surface: #ffffff;
   --elevated: #ffffff;
-  --muted: #eeede7;
-  --ink: #242824;
-  --subtle: #62675f;
-  --muted-ink: #73796f;
-  --line: #dddfd6;
-  --accent: #3f6554;
-  --success: #3d7151;
+  --muted: #edf0f7;
+  --ink: #18223a;
+  --subtle: #5e6a82;
+  --muted-ink: #77839a;
+  --line: #dce2ee;
+  --accent: #3659df;
+  --success: #2c7a62;
   --danger: #b03d44;
   --warning: #826023;
   --color-bg: var(--canvas);
@@ -42,18 +42,18 @@
 
 .dark {
   color-scheme: dark;
-  --canvas: #181b19;
-  --surface: #202421;
-  --elevated: #272c28;
-  --muted: #303730;
-  --ink: #eff1e9;
-  --subtle: #b7bfb3;
-  --muted-ink: #9ba595;
-  --line: #3c443b;
-  --accent: #adc8a5;
-  --success: #a4c797;
-  --danger: #efa4a1;
-  --warning: #ddc58b;
+  --canvas: #101522;
+  --surface: #181f30;
+  --elevated: #202a3e;
+  --muted: #273248;
+  --ink: #f1f4ff;
+  --subtle: #c0c9dc;
+  --muted-ink: #98a5c0;
+  --line: #34415a;
+  --accent: #afc1ff;
+  --success: #85d1b3;
+  --danger: #ffb5b2;
+  --warning: #f1d08c;
 }
 
 @layer base {
@@ -145,7 +145,7 @@
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-dialog[open] { animation: surface-enter 200ms ease-out; }
+dialog[open] { animation: surface-enter 260ms cubic-bezier(.16, 1, .3, 1); }
 button svg { transition: transform 200ms ease; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
