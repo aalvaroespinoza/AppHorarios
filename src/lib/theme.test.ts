@@ -26,5 +26,6 @@ describe('appearance', () => {
     expect(document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#008080');
     applyBrowserTheme(true);
     expect(document.documentElement.classList.contains('dark')).toBe(true);
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#0b0f19');
   });
 });

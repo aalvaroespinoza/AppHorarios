@@ -1,7 +1,7 @@
-# Modo oscuro Y2K
+# Modo oscuro premium
 
-El modo claro conserva la interfaz Windows 95. Al activar `.dark`, LifeOS usa una identidad urbana de 2005-2006: fondo `#0d0e12`, paneles de plástico translúcido, acentos oro `#d4af37` y rojo `#cc0000`.
+El modo claro conserva la interfaz Windows/XP. Al activar `.dark`, LifeOS usa una superficie digital sobria: fondo `#0B0F19`, tarjetas de vidrio con opacidad de 3%, desenfoque de 20px y un borde blanco de 8% de opacidad.
 
-Los paneles oscuros usan desenfoque de 12px, bordes cromados sutiles y esquinas de 12 a 16px. Los botones se muestran en mayúsculas con espaciado amplio y responden con un brillo dorado breve. La tipografía de títulos usa alternativas locales (`Impact` y `Arial Black`), sin fuentes externas.
+Los títulos usan una fuente sans-serif de sistema con peso 600; el texto de apoyo es `#94A3B8`. Los controles tienen esquinas de 12px, espacio amplio y transiciones de 300ms que aumentan su brillo de forma contenida.
 
-El icono PWA representa el mismo dispositivo oscuro con detalles cromados, oro y rojo. Los colores de la barra del navegador y del manifiesto siguen el fondo oscuro para evitar destellos claros al iniciar la aplicación.
+El icono PWA acompaña el modo claro con un paisaje y una ventana inspirados en XP. Los colores de la barra del navegador y del manifiesto usan el fondo oscuro para evitar destellos claros al iniciar la aplicación.
