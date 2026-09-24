@@ -45,7 +45,7 @@ export function Navbar() {
           return (
             <Link key={href} href={href} aria-current={selected ? 'page' : undefined}
               className="relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-[14px] px-2 py-2">
-              {selected && <motion.span layoutId="nav-selection" transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 35 }}
+              {selected && <motion.span layoutId="nav-selection" transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 30, mass: .7 }}
                 className="absolute inset-0 rounded-[14px] bg-muted" />}
               <Icon aria-hidden size={21} strokeWidth={selected ? 2.3 : 1.8} className={`relative ${selected ? 'text-accent' : 'text-subtle'}`} />
               <span className={`relative text-xs ${selected ? 'text-ink font-semibold' : 'text-subtle'}`}>{label}</span>

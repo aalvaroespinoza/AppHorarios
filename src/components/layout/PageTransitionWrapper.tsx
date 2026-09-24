@@ -8,8 +8,8 @@ export default function PageTransitionWrapper({ children }: { children: React.Re
   const reduced = useReducedMotion();
   return (
     <MotionConfig reducedMotion="user">
-      <motion.div key={pathname} initial={reduced ? false : { opacity: 0 }} animate={{ opacity: 1 }}
-        transition={{ duration: .16 }} className="w-full min-h-screen">
+      <motion.div key={pathname} initial={reduced ? false : { opacity: 0, y: 10, scale: .994 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 370, damping: 31, mass: .7 }} className="w-full min-h-screen">
         {children}
       </motion.div>
     </MotionConfig>

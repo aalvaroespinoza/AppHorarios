@@ -39,7 +39,7 @@ export default function ContextualControls({ showScenarios = true }: { showScena
           return (
             <button type="button" key={day.id} aria-pressed={isSelected} aria-label={day.id + (isToday ? ', día actual' : '')} onClick={() => setDiaSeleccionado(day.id)} className={'relative min-h-11 min-w-11 flex-1 rounded-full px-2 text-sm font-semibold transition-colors ' + (isSelected ? 'text-surface' : isToday ? 'text-accent hover:bg-muted' : 'text-subtle hover:bg-muted')}>
               <span className="relative z-10">{day.label}</span>
-              {isSelected && <motion.span layoutId={selectionId} className="absolute inset-0 rounded-xl bg-ink" transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 420, damping: 36 }} />}
+              {isSelected && <motion.span layoutId={selectionId} className="absolute inset-0 rounded-xl bg-ink" transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 30, mass: .7 }} />}
               {isToday && <span aria-hidden="true" className={'absolute z-10 bottom-1.5 left-1/2 h-1.5 w-1.5 -translate-x-1/2 rounded-full ' + (isSelected ? 'bg-surface' : 'bg-accent')} />}
             </button>
           );
