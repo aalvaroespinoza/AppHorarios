@@ -1,30 +1,34 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="case" x1="82" y1="64" x2="430" y2="448" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#3b404d" stop-opacity=".92"/>
-      <stop offset=".45" stop-color="#171a22" stop-opacity=".9"/>
-      <stop offset="1" stop-color="#090a0e" stop-opacity=".96"/>
+    <linearGradient id="sky" x1="256" y1="26" x2="256" y2="356" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#74c9ff"/>
+      <stop offset="1" stop-color="#2f83d6"/>
     </linearGradient>
-    <linearGradient id="chrome" x1="105" y1="86" x2="405" y2="426" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#fff" stop-opacity=".72"/>
-      <stop offset=".26" stop-color="#8f97a7" stop-opacity=".34"/>
-      <stop offset=".7" stop-color="#d4af37" stop-opacity=".72"/>
-      <stop offset="1" stop-color="#fff" stop-opacity=".18"/>
+    <linearGradient id="hill" x1="256" y1="238" x2="256" y2="486" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8fd14f"/>
+      <stop offset="1" stop-color="#317a23"/>
     </linearGradient>
-    <radialGradient id="screen" cx="0" cy="0" r="1" gradientTransform="translate(256 247) rotate(90) scale(122 154)" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#303949"/>
-      <stop offset="1" stop-color="#0d0e12"/>
-    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="11" flood-color="#124c85" flood-opacity=".36"/>
+    </filter>
   </defs>
-  <rect width="512" height="512" rx="116" fill="#0d0e12"/>
-  <path d="M-42 163C103 84 181 122 269 182c90 61 163 63 285-17" fill="none" stroke="#cc0000" stroke-opacity=".72" stroke-width="26"/>
-  <path d="M-31 350c128-67 211-47 303 18 73 52 144 63 269 8" fill="none" stroke="#d4af37" stroke-opacity=".62" stroke-width="12"/>
-  <rect x="64" y="67" width="384" height="380" rx="92" fill="url(#case)" stroke="url(#chrome)" stroke-width="8"/>
-  <path d="M105 179c38-61 121-88 203-59 37 13 70 38 98 76" fill="none" stroke="#fff" stroke-opacity=".17" stroke-width="13" stroke-linecap="round"/>
-  <rect x="119" y="155" width="274" height="175" rx="42" fill="url(#screen)" stroke="#d4af37" stroke-opacity=".78" stroke-width="6"/>
-  <path d="M161 275c28-46 58-70 95-70 40 0 69 24 96 70" fill="none" stroke="#f4f5f8" stroke-opacity=".87" stroke-width="13" stroke-linecap="round"/>
-  <path d="M151 342h210" stroke="#fff" stroke-opacity=".24" stroke-width="5" stroke-linecap="round"/>
-  <circle cx="173" cy="382" r="24" fill="#cc0000" stroke="#f1d36d" stroke-width="5"/>
-  <circle cx="339" cy="382" r="24" fill="#cc0000" stroke="#f1d36d" stroke-width="5"/>
-  <path d="M207 382h98" stroke="#f1d36d" stroke-width="9" stroke-linecap="round"/>
+  <rect width="512" height="512" rx="108" fill="#245edb"/>
+  <rect x="26" y="26" width="460" height="460" rx="88" fill="url(#sky)"/>
+  <path d="M24 379c87-96 175-139 266-128 77 9 141 46 198 105v104H24V379Z" fill="url(#hill)"/>
+  <path d="M23 414c84-58 177-75 265-45 78 27 141 62 202 72v45H23v-72Z" fill="#2b6f22" fill-opacity=".42"/>
+  <g fill="#fff" fill-opacity=".94">
+    <path d="M85 142c0-22 18-40 40-40 17 0 31 10 37 25a43 43 0 0 1 63 37H85v-22Z"/>
+    <path d="M299 112c0-18 15-33 33-33 14 0 26 8 31 20a34 34 0 0 1 49 30H299v-17Z"/>
+  </g>
+  <g filter="url(#shadow)">
+    <rect x="133" y="156" width="246" height="184" rx="20" fill="#f4f8ff" stroke="#fff" stroke-width="8"/>
+    <rect x="145" y="169" width="222" height="25" rx="11" fill="#1c5fc3"/>
+    <circle cx="160" cy="181.5" r="5" fill="#ee5959"/>
+    <circle cx="176" cy="181.5" r="5" fill="#f5ca45"/>
+    <circle cx="192" cy="181.5" r="5" fill="#61bf5d"/>
+    <path d="M160 217h70v45h-70z" fill="#3f8fd8"/>
+    <path d="M241 217h106v45H241z" fill="#8fc84f"/>
+    <path d="M160 273h114v43H160z" fill="#f4c249"/>
+    <path d="M285 273h62v43h-62z" fill="#db665e"/>
+  </g>
 </svg>
