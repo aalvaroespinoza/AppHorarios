@@ -39,14 +39,14 @@ export function Navbar() {
       {offline && <div role="status" className="mx-auto mb-2 w-fit rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-subtle flex items-center gap-2">
         <WifiOff size={14} /> Sin conexión · Datos locales
       </div>}
-      <div className="glass-toolbar rounded-[20px] grid grid-cols-3 p-1.5 gap-1">
+      <div className="glass-toolbar grid grid-cols-3 p-1 gap-1">
         {tabs.map(({ href, label, Icon }) => {
           const selected = active === href;
           return (
             <Link key={href} href={href} aria-current={selected ? 'page' : undefined}
-              className="relative flex min-h-[60px] flex-col items-center justify-center gap-1 rounded-[14px] px-2 py-2">
+              className="relative flex min-h-[52px] flex-col items-center justify-center gap-1 px-2 py-2">
               {selected && <motion.span layoutId="nav-selection" transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 360, damping: 30, mass: .7 }}
-                className="absolute inset-0 rounded-[14px] bg-muted" />}
+                className="absolute inset-0 bg-white" />}
               <Icon aria-hidden size={21} strokeWidth={selected ? 2.3 : 1.8} className={`relative ${selected ? 'text-accent' : 'text-subtle'}`} />
               <span className={`relative text-xs ${selected ? 'text-ink font-semibold' : 'text-subtle'}`}>{label}</span>
             </Link>

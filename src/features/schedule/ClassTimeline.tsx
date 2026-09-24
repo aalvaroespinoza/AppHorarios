@@ -57,6 +57,7 @@ export function ClassTimeline({ materiasDelDia, classes, isToday, horaActualHHMM
   const displayed = expanded ? items : summary ? [summary] : [];
   const isCurrent = (item: ClassItem) => Boolean(isToday && startOf(item) <= horaActualHHMM && endOf(item) > horaActualHHMM);
   return <motion.section layout="size" transition={{ duration: reduced ? 0 : .24 }} id="seccion-cursado" className="glass-panel scroll-mt-24 p-5" aria-label="Cursado del día">
+    <div className="window-titlebar"><span>LifeOS · Cursado</span><span aria-hidden="true">×</span></div>
     <div className="mb-3 flex items-center gap-2 text-subtle">
       <BookOpen size={17} className="text-accent" />
       <h2 className="section-label">Tu cursado</h2>
