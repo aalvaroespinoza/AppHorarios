@@ -23,7 +23,7 @@ describe('appearance', () => {
     localStorage.setItem('app_theme', 'light');
     new Function(themeInitScript)();
     expect(document.documentElement.classList.contains('dark')).toBe(false);
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#f7f8fc');
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute('content')).toBe('#008080');
     applyBrowserTheme(true);
     expect(document.documentElement.classList.contains('dark')).toBe(true);
   });
