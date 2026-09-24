@@ -65,6 +65,7 @@ export function HorarioCard({ titulo, recomendacion, icon: Icon = Bus, direction
         </button>
       ) : (
         <div className="p-5">
+          <div className="window-titlebar"><span>{isReturn ? 'LifeOS · Vuelta' : 'LifeOS · Ida'}</span><span aria-hidden="true">×</span></div>
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent"><Icon size={21} /></span>
@@ -75,7 +76,7 @@ export function HorarioCard({ titulo, recomendacion, icon: Icon = Bus, direction
 
           {current ? (
             <>
-              <div className="rounded-2xl bg-muted/50 px-4 py-5">
+              <div className="sunken px-4 py-5">
                 <p className="mb-2 flex items-center gap-1.5 text-sm text-subtle"><MapPin size={15} />{isReturn ? 'Parada Ministerio' : 'Desde Despeñaderos'}</p>
                 <div className="time-display text-ink">{stopTime(current)}</div>
                 <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -104,7 +105,7 @@ export function HorarioCard({ titulo, recomendacion, icon: Icon = Bus, direction
               {manual && <p className="mt-3 text-sm text-subtle">Elegido por vos</p>}
             </>
           ) : (
-            <div className="rounded-2xl bg-muted/50 p-4">
+            <div className="sunken p-4">
               <p className="text-base font-semibold text-ink">Sin viaje sugerido</p>
               <p className="mt-2 text-sm leading-relaxed text-subtle">{alternatives.length ? 'Los servicios restantes no coinciden con tu cursado. Podés consultar sus horarios.' : 'No hay un servicio disponible que coincida con tu cursado y este horario.'}</p>
               <Link className="mt-3 inline-flex min-h-11 items-center gap-2 text-sm font-semibold text-accent" href="/horarios">Ver todos los horarios<ArrowRight size={16} /></Link>

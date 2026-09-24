@@ -30,15 +30,16 @@ export function ScheduleHeader({ diaCapitalizado, diaSeleccionado, setDiaSelecci
   };
 
   return (
-    <header className="flex items-center justify-between gap-3 pt-[max(1rem,env(safe-area-inset-top))] pb-1">
-      <div className="min-w-0">
+    <header className="glass-panel flex items-center justify-between gap-3 p-3">
+      <div className="window-titlebar absolute inset-x-0 top-0"><span>LifeOS · Viajes</span><span aria-hidden="true">×</span></div>
+      <div className="min-w-0 pt-6">
         <button type="button" onClick={refreshWithSecretGesture} className="section-label mb-1 cursor-default" aria-label="LifeOS">
           LifeOS
         </button>
         <h1 className="text-3xl font-semibold tracking-tight text-ink">Tus viajes</h1>
         <p className="mt-1 text-sm text-subtle">{diaCapitalizado.replace('Miercoles', 'Miércoles').replace('Sabado', 'Sábado')} <span aria-hidden="true">·</span> <RelojMinimalista /></p>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-2 pt-6">
         {diaSeleccionado !== today && (
           <button type="button" className="glass-button w-11 p-0" onClick={() => setDiaSeleccionado(today)} aria-label="Volver al día de hoy">
             <CalendarDays size={19} />

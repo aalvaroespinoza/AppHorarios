@@ -40,6 +40,7 @@ export function MateriaDetailModal({ materia, eventDate, onClose }: { materia: M
       onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
       className="m-auto w-[calc(100%-2rem)] max-w-sm rounded-[20px] border border-line bg-elevated p-0 text-ink shadow-2xl backdrop:bg-black/40">
       {materia && <div className="p-6">
+        <div className="window-titlebar"><span>LifeOS · Detalle de clase</span><span aria-hidden="true">×</span></div>
         <div className="mb-5 flex items-center justify-between gap-2">
           <p className="section-label">Tu clase</p>
           <button type="button" onClick={onClose} aria-label="Cerrar detalle" className="glass-button h-11 w-11 p-0"><X size={20} /></button>
@@ -47,9 +48,9 @@ export function MateriaDetailModal({ materia, eventDate, onClose }: { materia: M
         <h2 id={titleId} className="text-2xl font-semibold tracking-tight">{info.nombre}</h2>
         <p className="mt-3 flex items-center gap-2 text-sm text-subtle"><Clock size={17} />{start && end ? `${start} a ${end}` : 'Horario sin asignar'}</p>
         <dl className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-muted p-4"><dt className="text-sm text-subtle">Curso</dt><dd className="mt-1 text-lg font-semibold">{known(materia.curso || info.curso) ? materia.curso || info.curso : 'Sin asignar'}</dd></div>
-          <div className="rounded-2xl bg-muted p-4"><dt className="text-sm text-subtle">Aula</dt><dd className="mt-1 text-lg font-semibold text-accent">{known(aula) ? aula : 'Sin asignar'}</dd></div>
-          <div className="col-span-2 rounded-2xl bg-muted p-4"><dt className="text-sm text-subtle">Edificio</dt><dd className="mt-1 flex items-center gap-2 font-medium"><MapPin size={17} className="shrink-0 text-accent" />{known(building) ? building : 'Ubicación por confirmar'}</dd></div>
+          <div className="sunken p-4"><dt className="text-sm text-subtle">Curso</dt><dd className="mt-1 text-lg font-semibold">{known(materia.curso || info.curso) ? materia.curso || info.curso : 'Sin asignar'}</dd></div>
+          <div className="sunken p-4"><dt className="text-sm text-subtle">Aula</dt><dd className="mt-1 text-lg font-semibold text-accent">{known(aula) ? aula : 'Sin asignar'}</dd></div>
+          <div className="sunken col-span-2 p-4"><dt className="text-sm text-subtle">Edificio</dt><dd className="mt-1 flex items-center gap-2 font-medium"><MapPin size={17} className="shrink-0 text-accent" />{known(building) ? building : 'Ubicación por confirmar'}</dd></div>
         </dl>
         {(materia.classBlocks?.length || 0) > 1 && <ul className="mt-4 space-y-2 text-sm text-subtle">{materia.classBlocks?.map((item, index) => <li key={index} className="capitalize">{item.day}: {item.startTime} a {item.endTime}{item.classroom ? ` · Aula ${item.classroom}` : ''}</li>)}</ul>}
         {eventDate && <div className="mt-6">
